@@ -1,0 +1,12 @@
+com\flinksight\sparkjob\metrics\MetricsReporter.class
+com\flinksight\sparkjob\recovery\RecoveryManager.class
+com\flinksight\sparkjob\sink\DynamicSinkFactory.class
+com\flinksight\sparkjob\config\DynamicConfigService$1.class
+com\flinksight\sparkjob\collector\SparkMetricsCollector.class
+com\flinksight\sparkjob\config\DynamicConfigService.class
+com\flinksight\sparkjob\audit\AuditLogCollector.class
+com\flinksight\sparkjob\audit\RestAuditLogServiceImpl.class
+com\flinksight\sparkjob\register\JobAutoRegisterService.class
+com\flinksight\sparkjob\sink\DLSink.class
+com\flinksight\sparkjob\runner\SparkOpsJob.class
+com\flinksight\sparkjob\alert\JobAlertPushService.class

@@ -1,0 +1,30 @@
+package com.flinksight.backend.controller;
+
+import com.flinksight.common.service.JobRegisterService;
+import com.flinksight.common.dto.JobRegisterRequestDTO;
+import com.flinksight.common.dto.JobInfoDTO;
+import com.flinksight.backend.common.ApiResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * 作业自动注册API
+ * 路径：POST /api/job/register
+ */
+@RestController
+@RequestMapping("/api/job")
+@RequiredArgsConstructor
+public class JobRegisterController {
+
+    private final JobRegisterService jobRegisterService;
+
+    /**
+     * 自动注册作业，平台幂等/权限校验/多租户
+     */
+    @PostMapping("/register")
+    public ApiResponse<JobInfoDTO> registerJob(@RequestBody JobRegisterRequestDTO req) {
+        // （建议接口层可加租户/平台黑白名单防刷）
+        JobInfoDTO job = jobRegisterService.register(req);
+        return ApiResponse.ok(job);
+    }
+}

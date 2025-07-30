@@ -1,0 +1,13 @@
+# 查询指标
+GET http://localhost:8080/api/metric
+
+###
+
+# 用户登录
+POST http://localhost:8080/api/login
+Content-Type: application/json
+
+{
+  "username": "demo",
+  "password": "123456"
+}

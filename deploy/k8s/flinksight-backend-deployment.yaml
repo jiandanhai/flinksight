@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flinksight-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flinksight-backend
+  template:
+    metadata:
+      labels:
+        app: flinksight-backend
+    spec:
+      containers:
+        - name: backend
+          image: yourorg/flinksight-backend:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql:3306/flinksight
+            - name: SPRING_DATASOURCE_USERNAME
+              value: root
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: 123456
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flinksight-backend-svc
+spec:
+  selector:
+    app: flinksight-backend
+  ports:
+    - port: 8080
+      targetPort: 8080

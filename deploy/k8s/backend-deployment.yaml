@@ -1,0 +1,13 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata: { name: flinksight-backend }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: flinksight-backend } }
+  template:
+    metadata: { labels: { app: flinksight-backend } }
+    spec:
+      containers:
+        - name: backend
+          image: flinksight-backend:latest
+          ports: [ { containerPort: 8080 } ]

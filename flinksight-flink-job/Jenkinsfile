@@ -1,0 +1,25 @@
+pipeline {
+  agent any
+  environment {
+    FLINK_HOME = '/opt/flink'
+    KAFKA_BOOTSTRAP = 'kafka1:9092,kafka2:9092'
+    FLINK_JOB_NAME = 'flinksight-ops-job'
+  }
+  stages {
+    stage('Build') {
+      steps {
+        sh './mvnw clean package -DskipTests'
+      }
+    }
+    stage('Deploy') {
+      steps {
+        sh """
+          $FLINK_HOME/bin/flink run -c com.flinksight.flinkjob.runner.FlinkOpsJob \
+          target/flinksight-flink-job.jar \
+          --kafka.bootstrap.servers=$KAFKA_BOOTSTRAP --job.name=$FLINK_JOB_NAME \
+          --alert.sink.type=kafka --alert.sink.param=$KAFKA_BOOTSTRAP
+        """
+      }
+    }
+  }
+}
