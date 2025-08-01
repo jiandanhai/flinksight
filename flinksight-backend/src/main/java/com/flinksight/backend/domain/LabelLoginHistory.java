@@ -2,22 +2,30 @@ package com.flinksight.backend.domain;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * 标签登录历史表实体
+ * 标签登录历史表
+ * 记录用户与标签相关的登录行为，用于安全审计
  */
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "label_login_history")
+@Table(
+        name = "label_login_history",
+        indexes = {
+                @Index(name = "idx_llh_tenant_user_time", columnList = "tenant_id, user_id, login_time"),
+                @Index(name = "idx_llh_label_time", columnList = "label_id, login_time")
+        }
+)
 @Schema(description = "标签登录历史表")
-@Where(clause = "is_deleted=0")
+@SQLRestriction("is_deleted=0") // ⚡ 替代 Hibernate 6.3 的 @Where
 public class LabelLoginHistory implements Serializable {
 
     @Id
@@ -38,14 +46,14 @@ public class LabelLoginHistory implements Serializable {
     private LocalDateTime loginTime;
 
     @Column(name = "ip_address", length = 64)
-    @Schema(description = "登录IP地址")
+    @Schema(description = "登录IP地址 (支持IPv6)")
     private String ipAddress;
 
     @Column(name = "tenant_id", nullable = false)
     @Schema(description = "租户ID")
     private Long tenantId;
 
-    @Column(name = "is_deleted", nullable = false, columnDefinition = "tinyint default 0")
-    @Schema(description = "软删除 0正常 1删除")
-    private Integer isDeleted;
+    @Column(name = "is_deleted", nullable = false)
+    @Schema(description = "软删除 0=正常 1=删除")
+    private Integer isDeleted = 0;
 }

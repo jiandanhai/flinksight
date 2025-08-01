@@ -3,7 +3,7 @@ package com.flinksight.backend.domain;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -12,14 +12,23 @@ import java.time.LocalDateTime;
  * 任务实体
  * Job Entity
  */
-@Data
+@Getter
+@Setter
 @Entity
-@Table(name = "job")
+@Table(
+        name = "job",
+        uniqueConstraints = @UniqueConstraint(name = "uk_job_name_tenant", columnNames = {"job_name", "tenant_id"}),
+        indexes = {
+                @Index(name = "idx_tenant", columnList = "tenant_id"),
+                @Index(name = "idx_cluster", columnList = "cluster_id"),
+                @Index(name = "idx_status", columnList = "status")
+        }
+)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "任务表")
-@Where(clause = "is_deleted=0")
+@SQLRestriction("is_deleted=0") // ⚡ 替代 Hibernate 6.3 的 @Where
 public class Job implements Serializable {
 
     @Id
@@ -35,16 +44,16 @@ public class Job implements Serializable {
     @Schema(description = "所属集群ID")
     private Long clusterId;
 
-    @Column(nullable = false, length = 64)
+    @Column(name = "job_name", nullable = false, length = 64)
     @Schema(description = "任务名")
     private String name;
 
-    @Column(length = 32)
-    @Schema(description = "类型(streaming/batch)")
+    @Column(name = "job_type", length = 32)
+    @Schema(description = "类型 (streaming/batch)")
     private String type;
 
     @Column(length = 16)
-    @Schema(description = "状态(运行/异常/已停止等)")
+    @Schema(description = "状态 (运行/异常/已停止等)")
     private String status;
 
     @Column(name = "owner_id")
@@ -59,15 +68,15 @@ public class Job implements Serializable {
     @Schema(description = "结束时间")
     private LocalDateTime endTime;
 
-    @Column(name = "is_deleted", nullable = false, columnDefinition = "tinyint default 0")
+    @Column(name = "is_deleted", nullable = false)
     @Schema(description = "软删除")
-    private Integer isDeleted;
+    private Integer isDeleted = 0;
 
-    @Column(name = "create_time", updatable = false)
+    @Column(name = "created_at", updatable = false)
     @Schema(description = "创建时间")
-    private LocalDateTime createTime;
+    private LocalDateTime createdAt;
 
-    @Column(name = "update_time")
+    @Column(name = "updated_at")
     @Schema(description = "更新时间")
-    private LocalDateTime updateTime;
+    private LocalDateTime updatedAt;
 }

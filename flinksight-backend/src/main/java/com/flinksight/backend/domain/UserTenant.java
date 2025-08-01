@@ -2,7 +2,7 @@ package com.flinksight.backend.domain;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import jakarta.persistence.*;
 import java.io.Serializable;
@@ -10,14 +10,22 @@ import java.io.Serializable;
 /**
  * 用户-租户关联表
  */
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "user_tenant", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "tenant_id"}))
+@Table(
+        name = "user_tenant",
+        uniqueConstraints = @UniqueConstraint(name = "uk_user_tenant", columnNames = {"user_id", "tenant_id"}),
+        indexes = {
+                @Index(name = "idx_user_tenant_user", columnList = "user_id"),
+                @Index(name = "idx_user_tenant_tenant", columnList = "tenant_id")
+        }
+)
 @Schema(description = "用户-租户关联表")
-@Where(clause = "is_deleted=0")
+@SQLRestriction("is_deleted=0") // Hibernate 6.3 推荐软删注解
 public class UserTenant implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,5 +42,5 @@ public class UserTenant implements Serializable {
 
     @Column(name = "is_deleted", nullable = false)
     @Schema(description = "是否删除 0正常 1删除")
-    private Integer isDeleted;
+    private Integer isDeleted = 0;
 }

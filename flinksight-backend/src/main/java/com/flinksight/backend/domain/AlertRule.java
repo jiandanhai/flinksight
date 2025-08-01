@@ -3,7 +3,7 @@ package com.flinksight.backend.domain;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -12,14 +12,21 @@ import java.time.LocalDateTime;
  * 报警规则实体
  * AlertRule Entity
  */
-@Data
+@Getter
+@Setter
 @Entity
-@Table(name = "alert_rule")
+@Table(
+        name = "alert_rule",
+        indexes = {
+                @Index(name = "idx_tenant", columnList = "tenant_id"),
+                @Index(name = "idx_cluster", columnList = "cluster_id")
+        }
+)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "报警规则表")
-@Where(clause = "is_deleted=0")
+@SQLRestriction("is_deleted=0") // ⚡ 替代 Hibernate 6.3 的 @Where
 public class AlertRule implements Serializable {
 
     @Id
@@ -51,15 +58,15 @@ public class AlertRule implements Serializable {
     @Schema(description = "通知方式")
     private String channel;
 
-    @Column(nullable = false, columnDefinition = "tinyint default 1")
+    @Column(nullable = false)
     @Schema(description = "是否启用")
-    private Integer enable;
+    private Integer enable = 1; // ⚡ 用 Java 默认值
 
-    @Column(name = "is_deleted", nullable = false, columnDefinition = "tinyint default 0")
+    @Column(name = "is_deleted", nullable = false)
     @Schema(description = "软删除")
-    private Integer isDeleted;
+    private Integer isDeleted = 0;
 
-    @Column(name = "create_time", updatable = false)
+    @Column(name = "created_at", updatable = false)
     @Schema(description = "创建时间")
-    private LocalDateTime createTime;
+    private LocalDateTime createdAt;
 }

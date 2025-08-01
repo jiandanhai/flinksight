@@ -2,7 +2,7 @@ package com.flinksight.backend.domain;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import jakarta.persistence.*;
 import java.io.Serializable;
@@ -10,14 +10,21 @@ import java.io.Serializable;
 /**
  * 数据字典表
  */
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "dict")
+@Table(
+        name = "dict",
+        uniqueConstraints = @UniqueConstraint(name = "uk_dict_type_key", columnNames = {"dict_type", "dict_key"}),
+        indexes = {
+                @Index(name = "idx_dict_type", columnList = "dict_type")
+        }
+)
 @Schema(description = "数据字典表")
-@Where(clause = "is_deleted=0")
+@SQLRestriction("is_deleted=0") // ⚡ 替代 Hibernate 6.3 的 @Where
 public class Dict implements Serializable {
 
     @Id
@@ -39,7 +46,7 @@ public class Dict implements Serializable {
 
     @Column(name = "sort", nullable = false)
     @Schema(description = "排序")
-    private Integer sort;
+    private Integer sort = 0; // 默认0，避免 null
 
     @Column(name = "description", length = 255)
     @Schema(description = "描述")
@@ -47,5 +54,5 @@ public class Dict implements Serializable {
 
     @Column(name = "is_deleted", nullable = false)
     @Schema(description = "是否删除 0正常 1删除")
-    private Integer isDeleted;
+    private Integer isDeleted = 0;
 }

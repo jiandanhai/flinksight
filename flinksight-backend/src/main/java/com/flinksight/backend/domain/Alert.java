@@ -3,7 +3,7 @@ package com.flinksight.backend.domain;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -12,14 +12,15 @@ import java.time.LocalDateTime;
  * 报警事件实体
  * Alert Entity
  */
-@Data
+@Getter
+@Setter
 @Entity
-@Table(name = "alert")
+@Table(name = "`alert`") // ⚡ 防止关键字冲突
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "报警事件表")
-@Where(clause = "is_deleted=0")
+@SQLRestriction("is_deleted=0") // ⚡ 替代 Hibernate 6.3 的 @Where
 public class Alert implements Serializable {
 
     @Id
@@ -47,23 +48,23 @@ public class Alert implements Serializable {
     @Schema(description = "报警内容")
     private String message;
 
-    @Column(nullable = false, columnDefinition = "tinyint default 0")
+    @Column(nullable = false)
     @Schema(description = "状态(0未处理1处理中2关闭)")
-    private Integer status;
+    private Integer status = 0; // ⚡ 默认值放到 Java，不要 columnDefinition
 
     @Column(name = "handler_id")
     @Schema(description = "处理人")
     private Long handlerId;
 
-    @Column(name = "is_deleted", nullable = false, columnDefinition = "tinyint default 0")
+    @Column(name = "is_deleted", nullable = false)
     @Schema(description = "软删除")
-    private Integer isDeleted;
+    private Integer isDeleted = 0;
 
-    @Column(name = "create_time", updatable = false)
+    @Column(name = "created_at", updatable = false)
     @Schema(description = "产生时间")
-    private LocalDateTime createTime;
+    private LocalDateTime createdAt;
 
-    @Column(name = "update_time")
+    @Column(name = "updated_at")
     @Schema(description = "更新时间")
-    private LocalDateTime updateTime;
+    private LocalDateTime updatedAt;
 }

@@ -4,27 +4,23 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.List;
 import java.io.Serializable;
 
-/**
- * 用户实体
- * 企业商用版 User Entity，实现Spring Security UserDetails
- */
-@Data
+@Getter
+@Setter
 @Entity
-@Table(name = "user")
+@Table(name = "`user`") // ⚠️ user 是关键字，必须加反引号或改名
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "用户表")
-@Where(clause = "is_deleted=0")
+@SQLRestriction("is_deleted=0") // ⚡ 替代 Hibernate 6.3 的 @Where
 public class User implements UserDetails, Serializable {
 
     @Id
@@ -41,7 +37,7 @@ public class User implements UserDetails, Serializable {
     private String username;
 
     @Column(nullable = false, length = 128)
-    @JsonIgnore // 密码不序列化
+    @JsonIgnore
     @Schema(description = "密码HASH")
     private String password;
 
@@ -53,21 +49,21 @@ public class User implements UserDetails, Serializable {
     @Schema(description = "手机号")
     private String phone;
 
-    @Column(nullable = false, columnDefinition = "tinyint default 1")
+    @Column(nullable = false)
     @Schema(description = "状态(1启用0禁用)")
-    private Integer status;
+    private Integer status = 1; // 直接在Java端默认值
 
-    @Column(name = "is_deleted", nullable = false, columnDefinition = "tinyint default 0")
+    @Column(name = "is_deleted", nullable = false)
     @Schema(description = "软删除")
-    private Integer isDeleted;
+    private Integer isDeleted = 0;
 
-    @Column(name = "create_time", updatable = false)
+    @Column(name = "created_at", updatable = false)
     @Schema(description = "注册时间")
-    private LocalDateTime createTime;
+    private LocalDateTime createdAt;
 
-    @Column(name = "update_time")
+    @Column(name = "updated_at")
     @Schema(description = "更新时间")
-    private LocalDateTime updateTime;
+    private LocalDateTime updatedAt;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -78,65 +74,42 @@ public class User implements UserDetails, Serializable {
     @Schema(description = "角色集合")
     private List<Role> roles;
 
-    /**
-     * 用户权限集合
-     * Spring Security会根据该集合进行权限判断
-     */
     @Override
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles;
     }
 
-    /**
-     * 用户名，通常用于登录
-     */
     @Override
     @JsonIgnore
     public String getUsername() {
         return this.username;
     }
 
-    /**
-     * 用户密码，框架自动验证
-     */
     @Override
     @JsonIgnore
     public String getPassword() {
         return this.password;
     }
 
-    /**
-     * 账号是否未过期，true为可用
-     */
     @Override
     @JsonIgnore
     public boolean isAccountNonExpired() {
         return true;
     }
 
-    /**
-     * 账号是否未锁定，true为可用
-     */
     @Override
     @JsonIgnore
     public boolean isAccountNonLocked() {
-        // 可以自定义锁定策略，示例默认全部可用
         return true;
     }
 
-    /**
-     * 密码是否未过期，true为可用
-     */
     @Override
     @JsonIgnore
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
-    /**
-     * 用户是否启用（如 status 字段为1即启用）
-     */
     @Override
     @JsonIgnore
     public boolean isEnabled() {

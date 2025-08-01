@@ -3,7 +3,7 @@ package com.flinksight.backend.domain;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -12,14 +12,22 @@ import java.time.LocalDateTime;
  * 操作审计实体
  * AuditLog Entity
  */
-@Data
+@Getter
+@Setter
 @Entity
-@Table(name = "audit_log")
+@Table(
+        name = "audit_log",
+        indexes = {
+                @Index(name = "idx_tenant", columnList = "tenant_id"),
+                @Index(name = "idx_trace", columnList = "trace_id"),
+                @Index(name = "idx_operator", columnList = "operator")
+        }
+)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "操作审计日志表")
-@Where(clause = "is_deleted=0")
+@SQLRestriction("is_deleted=0")  // 替代 Hibernate 6.3 的 @Where
 public class AuditLog implements Serializable {
 
     @Id
@@ -54,6 +62,7 @@ public class AuditLog implements Serializable {
     @Column(length = 255)
     @Schema(description = "操作内容")
     private String content;
+
     @Column(name = "operator", length = 64, nullable = false)
     @Schema(description = "操作人用户名/ID")
     private String operator;
@@ -62,18 +71,11 @@ public class AuditLog implements Serializable {
     @Schema(description = "全链路追踪ID")
     private String traceId;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     @Schema(description = "操作时间")
     private LocalDateTime createdAt;
 
-    @Column(name = "create_time")
-    @Schema(description = "操作时间")
-    private LocalDateTime createTime;
-
-    @Column(name = "is_deleted", nullable = false, columnDefinition = "tinyint default 0")
+    @Column(name = "is_deleted", nullable = false)
     @Schema(description = "软删除")
-    private Integer isDeleted;
-
-
-
+    private Integer isDeleted = 0;
 }

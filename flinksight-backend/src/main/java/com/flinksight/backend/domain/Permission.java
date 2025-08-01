@@ -3,7 +3,7 @@ package com.flinksight.backend.domain;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.io.Serializable;
 
@@ -11,7 +11,8 @@ import java.io.Serializable;
  * 权限点实体
  * 商业级平台权限表，支持多租户、细粒度权限（菜单、按钮、API等）
  */
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,7 +26,7 @@ import java.io.Serializable;
         }
 )
 @Schema(description = "权限点表")
-@Where(clause = "is_deleted=0")
+@SQLRestriction("is_deleted=0") // ⚡ 替代 Hibernate 6.3 的 @Where
 public class Permission implements Serializable {
 
     @Id
@@ -33,7 +34,7 @@ public class Permission implements Serializable {
     @Schema(description = "权限ID")
     private Long id;
 
-    @Column(nullable = false, unique = false, length = 50)
+    @Column(nullable = false, length = 50)
     @Schema(description = "权限编码(全局唯一，如JOB_OWNER/ADMIN/VIEWER)")
     private String code;
 
@@ -43,7 +44,7 @@ public class Permission implements Serializable {
 
     @Column(length = 100)
     @Schema(description = "权限描述")
-    private String desc;
+    private String description;
 
     @Column(nullable = false, length = 16)
     @Schema(description = "权限类型(MENU/BUTTON/API)")
@@ -53,7 +54,7 @@ public class Permission implements Serializable {
     @Schema(description = "租户ID，多租户隔离")
     private Long tenantId;
 
-    @Column(name = "is_deleted", nullable = false, columnDefinition = "tinyint default 0")
+    @Column(name = "is_deleted", nullable = false)
     @Schema(description = "软删除标记 0=正常 1=删除")
-    private Integer isDeleted;
+    private Integer isDeleted = 0;
 }

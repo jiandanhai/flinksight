@@ -3,45 +3,70 @@ package com.flinksight.backend.domain;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Where;
-import org.springframework.security.core.GrantedAuthority; // 需要导入
+import org.hibernate.annotations.SQLRestriction;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * 角色实体
  * Role Entity
  */
-@Data
+@Getter
+@Setter
 @Entity
-@Table(name = "role")
+@Table(
+        name = "role",
+        uniqueConstraints = @UniqueConstraint(name = "uk_code", columnNames = {"code"}),
+        indexes = {
+                @Index(name = "idx_tenant", columnList = "tenant_id")
+        }
+)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "角色表")
-@Where(clause = "is_deleted=0")
-public class Role implements GrantedAuthority, Serializable { // <----- 这里实现接口
+@SQLRestriction("is_deleted=0") // ⚡ 替代 Hibernate 6.3 的 @Where
+public class Role implements GrantedAuthority, Serializable {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Schema(description = "角色ID")
     private Long id;
 
+    @Column(nullable = false, unique = true, length = 50)
+    @Schema(description = "角色编码")
+    private String code;
+
     @Column(nullable = false, length = 50)
     @Schema(description = "角色名称")
     private String name;
 
-    @Column(nullable = false, length = 50)
-    @Schema(description = "角色编码")
-    private String code;
+    @Column(name = "tenant_id", nullable = false)
+    @Schema(description = "租户ID，多租户隔离")
+    private Long tenantId;
 
     @Column(length = 100)
     @Schema(description = "角色描述")
-    private String desc;
+    private String remark;
+
+    @Column(name = "created_at", updatable = false)
+    @Schema(description = "创建时间")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    @Schema(description = "更新时间")
+    private LocalDateTime updatedAt;
 
     @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
     @Schema(description = "用户集合")
     private List<User> users;
+
+    @Column(name = "is_deleted", nullable = false)
+    @Schema(description = "软删除标记 0=正常 1=删除")
+    private Integer isDeleted = 0;
 
     /**
      * 返回权限字符串（角色名/编码均可）
@@ -49,11 +74,7 @@ public class Role implements GrantedAuthority, Serializable { // <----- 这里�
      */
     @Override
     public String getAuthority() {
-        // 一般用code，如果需要和Security角色前缀保持一致可以加 "ROLE_" 前缀
+        // 推荐返回 code，例如 "ADMIN"
         return code;
     }
-
-    @Column(name = "is_deleted", nullable = false, columnDefinition = "tinyint default 0")
-    @Schema(description = "软删除")
-    private Integer isDeleted;
 }

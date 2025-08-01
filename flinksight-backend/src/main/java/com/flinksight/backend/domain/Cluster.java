@@ -3,7 +3,7 @@ package com.flinksight.backend.domain;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -12,14 +12,23 @@ import java.time.LocalDateTime;
  * 集群实体
  * Cluster Entity
  */
-@Data
+@Getter
+@Setter
 @Entity
-@Table(name = "cluster")
+@Table(
+        name = "cluster",
+        uniqueConstraints = @UniqueConstraint(name = "uk_name_tenant", columnNames = {"name", "tenant_id"}),
+        indexes = {
+                @Index(name = "idx_tenant", columnList = "tenant_id"),
+                @Index(name = "idx_type", columnList = "type"),
+                @Index(name = "idx_status", columnList = "status")
+        }
+)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "集群表")
-@Where(clause = "is_deleted=0")
+@SQLRestriction("is_deleted=0") // ⚡ 替代 Hibernate 6.3 的 @Where
 public class Cluster implements Serializable {
 
     @Id
@@ -51,19 +60,19 @@ public class Cluster implements Serializable {
     @Schema(description = "标签")
     private String tags;
 
-    @Column(nullable = false, columnDefinition = "tinyint default 1")
+    @Column(nullable = false)
     @Schema(description = "状态")
-    private Integer status;
+    private Integer status = 1; // 默认启用
 
     @Column(length = 255)
     @Schema(description = "备注")
     private String remark;
 
-    @Column(name = "is_deleted", nullable = false, columnDefinition = "tinyint default 0")
+    @Column(name = "is_deleted", nullable = false)
     @Schema(description = "软删除")
-    private Integer isDeleted;
+    private Integer isDeleted = 0;
 
-    @Column(name = "create_time", updatable = false)
+    @Column(name = "created_at", updatable = false)
     @Schema(description = "创建时间")
-    private LocalDateTime createTime;
+    private LocalDateTime createdAt;
 }

@@ -3,21 +3,26 @@ package com.flinksight.backend.domain;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.io.Serializable;
 
 /**
- * 系统设置（如品牌名、登录背景等）
+ * 全局系统设置表
  */
-@Data
+@Getter
+@Setter
 @Entity
-@Table(name = "system_settings")
+@Table(
+        name = "system_settings",
+        uniqueConstraints = @UniqueConstraint(name = "uk_system_settings_code", columnNames = "code"),
+        indexes = @Index(name = "idx_system_settings_code", columnList = "code")
+)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "全局系统设置表")
-@Where(clause = "is_deleted=0")
+@SQLRestriction("is_deleted=0") // 替代 Hibernate 6.3 的 @Where
 public class SystemSettings implements Serializable {
 
     @Id
@@ -25,16 +30,19 @@ public class SystemSettings implements Serializable {
     @Schema(description = "主键ID")
     private Long id;
 
-    @Schema(description = "设置项编码")
-    @Column(nullable = false, unique = true)
+    @Column(name = "code", nullable = false, unique = true, length = 64)
+    @Schema(description = "设置项编码（唯一）")
     private String code;
 
+    @Column(name = "value", columnDefinition = "text")
     @Schema(description = "设置项值")
     private String value;
 
+    @Column(name = "description", length = 256)
     @Schema(description = "备注")
     private String description;
 
-    @Schema(description = "软删除标志")
+    @Column(name = "is_deleted", nullable = false)
+    @Schema(description = "软删除标志 0=正常 1=删除")
     private Integer isDeleted = 0;
 }
