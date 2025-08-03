@@ -1,7 +1,6 @@
 package com.flinksight.flinkjob.metrics;
 
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 /**

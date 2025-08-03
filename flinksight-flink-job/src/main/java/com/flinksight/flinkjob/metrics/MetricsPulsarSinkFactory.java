@@ -1,11 +1,8 @@
 package com.flinksight.flinkjob.metrics;
 
-import org.apache.flink.connector.pulsar.sink.PulsarSink;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.connector.pulsar.sink.PulsarSink;
 import org.apache.flink.connector.pulsar.sink.writer.serializer.PulsarSerializationSchemaWrapper;
-import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.connector.pulsar.sink.writer.message.PulsarMessage;
-import org.apache.flink.connector.pulsar.sink.PulsarSinkBuilder;
 
 import java.util.Properties;
 

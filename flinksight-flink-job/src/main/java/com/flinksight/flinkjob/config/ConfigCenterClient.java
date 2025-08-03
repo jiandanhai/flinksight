@@ -2,6 +2,7 @@ package com.flinksight.flinkjob.config;
 
 import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.config.ConfigService;
+
 import java.util.Properties;
 
 /**

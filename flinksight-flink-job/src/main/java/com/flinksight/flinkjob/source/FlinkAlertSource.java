@@ -1,11 +1,11 @@
 package com.flinksight.flinkjob.source;
 
 import com.flinksight.common.dto.AlertDTO;
-import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
-import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
-import java.time.LocalDateTime;
+import org.apache.flink.connector.kafka.source.KafkaSource;
+import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 
+import java.time.LocalDateTime;
 import java.util.Random;
 
 public class FlinkAlertSource extends RichSourceFunction<AlertDTO> {

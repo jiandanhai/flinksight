@@ -1,8 +1,7 @@
 package com.flinksight.flinkjob.metrics;
 
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
-import io.prometheus.client.exporter.PushGateway;
 import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.exporter.PushGateway;
 
 import java.util.HashMap;
 import java.util.Map;

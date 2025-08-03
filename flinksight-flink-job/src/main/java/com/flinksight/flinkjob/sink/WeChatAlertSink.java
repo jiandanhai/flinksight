@@ -1,9 +1,10 @@
 package com.flinksight.flinkjob.sink;
 
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.io.OutputStream;
 
 /**
  * 企业微信告警Sink

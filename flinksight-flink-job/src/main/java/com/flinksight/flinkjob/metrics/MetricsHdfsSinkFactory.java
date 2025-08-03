@@ -1,8 +1,8 @@
 package com.flinksight.flinkjob.metrics;
 
+import org.apache.flink.api.common.serialization.SimpleStringEncoder;
 import org.apache.flink.connector.file.sink.FileSink;
 import org.apache.flink.core.fs.Path;
-import org.apache.flink.api.common.serialization.SimpleStringEncoder;
 
 /**
  * 企业级 HDFS Sink 工厂

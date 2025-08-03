@@ -1,8 +1,8 @@
 package com.flinksight.flinkjob.alert;
 
-import com.flinksight.common.dto.JobMetricsEventDTO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flinksight.common.dto.JobMetricsEventDTO;
 
 /**
  * 动态报警规则引擎 动态业务规则引擎集成（可对接平台API动态拉取报警/恢复策略）

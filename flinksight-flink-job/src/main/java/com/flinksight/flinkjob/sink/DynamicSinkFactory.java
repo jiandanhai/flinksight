@@ -1,6 +1,9 @@
 package com.flinksight.flinkjob.sink;
 
-import com.flinksight.flinkjob.metrics.*;
+import com.flinksight.flinkjob.metrics.MetricsEsSinkFactory;
+import com.flinksight.flinkjob.metrics.MetricsHdfsSinkFactory;
+import com.flinksight.flinkjob.metrics.MetricsKafkaSinkFactory;
+import com.flinksight.flinkjob.metrics.MetricsPulsarSinkFactory;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.http.HttpHost;

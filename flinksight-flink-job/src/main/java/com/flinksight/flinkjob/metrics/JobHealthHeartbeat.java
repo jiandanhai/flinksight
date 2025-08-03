@@ -1,8 +1,9 @@
 package com.flinksight.flinkjob.metrics;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+
 import java.time.LocalDateTime;
 
 /**

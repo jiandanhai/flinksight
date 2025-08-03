@@ -3,9 +3,9 @@ package com.flinksight.flinkjob.platform;
 import com.flinksight.common.dto.JobMetricsEventDTO;
 import com.flinksight.common.utils.JsonUtil;
 
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.io.OutputStream;
 
 /**
  * 与平台后端API集成，动态下发配置、上报诊断/链路日志(与平台API自动集成（如配置下发、事件落地、结果反馈）)

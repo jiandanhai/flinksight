@@ -1,9 +1,7 @@
 package com.flinksight.flinkjob.sink;
 
-import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
 
 /**
