@@ -1,8 +1,8 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.TicketDTO;
+import com.flinksight.common.model.PageResult;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -12,6 +12,6 @@ import java.util.Optional;
 public interface TicketService extends SoftDeleteService<TicketDTO, Long> {
     TicketDTO createTicket(TicketDTO ticket);
     Optional<TicketDTO> getTicketById(Long id);
-    List<TicketDTO> getTicketsByTenantAndStatus(Long tenantId, Integer status);
+    PageResult<TicketDTO> getTicketsByTenantAndStatus(Long tenantId, Integer status,int page, int size);
     TicketDTO updateTicket(TicketDTO ticket);
 }

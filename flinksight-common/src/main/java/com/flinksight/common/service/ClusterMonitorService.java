@@ -2,8 +2,7 @@ package com.flinksight.common.service;
 
 import com.flinksight.common.dto.ClusterDTO;
 import com.flinksight.common.dto.ClusterStatusHistoryDTO;
-
-import java.util.List;
+import com.flinksight.common.model.PageResult;
 
 public interface ClusterMonitorService {
     /**
@@ -19,5 +18,5 @@ public interface ClusterMonitorService {
     /**
      * 查询集群历史状态
      */
-    List<ClusterStatusHistoryDTO> getHistory(Long clusterId, int limit);
+    PageResult<ClusterStatusHistoryDTO> getHistory(Long clusterId,int page, int size);
 }

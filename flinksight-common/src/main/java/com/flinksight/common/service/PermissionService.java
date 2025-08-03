@@ -1,8 +1,8 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.PermissionDTO;
+import com.flinksight.common.model.PageResult;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -30,7 +30,7 @@ public interface PermissionService extends SoftDeleteService<PermissionDTO, Long
     /**
      * 查询所有权限点
      */
-    List<PermissionDTO> getAllPermissions();
+    PageResult<PermissionDTO> getAllPermissions(int page, int size);
 
     /**
      * 检查租户是否有权注册新作业

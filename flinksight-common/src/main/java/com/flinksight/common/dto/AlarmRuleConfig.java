@@ -1,6 +1,7 @@
 package com.flinksight.common.dto;
 
 import lombok.Data;
+
 import java.io.Serializable;
 
 /**

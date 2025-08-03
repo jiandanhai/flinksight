@@ -1,8 +1,8 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.TenantDTO;
+import com.flinksight.common.model.PageResult;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -13,6 +13,6 @@ public interface TenantService  extends SoftDeleteService<TenantDTO, Long> {
     TenantDTO createTenant(TenantDTO tenant);
     Optional<TenantDTO> getTenantById(Long tenantId);
     Optional<TenantDTO> getTenantByCode(String code);
-    List<TenantDTO> getAllTenants();
+    PageResult<TenantDTO> getAllTenants(int page, int size);
     TenantDTO updateTenant(TenantDTO tenant);
 }

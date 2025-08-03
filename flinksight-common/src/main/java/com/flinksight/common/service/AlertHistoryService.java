@@ -1,15 +1,13 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.AlertHistoryDTO;
-import com.flinksight.common.dto.ResourceDTO;
-import com.flinksight.common.dto.RoleDTO;
+import com.flinksight.common.model.PageResult;
 
-import java.util.List;
 import java.util.Optional;
 
-public interface AlertHistoryService extends SoftDeleteService<RoleDTO, Long> {
+public interface AlertHistoryService extends SoftDeleteService<AlertHistoryDTO, Long> {
     AlertHistoryDTO createOrUpdate(AlertHistoryDTO entity);
     Optional<AlertHistoryDTO> getById(Long id);
-    List<AlertHistoryDTO> findByTenantId(Long tenantId);
-    List<AlertHistoryDTO> getAll();
+    PageResult<AlertHistoryDTO> findByTenantId(Long tenantId,int page, int size);
+    PageResult<AlertHistoryDTO> getAll(int page, int size);
 }

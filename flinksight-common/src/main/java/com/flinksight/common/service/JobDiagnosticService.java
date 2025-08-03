@@ -1,13 +1,12 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.JobDiagnosticLogDTO;
-
-import java.util.List;
+import com.flinksight.common.model.PageResult;
 
 public interface JobDiagnosticService {
     void log(Long jobId, String jobName, String level, String content, String traceId);
 
-    List<JobDiagnosticLogDTO> getLogsByJob(Long jobId);
+    PageResult<JobDiagnosticLogDTO> getLogsByJob(Long jobId,int page, int size);
 
-    List<JobDiagnosticLogDTO> getLogsByLevel(String level);
+    PageResult<JobDiagnosticLogDTO> getLogsByLevel(String level,int page, int size);
 }

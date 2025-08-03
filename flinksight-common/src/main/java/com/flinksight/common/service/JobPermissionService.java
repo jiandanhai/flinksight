@@ -1,7 +1,7 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.JobPermissionDTO;
-import java.util.List;
+import com.flinksight.common.model.PageResult;
 
 /**
  * 作业-用户-权限三元组关系服务
@@ -18,7 +18,7 @@ public interface JobPermissionService {
     /**
      * 查询某作业下所有授权用户
      */
-    List<JobPermissionDTO> listJobPermissions(Long jobId);
+    PageResult<JobPermissionDTO> listJobPermissions(Long jobId,int page, int size);
 
     /**
      * 给指定用户分配作业权限
@@ -38,5 +38,5 @@ public interface JobPermissionService {
     /**
      * 查询某用户对某作业的所有权限
      */
-    List<JobPermissionDTO> getUserPermissions(Long jobId, String userId);
+    PageResult<JobPermissionDTO> getUserPermissions(Long jobId, String userId,int page, int size);
 }

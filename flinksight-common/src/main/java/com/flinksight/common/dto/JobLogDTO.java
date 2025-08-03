@@ -1,6 +1,10 @@
 package com.flinksight.common.dto;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -14,6 +18,6 @@ public class JobLogDTO implements Serializable {
     private Long jobId;
     private String level;
     private String content;
-    private LocalDateTime ts;
+    private LocalDateTime logTime;
     private Integer isDeleted;
 }

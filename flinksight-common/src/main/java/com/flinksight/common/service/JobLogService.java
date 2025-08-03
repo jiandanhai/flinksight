@@ -1,9 +1,9 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.JobLogDTO;
+import com.flinksight.common.model.PageResult;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -13,6 +13,6 @@ import java.util.Optional;
 public interface JobLogService extends SoftDeleteService<JobLogDTO, Long>   {
     JobLogDTO createJobLog(JobLogDTO log);
     Optional<JobLogDTO> getJobLogById(Long id);
-    List<JobLogDTO> getLogsByJob(Long jobId, LocalDateTime start, LocalDateTime end);
-    List<JobLogDTO> getLogsByTenantAndLevel(Long tenantId, String level, LocalDateTime start, LocalDateTime end);
+    PageResult<JobLogDTO> getLogsByJob(Long jobId, LocalDateTime start, LocalDateTime end,int page, int size);
+    PageResult<JobLogDTO> getLogsByTenantAndLevel(Long tenantId, String level, LocalDateTime start, LocalDateTime end,int page, int size);
 }

@@ -1,22 +1,24 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.JobInstanceDTO;
-import com.flinksight.common.dto.JobMetricDTO;
+import com.flinksight.common.model.PageResult;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface JobInstanceService  extends SoftDeleteService<JobInstanceDTO, Long> {
     JobInstanceDTO createJob(JobInstanceDTO job);
 
-    boolean updateJobStatus(Long id, String status);
+    boolean updateJobStatus(Long id, Integer status);
 
-    List<JobInstanceDTO> listByTenant(Long tenantId);
+    PageResult<JobInstanceDTO> listByTenant(Long tenantId,int page, int size);
 
-    List<JobInstanceDTO> listByStatus(String status);
+    PageResult<JobInstanceDTO> listByStatus(Integer status,int page, int size);
 
     Optional<JobInstanceDTO> getById(Long id);
 
-    List<JobInstanceDTO> findByTenantIdAndIsDeleted(Long tenantId);
+    PageResult<JobInstanceDTO> findByTenantIdAndIsDeleted(Long tenantId, int page, int size);
+
+    Map<Integer, Long> countStatusByTenantId(Long tenantId);
 
 }

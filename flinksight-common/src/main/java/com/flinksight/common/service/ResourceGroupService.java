@@ -1,13 +1,13 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.ResourceGroupDTO;
+import com.flinksight.common.model.PageResult;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface ResourceGroupService extends SoftDeleteService<ResourceGroupDTO, Long> {
     ResourceGroupDTO createOrUpdate(ResourceGroupDTO group);
     Optional<ResourceGroupDTO> getById(Long id);
-    List<ResourceGroupDTO> getAll();
-    List<ResourceGroupDTO> findByTenantId(Long tenantId);
+    PageResult<ResourceGroupDTO> getAll(int page, int size);
+    PageResult<ResourceGroupDTO> findByTenantId(Long tenantId,int page, int size);
 }

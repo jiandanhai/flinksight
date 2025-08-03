@@ -1,8 +1,8 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.JobDTO;
+import com.flinksight.common.model.PageResult;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface JobService extends SoftDeleteService<JobDTO, Long>   {
     JobDTO createJob(JobDTO job);
     Optional<JobDTO> getJobById(Long jobId);
-    List<JobDTO> getJobsByTenant(Long tenantId);
-    List<JobDTO> getJobsByTenantAndCluster(Long tenantId, Long clusterId);
+    PageResult<JobDTO> getJobsByTenant(Long tenantId,int page, int size);
+    PageResult<JobDTO> getJobsByTenantAndCluster(Long tenantId, Long clusterId,int page, int size);
     JobDTO updateJob(JobDTO job);
 }

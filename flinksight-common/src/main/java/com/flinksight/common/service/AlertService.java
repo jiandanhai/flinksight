@@ -1,9 +1,8 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.AlertDTO;
-import com.flinksight.common.dto.AlertRuleDTO;
+import com.flinksight.common.model.PageResult;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -13,7 +12,7 @@ import java.util.Optional;
 public interface AlertService  extends SoftDeleteService<AlertDTO, Long> {
     AlertDTO createAlert(AlertDTO alert);
     Optional<AlertDTO> getAlertById(Long id);
-    List<AlertDTO> getAlertsByTenantAndStatus(Long tenantId, Integer status);
-    List<AlertDTO> getAlertsByJobAndStatus(Long jobId, Integer status);
+    PageResult<AlertDTO> getAlertsByTenantAndStatus(Long tenantId, Integer status,int page, int size);
+    PageResult<AlertDTO> getAlertsByJobAndStatus(Long jobId, Integer status,int page, int size);
     AlertDTO updateAlert(AlertDTO alert);
 }

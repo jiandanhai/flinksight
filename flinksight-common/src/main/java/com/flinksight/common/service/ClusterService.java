@@ -1,8 +1,8 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.ClusterDTO;
+import com.flinksight.common.model.PageResult;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -12,5 +12,5 @@ import java.util.Optional;
 public interface ClusterService extends SoftDeleteService<ClusterDTO, Long>  {
     ClusterDTO createOrUpdate(ClusterDTO clusterDTO);
     Optional<ClusterDTO> getClusterById(Long clusterId);
-    List<ClusterDTO> getClustersByTenant(Long tenantId);
+    PageResult<ClusterDTO> getClustersByTenant(Long tenantId,int page, int size);
 }

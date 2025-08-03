@@ -1,8 +1,8 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.RoleDTO;
+import com.flinksight.common.model.PageResult;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -13,5 +13,5 @@ public interface RoleService extends SoftDeleteService<RoleDTO, Long> {
     RoleDTO createRole(RoleDTO role);
     Optional<RoleDTO> getRoleById(Long roleId);
     RoleDTO getRoleByCode(String code);
-    List<RoleDTO> getAllRoles();
+    PageResult<RoleDTO> getAllRoles(int page, int size);
 }

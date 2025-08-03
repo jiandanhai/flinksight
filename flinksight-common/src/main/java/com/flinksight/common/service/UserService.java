@@ -1,7 +1,7 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.UserDTO;
-import org.springframework.security.core.userdetails.UserDetails;
+import com.flinksight.common.model.PageResult;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +33,7 @@ public interface UserService extends SoftDeleteService<UserDTO, Long>  {
      * @param size 每页条数
      * @return 用户列表
      */
-    List<UserDTO> getUsersByTenant(Long tenantId, int page, int size);
+    PageResult<UserDTO> getUsersByTenant(Long tenantId, int page, int size);
 
 
     /**

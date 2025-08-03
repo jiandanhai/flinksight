@@ -1,6 +1,7 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.NodeHealthDTO;
+import com.flinksight.common.model.PageResult;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,9 +11,9 @@ public interface NodeHealthService extends SoftDeleteService<NodeHealthDTO, Long
 
     Optional<NodeHealthDTO> getLatestByNodeId(Long nodeId);
 
-    List<NodeHealthDTO> getByTenantId(Long tenantId);
+    PageResult<NodeHealthDTO> getByTenantId(Long tenantId,int page, int size);
 
-    List<NodeHealthDTO> getByNodeId(Long nodeId);
+    PageResult<NodeHealthDTO> getByNodeId(Long nodeId,int page, int size);
 
     boolean batchSoftDelete(List<Long> ids);
 }

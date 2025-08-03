@@ -1,14 +1,13 @@
 package com.flinksight.common.service;
 
-import com.flinksight.common.dto.ApiKeyDTO;
 import com.flinksight.common.dto.FileDTO;
+import com.flinksight.common.model.PageResult;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface FileService extends SoftDeleteService<FileDTO, Long> {
     FileDTO createOrUpdate(FileDTO entity);
     Optional<FileDTO> getById(Long id);
-    List<FileDTO> findByTenantId(Long tenantId);
-    List<FileDTO> getAll();
+    PageResult<FileDTO> findByTenantId(Long tenantId,int page, int size);
+    PageResult<FileDTO> getAll(int page, int size);
 }

@@ -1,14 +1,14 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.NotificationDTO;
+import com.flinksight.common.model.PageResult;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface NotificationService extends SoftDeleteService<NotificationDTO, Long> {
     NotificationDTO createOrUpdate(NotificationDTO entity);
     Optional<NotificationDTO> getById(Long id);
-    List<NotificationDTO> getAll();
-    List<NotificationDTO> findByUserId(Long userId);
-    List<NotificationDTO> findByTenantId(Long tenantId);
+    PageResult<NotificationDTO> getAll(int page, int size);
+    PageResult<NotificationDTO> findByUserId(Long userId,int page, int size);
+    PageResult<NotificationDTO> findByTenantId(Long tenantId,int page, int size);
 }

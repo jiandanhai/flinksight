@@ -1,7 +1,7 @@
 package com.flinksight.common.service;
 
-import com.flinksight.common.dto.JobRegisterRequestDTO;
 import com.flinksight.common.dto.JobInfoDTO;
+import com.flinksight.common.dto.JobRegisterRequestDTO;
 
 /**
  * 作业自动注册服务接口

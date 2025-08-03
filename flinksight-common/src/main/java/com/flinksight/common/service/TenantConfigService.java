@@ -1,6 +1,7 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.TenantConfigDTO;
+import com.flinksight.common.model.PageResult;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,7 +13,7 @@ public interface TenantConfigService extends SoftDeleteService<TenantConfigDTO, 
 
     Optional<TenantConfigDTO> getByTenantIdAndConfigKey(Long tenantId, String configKey);
 
-    List<TenantConfigDTO> listByTenantId(Long tenantId);
+    PageResult<TenantConfigDTO> listByTenantId(Long tenantId,int page, int size);
 
     boolean batchSoftDelete(List<Long> ids);
 }

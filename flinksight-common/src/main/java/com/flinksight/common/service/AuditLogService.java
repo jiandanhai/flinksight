@@ -1,9 +1,8 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.AuditLogDTO;
+import com.flinksight.common.model.PageResult;
 
-
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -13,7 +12,7 @@ import java.util.Optional;
 public interface AuditLogService  extends SoftDeleteService<AuditLogDTO, Long> {
     AuditLogDTO createAuditLog(AuditLogDTO log);
     Optional<AuditLogDTO> getAuditLogById(Long id);
-    List<AuditLogDTO> getLogsByTenantAndUser(Long tenantId, Long userId);
+    PageResult<AuditLogDTO> getLogsByTenantAndUser(Long tenantId, Long userId,int page, int size);
     /**
      * 配置变更审计日志
      * @param configType 配置类型（如 NACOS、SPARK_JOB、GLOBAL 等）
