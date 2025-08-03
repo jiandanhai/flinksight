@@ -4,7 +4,9 @@ import com.flinksight.common.dto.JobMetricsEventDTO;
 import com.flinksight.common.tenant.TenantContext;
 import com.flinksight.common.utils.TraceUtil;
 import com.flinksight.sparkjob.metrics.MetricsReporter;
-import org.apache.spark.scheduler.*;
+import org.apache.spark.scheduler.SparkListener;
+import org.apache.spark.scheduler.SparkListenerJobEnd;
+import org.apache.spark.scheduler.SparkListenerJobStart;
 
 import java.time.Instant;
 

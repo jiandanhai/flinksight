@@ -1,12 +1,12 @@
 package com.flinksight.sparkjob.audit;
 
 import com.flinksight.common.dto.AuditLogDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.AuditLogService;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -32,8 +32,8 @@ public class RestAuditLogServiceImpl implements AuditLogService {
     }
 
     @Override
-    public List<AuditLogDTO> getLogsByTenantAndUser(Long tenantId, Long userId) {
-        return List.of();
+    public PageResult<AuditLogDTO> getLogsByTenantAndUser(Long tenantId, Long userId, int page, int size) {
+        return null;
     }
 
     @Override
