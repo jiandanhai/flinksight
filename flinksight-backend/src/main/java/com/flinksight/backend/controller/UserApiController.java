@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.UserApi;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.UserApiDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.UserApiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 用户-API权限分配管理
@@ -19,8 +18,8 @@ public class UserApiController {
     private final UserApiService service;
 
     @PostMapping("/assign")
-    public UserApiDTO assign(@RequestParam Long userId, @RequestParam Long apiId) {
-        return service.assignApiToUser(userId, apiId);
+    public ApiResponse<UserApiDTO> assign(@RequestParam Long userId, @RequestParam Long apiId) {
+        return ApiResponse.ok(service.assignApiToUser(userId, apiId));
     }
 
     @PostMapping("/remove")
@@ -29,18 +28,25 @@ public class UserApiController {
     }
 
     @GetMapping("/user/{userId}")
-    public List<UserApiDTO> findByUser(@PathVariable Long userId) {
-        return service.findByUserId(userId);
+    public ApiResponse<PageResult<UserApiDTO>> findByUser(@PathVariable Long userId,
+                                                         @RequestParam(defaultValue = "0") int page,
+                                                         @RequestParam(defaultValue = "20") int size) {
+
+        return ApiResponse.ok(service.findByUserId(userId,page,size));
     }
 
     @GetMapping("/api/{apiId}")
-    public List<UserApiDTO> findByApi(@PathVariable Long apiId) {
-        return service.findByApiId(apiId);
+    public ApiResponse<PageResult<UserApiDTO>> findByApi(@PathVariable Long apiId,
+                                      @RequestParam(defaultValue = "0") int page,
+                                      @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByApiId(apiId,page,size));
     }
 
     @GetMapping("/{id}")
-    public Optional<UserApiDTO> getById(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<UserApiDTO> getById(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @DeleteMapping("/{id}")

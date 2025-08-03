@@ -1,11 +1,12 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.TenantConfig;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.TenantConfigDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.TenantConfigService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
+
 import java.util.Optional;
 
 /**
@@ -19,8 +20,9 @@ public class TenantConfigController {
     private final TenantConfigService service;
 
     @PostMapping
-    public TenantConfigDTO create(@RequestBody TenantConfigDTO dto) {
-        return service.createOrUpdate(dto);
+    public ApiResponse<TenantConfigDTO> create(@RequestBody TenantConfigDTO dto) {
+
+        return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @GetMapping("/{id}")
@@ -29,13 +31,16 @@ public class TenantConfigController {
     }
 
     @GetMapping("/tenant/{tenantId}")
-    public List<TenantConfigDTO> findByTenantId(@PathVariable Long tenantId) {
-        return service.listByTenantId(tenantId);
+    public ApiResponse<PageResult<TenantConfigDTO>> findByTenantId(@PathVariable Long tenantId,
+                                                                  @RequestParam(defaultValue = "0") int page,
+                                                                  @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.listByTenantId(tenantId,page,size));
     }
 
     @PutMapping
-    public TenantConfigDTO update(@RequestBody TenantConfigDTO dto) {
-        return service.createOrUpdate(dto);
+    public ApiResponse<TenantConfigDTO> update(@RequestBody TenantConfigDTO dto) {
+
+        return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @DeleteMapping("/{id}")

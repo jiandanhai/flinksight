@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.RolePermission;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.RolePermissionDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.RolePermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 角色权限分配管理
@@ -19,8 +18,8 @@ public class RolePermissionController {
     private final RolePermissionService service;
 
     @PostMapping("/assign")
-    public RolePermissionDTO assign(@RequestParam Long roleId, @RequestParam Long permissionId) {
-        return service.assignPermissionToRole(roleId, permissionId);
+    public ApiResponse<RolePermissionDTO> assign(@RequestParam Long roleId, @RequestParam Long permissionId) {
+        return ApiResponse.ok(service.assignPermissionToRole(roleId, permissionId));
     }
 
     @PostMapping("/remove")
@@ -29,18 +28,25 @@ public class RolePermissionController {
     }
 
     @GetMapping("/role/{roleId}")
-    public List<RolePermissionDTO> findByRoleId(@PathVariable Long roleId) {
-        return service.findByRoleId(roleId);
+    public ApiResponse<PageResult<RolePermissionDTO>> findByRoleId(@PathVariable Long roleId,
+                                                                  @RequestParam(defaultValue = "0") int page,
+                                                                  @RequestParam(defaultValue = "20") int size) {
+
+        return ApiResponse.ok(service.findByRoleId(roleId,page,size));
     }
 
     @GetMapping("/permission/{permissionId}")
-    public List<RolePermissionDTO> findByPermissionId(@PathVariable Long permissionId) {
-        return service.findByPermissionId(permissionId);
+    public ApiResponse<PageResult<RolePermissionDTO>> findByPermissionId(@PathVariable Long permissionId,
+                                                      @RequestParam(defaultValue = "0") int page,
+                                                      @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByPermissionId(permissionId,page,size));
     }
 
     @GetMapping("/{id}")
-    public Optional<RolePermissionDTO> getById(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<RolePermissionDTO> getById(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @DeleteMapping("/{id}")

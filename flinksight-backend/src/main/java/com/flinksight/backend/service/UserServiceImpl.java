@@ -1,24 +1,24 @@
 package com.flinksight.backend.service;
 
-import com.flinksight.backend.domain.Profile;
 import com.flinksight.backend.domain.User;
 import com.flinksight.backend.exception.BusinessException;
-import com.flinksight.backend.mapper.UserRoleStructMapper;
 import com.flinksight.backend.mapper.UserStructMapper;
-import com.flinksight.backend.repository.PermissionRepository;
 import com.flinksight.backend.repository.RolePermissionRepository;
 import com.flinksight.backend.repository.UserRepository;
 import com.flinksight.backend.repository.UserRoleRepository;
 import com.flinksight.backend.security.tenant.TenantRequired;
 import com.flinksight.common.dto.UserDTO;
-import com.flinksight.common.dto.UserRoleDTO;
 import com.flinksight.common.enums.ErrorCode;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.UserService;
 import com.flinksight.common.utils.PasswordUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -44,31 +44,33 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Autowired
     private UserRoleRepository userRoleRepository;
     @Autowired
-    private final UserStructMapper mapper;
+    private final UserStructMapper userStructMapper;
 
     @Override
     public UserDTO createUser(UserDTO userDTO) {
-        User entity = mapper.toEntity(userDTO);
+        User entity = userStructMapper.toEntity(userDTO);
         entity.setIsDeleted(0);
         User saved = repository.save(entity);
-        return mapper.toDTO(saved);
+        return userStructMapper.toDTO(saved);
     }
 
     @Override
     public Optional<UserDTO> getUserById(Long userId) {
-        return repository.findById(userId).map(mapper::toDTO).filter(e -> e.getIsDeleted() != null && e.getIsDeleted() == 0);
+        return repository.findById(userId).map(userStructMapper::toDTO).filter(e -> e.getIsDeleted() != null && e.getIsDeleted() == 0);
     }
 
     @Override
-    public List<UserDTO> getUsersByTenant(Long tenantId, int page, int size) {
-        return mapper.toDTOList(repository.findAllByTenantIdAndIsDeleted(tenantId, 0).stream().skip((long)page*size).limit(size).toList());
+    public PageResult<UserDTO> getUsersByTenant(Long tenantId, int page, int size) {
+        Page<User> result = repository.findAllByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<UserDTO> dtoPage = result.map(userStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public UserDTO updateUser(UserDTO userDTO) {
         // 仅允许修改部分字段
-        Optional<UserDTO> oldOpt = repository.findById(userDTO.getId()).map(mapper::toDTO).filter(e -> e.getIsDeleted() != null && e.getIsDeleted() == 0);
-        User entity = mapper.toEntity(userDTO);
+        Optional<UserDTO> oldOpt = repository.findById(userDTO.getId()).map(userStructMapper::toDTO).filter(e -> e.getIsDeleted() != null && e.getIsDeleted() == 0);
+        User entity = userStructMapper.toEntity(userDTO);
         if(oldOpt.isPresent()) {
             UserDTO ud = oldOpt.get();
             entity.setEmail(ud.getEmail());
@@ -76,7 +78,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             entity.setStatus(ud.getStatus());
             entity.setIsDeleted(0);
             // ...其它字段
-            return mapper.toDTO(repository.save(entity));
+            return userStructMapper.toDTO(repository.save(entity));
         }
         throw new BusinessException(ErrorCode.NOT_FOUND, "用户不存在");
     }
@@ -92,21 +94,21 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      */
     @Override
     public List<String> getAuthorities(Long userId) {
-        Set<Long> roleIds = userRoleRepository.findRoleIdsByUserId(userId);
+        Set<Long> roleIds = userRoleRepository.findRoleIdsByUserIdAndIsDeleted(userId,0);
         Set<String> authorities = new HashSet<>();
         for (Long roleId : roleIds) {
-            authorities.addAll(rolePermissionRepository.findPermissionCodesByRoleId(roleId));
+            authorities.addAll(rolePermissionRepository.findPermissionCodesByRoleIdAndIsDeleted(roleId,0));
         }
         return new ArrayList<>(authorities);
     }
 
     @Override
     public boolean softDelete(Long userId) {
-        Optional<UserDTO> opt = repository.findById(userId).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<UserDTO> opt = repository.findById(userId).map(userStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             UserDTO dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(userStructMapper.toEntity(dto));
             return true;
         }
         return false;

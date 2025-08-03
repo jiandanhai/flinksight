@@ -1,17 +1,18 @@
 package com.flinksight.backend.service;
 
-import com.flinksight.backend.domain.SysParam;
 import com.flinksight.backend.domain.Tag;
-import com.flinksight.backend.mapper.SysParamStructMapper;
 import com.flinksight.backend.mapper.TagStructMapper;
 import com.flinksight.backend.repository.TagRepository;
-import com.flinksight.common.dto.SysParamDTO;
 import com.flinksight.common.dto.TagDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.TagService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import java.util.List;
+
 import java.util.Optional;
 
 @Service
@@ -19,38 +20,42 @@ import java.util.Optional;
 @Transactional
 public class TagServiceImpl implements TagService {
     private final TagRepository repository;
-    private final TagStructMapper mapper;
+    private final TagStructMapper tagStructMapper;
 
     @Override
     public TagDTO createOrUpdate(TagDTO tagDTO) {
-        Tag entity = mapper.toEntity(tagDTO);
+        Tag entity = tagStructMapper.toEntity(tagDTO);
         entity.setIsDeleted(0);
         Tag saved = repository.save(entity);
-        return mapper.toDTO(saved);
+        return tagStructMapper.toDTO(saved);
     }
 
     @Override
     public Optional<TagDTO> getById(Long id) {
-        return repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(id).map(tagStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
-    public List<TagDTO> getAll() {
-        return mapper.toDTOList(repository.findAll().stream().filter(e -> e.getIsDeleted() == 0).toList());
+    public PageResult<TagDTO> getAll(int page, int size) {
+        Page<Tag> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<TagDTO> dtoPage = result.map(tagStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<TagDTO> findByTenantId(Long tenantId) {
-        return mapper.toDTOList(repository.findByTenantIdAndIsDeleted(tenantId, 0));
+    public PageResult<TagDTO> findByTenantId(Long tenantId,int page, int size) {
+        Page<Tag> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<TagDTO> dtoPage = result.map(tagStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<TagDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<TagDTO> opt = repository.findById(id).map(tagStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             TagDTO dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(tagStructMapper.toEntity(dto));
             return true;
         }
         return false;

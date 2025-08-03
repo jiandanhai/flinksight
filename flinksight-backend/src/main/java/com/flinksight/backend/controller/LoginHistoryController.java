@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.LoginHistory;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.LoginHistoryDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.LoginHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 登录历史管理
@@ -19,18 +18,24 @@ public class LoginHistoryController {
     private final LoginHistoryService service;
 
     @PostMapping
-    public LoginHistoryDTO create(@RequestBody LoginHistoryDTO dto) {
-        return service.create(dto);
+    public ApiResponse<LoginHistoryDTO> create(@RequestBody LoginHistoryDTO dto) {
+
+        return ApiResponse.ok(service.create(dto));
     }
 
     @GetMapping("/{id}")
-    public Optional<LoginHistoryDTO> get(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<LoginHistoryDTO> get(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @GetMapping("/user/{userId}")
-    public List<LoginHistoryDTO> findByUserId(@PathVariable Long userId) {
-        return service.findByUserId(userId);
+    public ApiResponse<PageResult<LoginHistoryDTO>> findByUserId(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByUserId(userId,page,size));
     }
 
     @DeleteMapping("/{id}")

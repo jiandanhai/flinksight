@@ -1,11 +1,11 @@
 package com.flinksight.backend.security.tenant;
 
 import com.flinksight.backend.exception.BusinessException;
-import com.flinksight.backend.security.tenant.TenantInterceptor;
 import com.flinksight.common.enums.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.*;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;

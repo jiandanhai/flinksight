@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.common.service.JobPermissionService;
-import com.flinksight.common.dto.JobPermissionDTO;
 import com.flinksight.backend.common.ApiResponse;
+import com.flinksight.common.dto.JobPermissionDTO;
+import com.flinksight.common.model.PageResult;
+import com.flinksight.common.service.JobPermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * 作业权限分配与查询API
@@ -23,9 +22,11 @@ public class JobPermissionController {
      * 查询某作业的所有权限分配记录
      */
     @GetMapping("/list")
-    public ApiResponse<List<JobPermissionDTO>> listJobPermissions(@RequestParam Long jobId) {
-        List<JobPermissionDTO> list = jobPermissionService.listJobPermissions(jobId);
-        return ApiResponse.ok(list);
+    public ApiResponse<PageResult<JobPermissionDTO>> listJobPermissions(
+            @RequestParam Long jobId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(jobPermissionService.listJobPermissions(jobId,page,size));
     }
 
     /**
@@ -59,11 +60,12 @@ public class JobPermissionController {
      * 查询某用户对某作业的权限（Owner/Admin/Viewer等）
      */
     @GetMapping("/user")
-    public ApiResponse<List<JobPermissionDTO>> getUserPermissions(
+    public ApiResponse<PageResult<JobPermissionDTO>> getUserPermissions(
             @RequestParam Long jobId,
-            @RequestParam String userId
+            @RequestParam String userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
     ) {
-        List<JobPermissionDTO> list = jobPermissionService.getUserPermissions(jobId, userId);
-        return ApiResponse.ok(list);
+        return ApiResponse.ok(jobPermissionService.getUserPermissions(jobId,userId,page,size));
     }
 }

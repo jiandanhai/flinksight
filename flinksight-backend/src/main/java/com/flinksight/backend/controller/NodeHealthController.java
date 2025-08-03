@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.NodeHealth;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.NodeHealthDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NodeHealthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 节点健康管理
@@ -19,13 +18,18 @@ public class NodeHealthController {
     private final NodeHealthService service;
 
     @GetMapping("/{id}")
-    public Optional<NodeHealthDTO> get(@PathVariable Long id) {
-        return service.getLatestByNodeId(id);
+    public ApiResponse<NodeHealthDTO> get(@PathVariable Long id) {
+        return service.getLatestByNodeId(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @GetMapping("/node/{nodeId}")
-    public List<NodeHealthDTO> findByNodeId(@PathVariable Long nodeId) {
-        return service.getByNodeId(nodeId);
+    public ApiResponse<PageResult<NodeHealthDTO>> findByNodeId(
+            @PathVariable Long nodeId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.getByNodeId(nodeId,page,size));
     }
 
     @DeleteMapping("/{id}")

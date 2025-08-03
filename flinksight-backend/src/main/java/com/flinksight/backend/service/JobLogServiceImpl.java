@@ -1,20 +1,20 @@
 package com.flinksight.backend.service;
 
-import com.flinksight.backend.domain.JobInstance;
 import com.flinksight.backend.domain.JobLog;
-import com.flinksight.backend.mapper.JobInstanceStructMapper;
 import com.flinksight.backend.mapper.JobLogStructMapper;
 import com.flinksight.backend.repository.JobLogRepository;
 import com.flinksight.backend.security.tenant.TenantRequired;
-import com.flinksight.common.dto.JobInstanceDTO;
 import com.flinksight.common.dto.JobLogDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.JobLogService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -28,38 +28,42 @@ import java.util.Optional;
 public class JobLogServiceImpl implements JobLogService {
 
     private final JobLogRepository repository;
-    private final JobLogStructMapper mapper;
+    private final JobLogStructMapper jobLogStructMapper;
 
     @Override
     public JobLogDTO createJobLog(JobLogDTO jobLogDTO) {
-        JobLog entity = mapper.toEntity(jobLogDTO);
+        JobLog entity = jobLogStructMapper.toEntity(jobLogDTO);
         entity.setIsDeleted(0);
         JobLog saved = repository.save(entity);
-        return mapper.toDTO(saved);
+        return jobLogStructMapper.toDTO(saved);
     }
 
     @Override
     public Optional<JobLogDTO> getJobLogById(Long id) {
-        return repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(id).map(jobLogStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
-    public List<JobLogDTO> getLogsByJob(Long jobId, LocalDateTime start, LocalDateTime end) {
-        return mapper.toDTOList(repository.findByJobIdAndTsBetweenAndIsDeleted(jobId, start, end, 0));
+    public PageResult<JobLogDTO> getLogsByJob(Long jobId, LocalDateTime start, LocalDateTime end,int page, int size) {
+        Page<JobLog> result = repository.findByJobIdAndLogTimeBetweenAndIsDeleted(jobId, start, end,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<JobLogDTO> dtoPage = result.map(jobLogStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<JobLogDTO> getLogsByTenantAndLevel(Long tenantId, String level, LocalDateTime start, LocalDateTime end) {
-        return mapper.toDTOList(repository.findByTenantIdAndLevelAndTsBetweenAndIsDeleted(tenantId, level, start, end, 0));
+    public PageResult<JobLogDTO> getLogsByTenantAndLevel(Long tenantId, String level, LocalDateTime start, LocalDateTime end,int page, int size) {
+        Page<JobLog> result = repository.findByTenantIdAndLevelAndLogTimeBetweenAndIsDeleted(tenantId, level, start, end,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<JobLogDTO> dtoPage = result.map(jobLogStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<JobLogDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<JobLogDTO> opt = repository.findById(id).map(jobLogStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             JobLogDTO dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(jobLogStructMapper.toEntity(dto));
             return true;
         }
         return false;

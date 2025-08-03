@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.Notification;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.NotificationDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 消息通知管理
@@ -19,33 +18,45 @@ public class NotificationController {
     private final NotificationService service;
 
     @PostMapping
-    public NotificationDTO create(@RequestBody NotificationDTO dto) {
-        return service.createOrUpdate(dto);
+    public ApiResponse<NotificationDTO> create(@RequestBody NotificationDTO dto) {
+        return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @GetMapping("/{id}")
-    public Optional<NotificationDTO> get(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<NotificationDTO> get(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @GetMapping
-    public List<NotificationDTO> getAll() {
-        return service.getAll();
+    public ApiResponse<PageResult<NotificationDTO>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.getAll(page,size));
     }
 
+
     @GetMapping("/user/{userId}")
-    public List<NotificationDTO> findByUserId(@PathVariable Long userId) {
-        return service.findByUserId(userId);
+    public ApiResponse<PageResult<NotificationDTO>> findByUserId(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByUserId(userId,page,size));
     }
 
     @GetMapping("/tenant/{tenantId}")
-    public List<NotificationDTO> findByTenantId(@PathVariable Long tenantId) {
-        return service.findByTenantId(tenantId);
+    public ApiResponse<PageResult<NotificationDTO>> findByTenantId(
+            @PathVariable Long tenantId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
     }
 
     @PutMapping
-    public NotificationDTO update(@RequestBody NotificationDTO dto) {
-        return service.createOrUpdate(dto);
+    public ApiResponse<NotificationDTO> update(@RequestBody NotificationDTO dto) {
+
+        return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @DeleteMapping("/{id}")

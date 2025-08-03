@@ -1,9 +1,9 @@
 package com.flinksight.backend.domain;
 
-import lombok.*;
-import jakarta.persistence.*;
-import org.hibernate.annotations.SQLRestriction;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

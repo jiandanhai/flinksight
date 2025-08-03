@@ -1,7 +1,5 @@
 package com.flinksight.backend.service;
 
-import com.flinksight.backend.domain.AuditLog;
-import com.flinksight.backend.domain.Cluster;
 import com.flinksight.backend.domain.ClusterStatusHistory;
 import com.flinksight.backend.mapper.ClusterStatusHistoryStructMapper;
 import com.flinksight.backend.mapper.ClusterStructMapper;
@@ -9,8 +7,12 @@ import com.flinksight.backend.repository.ClusterRepository;
 import com.flinksight.backend.repository.ClusterStatusHistoryRepository;
 import com.flinksight.common.dto.ClusterDTO;
 import com.flinksight.common.dto.ClusterStatusHistoryDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ClusterMonitorService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -23,8 +25,8 @@ public class ClusterMonitorServiceImpl implements ClusterMonitorService {
 
     private final ClusterRepository clusterRepo;
     private final ClusterStatusHistoryRepository statusRepo;
-    private final ClusterStructMapper mapper;
-    private final ClusterStatusHistoryStructMapper cshMapper;
+    private final ClusterStructMapper clusterStructMapper;
+    private final ClusterStatusHistoryStructMapper clusterStatusHistoryStructMapper;
 
     /**
      * 每5分钟采集一次所有集群状态，可用@Scheduled(fixedDelay = 300000)
@@ -32,7 +34,7 @@ public class ClusterMonitorServiceImpl implements ClusterMonitorService {
     @Override
     @Scheduled(fixedDelay = 300000)
     public void collectAllClusterStatus() {
-        List<ClusterDTO> clusters  = mapper.toDTOList(clusterRepo.findByStatusAndIsDeleted(1,0));
+        List<ClusterDTO> clusters  = clusterStructMapper.toDTOList(clusterRepo.findByStatusAndIsDeleted(1,0));
         for (ClusterDTO c : clusters) {
             collectStatus(c);
         }
@@ -51,12 +53,14 @@ public class ClusterMonitorServiceImpl implements ClusterMonitorService {
                 .extendJson("{}")
                 .isDeleted(0)
                 .build();
-        statusRepo.save(cshMapper.toEntity(dto));
+        statusRepo.save(clusterStatusHistoryStructMapper.toEntity(dto));
         return dto;
     }
 
     @Override
-    public List<ClusterStatusHistoryDTO> getHistory(Long clusterId, int limit) {
-        return cshMapper.toDTOList(statusRepo.findTopNByClusterIdAndIsDeletedOrderByCollectTimeDesc(clusterId, 0, limit));
+    public PageResult<ClusterStatusHistoryDTO> getHistory(Long clusterId,int page, int size) {
+        Page<ClusterStatusHistory> result = statusRepo.findByClusterIdAndIsDeletedOrderByCollectTimeDesc(clusterId, 0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<ClusterStatusHistoryDTO> dtoPage = result.map(clusterStatusHistoryStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 }

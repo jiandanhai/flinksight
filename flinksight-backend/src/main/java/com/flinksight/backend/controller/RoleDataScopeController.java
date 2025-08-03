@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.RoleDataScope;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.RoleDataScopeDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.RoleDataScopeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 角色-数据权限分配管理
@@ -19,8 +18,8 @@ public class RoleDataScopeController {
     private final RoleDataScopeService service;
 
     @PostMapping("/assign")
-    public RoleDataScopeDTO assign(@RequestParam Long roleId, @RequestParam Long dataScopeId) {
-        return service.assignDataScopeToRole(roleId, dataScopeId);
+    public ApiResponse<RoleDataScopeDTO> assign(@RequestParam Long roleId, @RequestParam Long dataScopeId) {
+        return ApiResponse.ok(service.assignDataScopeToRole(roleId, dataScopeId));
     }
 
     @PostMapping("/remove")
@@ -29,18 +28,25 @@ public class RoleDataScopeController {
     }
 
     @GetMapping("/role/{roleId}")
-    public List<RoleDataScopeDTO> findByRole(@PathVariable Long roleId) {
-        return service.findByRoleId(roleId);
+    public ApiResponse<PageResult<RoleDataScopeDTO>> findByRole(
+            @PathVariable Long roleId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByRoleId(roleId,page,size));
     }
 
     @GetMapping("/data-scope/{dataScopeId}")
-    public List<RoleDataScopeDTO> findByDataScope(@PathVariable Long dataScopeId) {
-        return service.findByDataScopeId(dataScopeId);
+    public ApiResponse<PageResult<RoleDataScopeDTO>> findByDataScope(@PathVariable Long dataScopeId,
+                                                                    @RequestParam(defaultValue = "0") int page,
+                                                                    @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByDataScopeId(dataScopeId,page,size));
     }
 
     @GetMapping("/{id}")
-    public Optional<RoleDataScopeDTO> getById(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<RoleDataScopeDTO> getById(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @DeleteMapping("/{id}")

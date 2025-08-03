@@ -1,18 +1,19 @@
-package com.flinksight.backend.service.impl;
+package com.flinksight.backend.service;
 
 import com.flinksight.backend.domain.JobPermission;
+import com.flinksight.backend.domain.Permission;
+import com.flinksight.backend.mapper.JobPermissionStructMapper;
 import com.flinksight.backend.repository.JobPermissionRepository;
 import com.flinksight.backend.repository.PermissionRepository;
-import com.flinksight.common.dto.PermissionDTO;
-import com.flinksight.common.service.JobPermissionService;
 import com.flinksight.common.dto.JobPermissionDTO;
-import com.flinksight.backend.domain.Permission;
+import com.flinksight.common.model.PageResult;
+import com.flinksight.common.service.JobPermissionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 作业-权限分配服务实现
@@ -23,6 +24,7 @@ public class JobPermissionServiceImpl implements JobPermissionService {
 
     private final JobPermissionRepository jobPermissionRepository;
     private final PermissionRepository permissionRepository;
+    private final JobPermissionStructMapper jobPermissionStructMapper;
 
     @Override
     @Transactional
@@ -44,9 +46,10 @@ public class JobPermissionServiceImpl implements JobPermissionService {
     }
 
     @Override
-    public List<JobPermissionDTO> listJobPermissions(Long jobId) {
-        List<JobPermission> perms = jobPermissionRepository.findByJobId(jobId);
-        return perms.stream().map(this::toDTO).collect(Collectors.toList());
+    public PageResult<JobPermissionDTO> listJobPermissions(Long jobId,int page, int size) {
+        Page<JobPermission> result = jobPermissionRepository.findByJobIdAndIsDeleted(jobId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<JobPermissionDTO> dtoPage = result.map(jobPermissionStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
@@ -72,16 +75,15 @@ public class JobPermissionServiceImpl implements JobPermissionService {
 
     @Override
     public boolean hasJobPermission(Long jobId, Long userId) {
-        // 可按实际平台“权限ID”配置判断（如owner/admin等权限ID可配置）
-        List<JobPermission> perms = jobPermissionRepository.findByJobIdAndUserId(jobId, String.valueOf(userId));
-        // 示例：只要有一条关联即认为有权限（可根据具体角色/权限进一步细化）
-        return perms != null && !perms.isEmpty();
+        // 可按实际平台“权限ID”配置判断（如owner/admin等权限ID可配置）        // 示例：只要有一条关联即认为有权限（可根据具体角色/权限进一步细化）
+        return jobPermissionRepository.existsByJobIdAndUserIdAndIsDeleted(jobId, String.valueOf(userId),0);
     }
 
     @Override
-    public List<JobPermissionDTO> getUserPermissions(Long jobId, String userId) {
-        List<JobPermission> perms = jobPermissionRepository.findByJobIdAndUserId(jobId, userId);
-        return perms.stream().map(this::toDTO).collect(Collectors.toList());
+    public PageResult<JobPermissionDTO> getUserPermissions(Long jobId, String userId,int page, int size) {
+        Page<JobPermission> result = jobPermissionRepository.findByJobIdAndUserIdAndIsDeleted(jobId,userId,0,PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<JobPermissionDTO> dtoPage = result.map(jobPermissionStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     private JobPermissionDTO toDTO(JobPermission perm) {

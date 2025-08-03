@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.UserRole;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.UserRoleDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.UserRoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 用户角色分配管理
@@ -19,8 +18,8 @@ public class UserRoleController {
     private final UserRoleService service;
 
     @PostMapping("/assign")
-    public UserRoleDTO assign(@RequestParam Long userId, @RequestParam Long roleId, @RequestParam(required = false) Long tenantId) {
-        return service.assignRoleToUser(userId, roleId, tenantId);
+    public ApiResponse<UserRoleDTO> assign(@RequestParam Long userId, @RequestParam Long roleId, @RequestParam(required = false) Long tenantId) {
+        return ApiResponse.ok(service.assignRoleToUser(userId, roleId, tenantId));
     }
 
     @PostMapping("/remove")
@@ -29,23 +28,32 @@ public class UserRoleController {
     }
 
     @GetMapping("/user/{userId}")
-    public List<UserRoleDTO> findRolesByUser(@PathVariable Long userId) {
-        return service.findRolesByUserId(userId);
+    public ApiResponse<PageResult<UserRoleDTO>> findRolesByUser(@PathVariable Long userId,
+                                                               @RequestParam(defaultValue = "0") int page,
+                                                               @RequestParam(defaultValue = "20") int size) {
+
+        return ApiResponse.ok(service.findRolesByUserId(userId,page,size));
     }
 
     @GetMapping("/role/{roleId}")
-    public List<UserRoleDTO> findUsersByRole(@PathVariable Long roleId) {
-        return service.findUsersByRoleId(roleId);
+    public ApiResponse<PageResult<UserRoleDTO>> findUsersByRole(@PathVariable Long roleId,
+                                             @RequestParam(defaultValue = "0") int page,
+                                             @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findUsersByRoleId(roleId,page,size));
     }
 
     @GetMapping("/tenant/{tenantId}")
-    public List<UserRoleDTO> findByTenantId(@PathVariable Long tenantId) {
-        return service.findByTenantId(tenantId);
+    public ApiResponse<PageResult<UserRoleDTO>> findByTenantId(@PathVariable Long tenantId,
+                                            @RequestParam(defaultValue = "0") int page,
+                                            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
     }
 
     @GetMapping("/{id}")
-    public Optional<UserRoleDTO> getById(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<UserRoleDTO> getById(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @DeleteMapping("/{id}")

@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.UserTenant;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.UserTenantDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.UserTenantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 用户-租户关联管理
@@ -19,8 +18,8 @@ public class UserTenantController {
     private final UserTenantService service;
 
     @PostMapping("/assign")
-    public UserTenantDTO assign(@RequestParam Long userId, @RequestParam Long tenantId) {
-        return service.assignTenantToUser(userId, tenantId);
+    public ApiResponse<UserTenantDTO> assign(@RequestParam Long userId, @RequestParam Long tenantId) {
+        return ApiResponse.ok(service.assignTenantToUser(userId, tenantId));
     }
 
     @PostMapping("/remove")
@@ -29,18 +28,24 @@ public class UserTenantController {
     }
 
     @GetMapping("/user/{userId}")
-    public List<UserTenantDTO> findByUserId(@PathVariable Long userId) {
-        return service.findByUserId(userId);
+    public ApiResponse<PageResult<UserTenantDTO>> findByUserId(@PathVariable Long userId,
+                                                              @RequestParam(defaultValue = "0") int page,
+                                                              @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByUserId(userId,page,size));
     }
 
     @GetMapping("/tenant/{tenantId}")
-    public List<UserTenantDTO> findByTenantId(@PathVariable Long tenantId) {
-        return service.findByTenantId(tenantId);
+    public ApiResponse<PageResult<UserTenantDTO>> findByTenantId(@PathVariable Long tenantId,
+                                              @RequestParam(defaultValue = "0") int page,
+                                              @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
     }
 
     @GetMapping("/{id}")
-    public Optional<UserTenantDTO> getById(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<UserTenantDTO> getById(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @DeleteMapping("/{id}")

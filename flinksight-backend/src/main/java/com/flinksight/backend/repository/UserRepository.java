@@ -1,12 +1,12 @@
 package com.flinksight.backend.repository;
 
-import com.flinksight.backend.domain.Ticket;
 import com.flinksight.backend.domain.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
-import java.util.List;
 
 /**
  * 用户表数据访问接口
@@ -30,7 +30,7 @@ public interface UserRepository extends JpaRepository<User, Long>, SoftDeleteRep
      * @param isDeleted 软删除标志
      * @return 用户列表
      */
-    List<User> findAllByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted);
+    Page<User> findAllByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted, Pageable pageable);
 
     /**
      * 根据用户名和租户ID查询用户（用于多租户场景，支持软删除过滤）

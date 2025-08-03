@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.IntegrationConfig;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.IntegrationConfigDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.IntegrationConfigService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 第三方集成配置管理
@@ -19,28 +18,35 @@ public class IntegrationConfigController {
     private final IntegrationConfigService service;
 
     @PostMapping
-    public IntegrationConfigDTO create(@RequestBody IntegrationConfigDTO dto) {
-        return service.createOrUpdate(dto);
+    public ApiResponse<IntegrationConfigDTO> create(@RequestBody IntegrationConfigDTO dto) {
+        return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @GetMapping("/{id}")
-    public Optional<IntegrationConfigDTO> get(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<IntegrationConfigDTO> get(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @GetMapping
-    public List<IntegrationConfigDTO> getAll() {
-        return service.getAll();
+    public ApiResponse<PageResult<IntegrationConfigDTO>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.getAll(page,size));
     }
 
     @GetMapping("/tenant/{tenantId}")
-    public List<IntegrationConfigDTO> findByTenantId(@PathVariable Long tenantId) {
-        return service.findByTenantId(tenantId);
+    public ApiResponse<PageResult<IntegrationConfigDTO>> findByTenantId(
+            @PathVariable Long tenantId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
     }
 
     @PutMapping
-    public IntegrationConfigDTO update(@RequestBody IntegrationConfigDTO dto) {
-        return service.createOrUpdate(dto);
+    public ApiResponse<IntegrationConfigDTO> update(@RequestBody IntegrationConfigDTO dto) {
+        return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @DeleteMapping("/{id}")

@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.TenantResource;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.TenantResourceDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.TenantResourceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 租户-资源分配管理
@@ -19,8 +18,8 @@ public class TenantResourceController {
     private final TenantResourceService service;
 
     @PostMapping("/assign")
-    public TenantResourceDTO assign(@RequestParam Long tenantId, @RequestParam Long resourceId) {
-        return service.assignResourceToTenant(tenantId, resourceId);
+    public ApiResponse<TenantResourceDTO> assign(@RequestParam Long tenantId, @RequestParam Long resourceId) {
+        return ApiResponse.ok(service.assignResourceToTenant(tenantId, resourceId));
     }
 
     @PostMapping("/remove")
@@ -29,18 +28,26 @@ public class TenantResourceController {
     }
 
     @GetMapping("/tenant/{tenantId}")
-    public List<TenantResourceDTO> findByTenant(@PathVariable Long tenantId) {
-        return service.findByTenantId(tenantId);
+    public ApiResponse<PageResult<TenantResourceDTO>> findByTenant(
+            @PathVariable Long tenantId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
     }
 
     @GetMapping("/resource/{resourceId}")
-    public List<TenantResourceDTO> findByResource(@PathVariable Long resourceId) {
-        return service.findByResourceId(resourceId);
+    public ApiResponse<PageResult<TenantResourceDTO>> findByResource(
+            @PathVariable Long resourceId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByResourceId(resourceId,page,size));
     }
 
     @GetMapping("/{id}")
-    public Optional<TenantResourceDTO> getById(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<TenantResourceDTO> getById(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @DeleteMapping("/{id}")

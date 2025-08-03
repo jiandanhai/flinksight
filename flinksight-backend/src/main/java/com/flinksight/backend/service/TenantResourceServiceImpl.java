@@ -1,15 +1,18 @@
 package com.flinksight.backend.service;
 
 import com.flinksight.backend.domain.TenantResource;
-import com.flinksight.backend.mapper.TenantConfigStructMapper;
 import com.flinksight.backend.mapper.TenantResourceStructMapper;
 import com.flinksight.backend.repository.TenantResourceRepository;
-import com.flinksight.common.dto.TenantConfigDTO;
 import com.flinksight.common.dto.TenantResourceDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.TenantResourceService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -18,7 +21,7 @@ import java.util.Optional;
 @Transactional
 public class TenantResourceServiceImpl implements TenantResourceService {
     private final TenantResourceRepository repository;
-    private final TenantResourceStructMapper mapper;
+    private final TenantResourceStructMapper tenantResourceStructMapper;
 
     @Override
     public TenantResourceDTO assignResourceToTenant(Long tenantId, Long resourceId) {
@@ -27,12 +30,12 @@ public class TenantResourceServiceImpl implements TenantResourceService {
             .resourceId(resourceId)
             .isDeleted(0)
             .build();
-        return mapper.toDTO(repository.save(tr));
+        return tenantResourceStructMapper.toDTO(repository.save(tr));
     }
 
     @Override
     public boolean removeResourceFromTenant(Long tenantId, Long resourceId) {
-        List<TenantResource> list = repository.findByTenantIdAndIsDeleted(tenantId, 0);
+        List<TenantResource> list = repository.findByTenantIdAndResourceIdAndIsDeleted(tenantId, resourceId,0);
         for (TenantResource tr : list) {
             if (tr.getResourceId().equals(resourceId)) {
                 tr.setIsDeleted(1);
@@ -44,28 +47,32 @@ public class TenantResourceServiceImpl implements TenantResourceService {
     }
 
     @Override
-    public List<TenantResourceDTO> findByTenantId(Long tenantId) {
-        return mapper.toDTOList(repository.findByTenantIdAndIsDeleted(tenantId, 0));
+    public PageResult<TenantResourceDTO> findByTenantId(Long tenantId,int page, int size) {
+        Page<TenantResource> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<TenantResourceDTO> dtoPage = result.map(tenantResourceStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
 
     }
 
     @Override
-    public List<TenantResourceDTO> findByResourceId(Long resourceId) {
-        return mapper.toDTOList(repository.findByResourceIdAndIsDeleted(resourceId, 0));
+    public PageResult<TenantResourceDTO> findByResourceId(Long resourceId,int page, int size) {
+        Page<TenantResource> result = repository.findByResourceIdAndIsDeleted(resourceId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<TenantResourceDTO> dtoPage = result.map(tenantResourceStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public Optional<TenantResourceDTO> getById(Long id) {
-        return repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(id).map(tenantResourceStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<TenantResourceDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<TenantResourceDTO> opt = repository.findById(id).map(tenantResourceStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             TenantResourceDTO dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(tenantResourceStructMapper.toEntity(dto));
             return true;
         }
         return false;

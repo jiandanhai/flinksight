@@ -1,19 +1,18 @@
 package com.flinksight.backend.service;
 
-import com.flinksight.backend.domain.ApiAccessLog;
 import com.flinksight.backend.domain.ApiKey;
-import com.flinksight.backend.mapper.ApiAccessLogStructMapper;
 import com.flinksight.backend.mapper.ApiKeyStructMapper;
 import com.flinksight.backend.repository.ApiKeyRepository;
-import com.flinksight.common.dto.AlertHistoryDTO;
-import com.flinksight.common.dto.ApiAccessLogDTO;
 import com.flinksight.common.dto.ApiKeyDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ApiKeyService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -21,38 +20,42 @@ import java.util.Optional;
 @Transactional
 public class ApiKeyServiceImpl implements ApiKeyService {
     private final ApiKeyRepository repository;
-    private final ApiKeyStructMapper mapper;
+    private final ApiKeyStructMapper apiKeyStructMapper;
 
     @Override
     public ApiKeyDTO createOrUpdate(ApiKeyDTO apiKeyDTO) {
-        ApiKey entity = mapper.toEntity(apiKeyDTO);
+        ApiKey entity = apiKeyStructMapper.toEntity(apiKeyDTO);
         ApiKey saved = repository.save(entity);
         entity.setIsDeleted(0);
-        return mapper.toDTO(saved);
+        return apiKeyStructMapper.toDTO(saved);
     }
 
     @Override
     public Optional<ApiKeyDTO> getById(Long id) {
-        return repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(id).map(apiKeyStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
-    public List<ApiKeyDTO> findByTenantId(Long tenantId) {
-        return mapper.toDTOList(repository.findByTenantIdAndIsDeleted(tenantId,0));
+    public PageResult<ApiKeyDTO> findByTenantId(Long tenantId,int page, int size) {
+        Page<ApiKey> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<ApiKeyDTO> dtoPage = result.map(apiKeyStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<ApiKeyDTO> getAll() {
-        return mapper.toDTOList(repository.findAll().stream().filter(e -> e.getIsDeleted() == 0).toList());
+    public PageResult<ApiKeyDTO> getAll(int page, int size) {
+        Page<ApiKey> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<ApiKeyDTO> dtoPage = result.map(apiKeyStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<ApiKeyDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<ApiKeyDTO> opt = repository.findById(id).map(apiKeyStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             ApiKeyDTO dto = opt.get();
             dto.setIsDeleted(1);
-            ApiKey entity = mapper.toEntity(dto);
+            ApiKey entity = apiKeyStructMapper.toEntity(dto);
             repository.save(entity);
             return true;
         }

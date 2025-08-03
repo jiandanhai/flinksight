@@ -1,9 +1,10 @@
 package com.flinksight.backend.domain;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLRestriction;
-import jakarta.persistence.*;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -57,9 +58,9 @@ public class JobInstance implements Serializable {
     @Schema(description = "实例唯一标识（幂等/外部traceId）")
     private String instanceCode;
 
-    @Column(name = "status", nullable = false, length = 32)
-    @Schema(description = "运行状态（INIT/RUNNING/FAILED/SUCCESS/KILLED等）")
-    private String status;
+    @Column(name = "status", nullable = false)
+    @Schema(description = "运行状态（0:CREATED/1:RUNNING/2:FAILED/3:STOPPED/4:RESTARTING/5:UNKNOWN等）")
+    private Integer status;
 
     @Column(name = "trigger_type", nullable = false, length = 32)
     @Schema(description = "触发类型（SCHEDULE/MANUAL/RECOVERY/TEST等）")

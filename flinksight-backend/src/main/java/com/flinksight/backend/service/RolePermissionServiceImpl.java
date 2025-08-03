@@ -1,15 +1,18 @@
 package com.flinksight.backend.service;
 
 import com.flinksight.backend.domain.RolePermission;
-import com.flinksight.backend.mapper.RoleMenuStructMapper;
 import com.flinksight.backend.mapper.RolePermissionStructMapper;
 import com.flinksight.backend.repository.RolePermissionRepository;
-import com.flinksight.common.dto.RoleMenuDTO;
 import com.flinksight.common.dto.RolePermissionDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.RolePermissionService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -18,7 +21,7 @@ import java.util.Optional;
 @Transactional
 public class RolePermissionServiceImpl implements RolePermissionService {
     private final RolePermissionRepository repository;
-    private final RolePermissionStructMapper mapper;
+    private final RolePermissionStructMapper rolePermissionStructMapper;
     @Override
     public RolePermissionDTO assignPermissionToRole(Long roleId, Long permissionId) {
         RolePermission rp = RolePermission.builder()
@@ -26,12 +29,12 @@ public class RolePermissionServiceImpl implements RolePermissionService {
             .permissionId(permissionId)
             .isDeleted(0)
             .build();
-        return mapper.toDTO(repository.save(rp));
+        return rolePermissionStructMapper.toDTO(repository.save(rp));
     }
 
     @Override
     public boolean removePermissionFromRole(Long roleId, Long permissionId) {
-        List<RolePermission> list = repository.findByRoleIdAndIsDeleted(roleId, 0);
+        List<RolePermission> list = repository.findByRoleIdAndPermissionIdAndIsDeleted(roleId,permissionId, 0);
         for (RolePermission rp : list) {
             if (rp.getPermissionId().equals(permissionId)) {
                 rp.setIsDeleted(1);
@@ -43,27 +46,31 @@ public class RolePermissionServiceImpl implements RolePermissionService {
     }
 
     @Override
-    public List<RolePermissionDTO> findByRoleId(Long roleId) {
-        return mapper.toDTOList(repository.findByRoleIdAndIsDeleted(roleId, 0));
+    public PageResult<RolePermissionDTO> findByRoleId(Long roleId,int page, int size) {
+        Page<RolePermission> result = repository.findByRoleIdAndIsDeleted(roleId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<RolePermissionDTO> dtoPage = result.map(rolePermissionStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<RolePermissionDTO> findByPermissionId(Long permissionId) {
-        return mapper.toDTOList(repository.findByPermissionIdAndIsDeleted(permissionId, 0));
+    public PageResult<RolePermissionDTO> findByPermissionId(Long permissionId,int page, int size) {
+        Page<RolePermission> result = repository.findByPermissionIdAndIsDeleted(permissionId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<RolePermissionDTO> dtoPage = result.map(rolePermissionStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public Optional<RolePermissionDTO> getById(Long id) {
-        return repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(id).map(rolePermissionStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<RolePermissionDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<RolePermissionDTO> opt = repository.findById(id).map(rolePermissionStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             RolePermissionDTO dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(rolePermissionStructMapper.toEntity(dto));
             return true;
         }
         return false;

@@ -4,11 +4,15 @@ import com.flinksight.backend.domain.AlertHistory;
 import com.flinksight.backend.mapper.AlertHistoryStructMapper;
 import com.flinksight.backend.repository.AlertHistoryRepository;
 import com.flinksight.common.dto.AlertHistoryDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.AlertHistoryService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import java.util.List;
+
 import java.util.Optional;
 
 @Service
@@ -31,13 +35,17 @@ public class AlertHistoryServiceImpl implements AlertHistoryService {
     }
 
     @Override
-    public List<AlertHistoryDTO> findByTenantId(Long tenantId) {
-        return alertHistoryStructMapper.toDTOList(repository.findByTenantIdAndIsDeleted(null,0));
+    public PageResult<AlertHistoryDTO> findByTenantId(Long tenantId,int page, int size) {
+        Page<AlertHistory> result = repository.findByTenantIdAndIsDeleted(tenantId, 0,  PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<AlertHistoryDTO> dtoPage = result.map(alertHistoryStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<AlertHistoryDTO> getAll() {
-        return alertHistoryStructMapper.toDTOList(repository.findAll().stream().filter(e -> e.getIsDeleted() == 0).toList());
+    public PageResult<AlertHistoryDTO> getAll(int page, int size) {
+        Page<AlertHistory> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<AlertHistoryDTO> dtoPage = result.map(alertHistoryStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override

@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.Node;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.NodeDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 节点管理
@@ -19,28 +18,36 @@ public class NodeController {
     private final NodeService service;
 
     @PostMapping
-    public NodeDTO create(@RequestBody NodeDTO dto) {
-        return service.createOrUpdate(dto);
+    public ApiResponse<NodeDTO> create(@RequestBody NodeDTO dto) {
+
+        return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @GetMapping("/{id}")
-    public Optional<NodeDTO> get(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<NodeDTO> get(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @GetMapping
-    public List<NodeDTO> getAll() {
-        return service.getAll();
+    public ApiResponse<PageResult<NodeDTO>> getAll(
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.getAll(page,size));
     }
 
     @GetMapping("/cluster/{clusterId}")
-    public List<NodeDTO> findByClusterId(@PathVariable Long clusterId) {
-        return service.findByClusterId(clusterId);
+    public ApiResponse<PageResult<NodeDTO>> findByClusterId(
+            @PathVariable Long clusterId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByClusterId(clusterId,page,size));
     }
 
     @PutMapping
-    public NodeDTO update(@RequestBody NodeDTO dto) {
-        return service.createOrUpdate(dto);
+    public ApiResponse<NodeDTO> update(@RequestBody NodeDTO dto) {
+        return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @DeleteMapping("/{id}")

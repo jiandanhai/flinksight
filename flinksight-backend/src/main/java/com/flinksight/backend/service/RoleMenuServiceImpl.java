@@ -1,16 +1,18 @@
 package com.flinksight.backend.service;
 
 import com.flinksight.backend.domain.RoleMenu;
-import com.flinksight.backend.mapper.RoleDataScopeStructMapper;
 import com.flinksight.backend.mapper.RoleMenuStructMapper;
 import com.flinksight.backend.repository.RoleMenuRepository;
-import com.flinksight.common.dto.RoleDataScopeDTO;
 import com.flinksight.common.dto.RoleMenuDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.RoleMenuService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -19,7 +21,7 @@ import java.util.Optional;
 @Transactional
 public class RoleMenuServiceImpl implements RoleMenuService {
     private final RoleMenuRepository repository;
-    private final RoleMenuStructMapper mapper;
+    private final RoleMenuStructMapper roleMenuStructMapper;
 
     @Override
     public RoleMenuDTO assignMenuToRole(Long roleId, Long menuId) {
@@ -28,12 +30,12 @@ public class RoleMenuServiceImpl implements RoleMenuService {
             .menuId(menuId)
             .isDeleted(0)
             .build();
-        return mapper.toDTO(repository.save(rm));
+        return roleMenuStructMapper.toDTO(repository.save(rm));
     }
 
     @Override
     public boolean removeMenuFromRole(Long roleId, Long menuId) {
-        List<RoleMenu> list = repository.findByRoleIdAndIsDeleted(roleId, 0);
+        List<RoleMenu> list = repository.findByRoleIdAndMenuIdAndIsDeleted(roleId, menuId,0);
         for (RoleMenu rm : list) {
             if (rm.getMenuId().equals(menuId)) {
                 rm.setIsDeleted(1);
@@ -45,27 +47,31 @@ public class RoleMenuServiceImpl implements RoleMenuService {
     }
 
     @Override
-    public List<RoleMenuDTO> findByRoleId(Long roleId) {
-        return mapper.toDTOList(repository.findByRoleIdAndIsDeleted(roleId, 0));
+    public PageResult<RoleMenuDTO> findByRoleId(Long roleId,int page, int size) {
+        Page<RoleMenu> result = repository.findByRoleIdAndIsDeleted(roleId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<RoleMenuDTO> dtoPage = result.map(roleMenuStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<RoleMenuDTO> findByMenuId(Long menuId) {
-        return mapper.toDTOList(repository.findByMenuIdAndIsDeleted(menuId, 0));
+    public PageResult<RoleMenuDTO> findByMenuId(Long menuId,int page, int size) {
+        Page<RoleMenu> result = repository.findByMenuIdAndIsDeleted(menuId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<RoleMenuDTO> dtoPage = result.map(roleMenuStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public Optional<RoleMenuDTO> getById(Long id) {
-        return repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(id).map(roleMenuStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<RoleMenuDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<RoleMenuDTO> opt = repository.findById(id).map(roleMenuStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             RoleMenuDTO dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(roleMenuStructMapper.toEntity(dto));
             return true;
         }
         return false;

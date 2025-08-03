@@ -1,8 +1,8 @@
 package com.flinksight.backend.mapper;
 
-import org.mapstruct.Mapper;
 import com.flinksight.backend.domain.JobAlertLog;
 import com.flinksight.common.dto.JobAlertLogDTO;
+import org.mapstruct.Mapper;
 
-@Mapper(config = BaseStructMapperConfig.class)
+@Mapper(config = BaseStructMapperConfig.class, componentModel = "spring")
 public interface JobAlertLogStructMapper extends GenericMapper<JobAlertLogDTO, JobAlertLog> {}

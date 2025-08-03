@@ -1,8 +1,8 @@
 package com.flinksight.backend.mapper;
 
-import org.mapstruct.Mapper;
 import com.flinksight.backend.domain.ApiWhitelist;
 import com.flinksight.common.dto.ApiWhitelistDTO;
+import org.mapstruct.Mapper;
 
-@Mapper(config = BaseStructMapperConfig.class)
+@Mapper(config = BaseStructMapperConfig.class, componentModel = "spring")
 public interface ApiWhitelistStructMapper extends GenericMapper<ApiWhitelistDTO, ApiWhitelist> {}

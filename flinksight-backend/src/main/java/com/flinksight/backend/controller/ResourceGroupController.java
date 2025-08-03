@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.ResourceGroup;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.ResourceGroupDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ResourceGroupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 资源分组管理
@@ -19,28 +18,35 @@ public class ResourceGroupController {
     private final ResourceGroupService service;
 
     @PostMapping
-    public ResourceGroupDTO create(@RequestBody ResourceGroupDTO dto) {
-        return service.createOrUpdate(dto);
+    public ApiResponse<ResourceGroupDTO> create(@RequestBody ResourceGroupDTO dto) {
+        return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @GetMapping("/{id}")
-    public Optional<ResourceGroupDTO> get(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<ResourceGroupDTO> get(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @GetMapping
-    public List<ResourceGroupDTO> getAll() {
-        return service.getAll();
+    public ApiResponse<PageResult<ResourceGroupDTO>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.getAll(page,size));
     }
 
     @GetMapping("/tenant/{tenantId}")
-    public List<ResourceGroupDTO> findByTenantId(@PathVariable Long tenantId) {
-        return service.findByTenantId(tenantId);
+    public ApiResponse<PageResult<ResourceGroupDTO>> findByTenantId(
+            @PathVariable Long tenantId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
     }
 
     @PutMapping
-    public ResourceGroupDTO update(@RequestBody ResourceGroupDTO dto) {
-        return service.createOrUpdate(dto);
+    public ApiResponse<ResourceGroupDTO> update(@RequestBody ResourceGroupDTO dto) {
+        return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @DeleteMapping("/{id}")

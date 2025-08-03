@@ -1,11 +1,12 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.MetricDashboard;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.MetricDashboardDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.MetricDashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
+
 import java.util.Optional;
 
 /**
@@ -29,18 +30,23 @@ public class MetricDashboardController {
     }
 
     @GetMapping
-    public List<MetricDashboardDTO> getAll() {
-        return service.getAll();
+    public ApiResponse<PageResult<MetricDashboardDTO>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.getAll(page,size));
     }
 
     @GetMapping("/tenant/{tenantId}")
-    public List<MetricDashboardDTO> findByTenantId(@PathVariable Long tenantId) {
-        return service.findByTenantId(tenantId);
+    public ApiResponse<PageResult<MetricDashboardDTO>> findByTenantId(
+            @PathVariable Long tenantId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
     }
 
     @PutMapping
-    public MetricDashboardDTO update(@RequestBody MetricDashboardDTO dto) {
-        return service.createOrUpdate(dto);
+    public ApiResponse<MetricDashboardDTO> update(@RequestBody MetricDashboardDTO dto) {
+        return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @DeleteMapping("/{id}")

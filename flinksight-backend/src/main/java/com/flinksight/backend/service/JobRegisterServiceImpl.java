@@ -1,13 +1,10 @@
 package com.flinksight.backend.service;
 
 import com.flinksight.backend.domain.JobInfo;
-import com.flinksight.backend.domain.JobMetric;
 import com.flinksight.backend.mapper.JobInfoStructMapper;
-import com.flinksight.backend.mapper.JobMetricStructMapper;
 import com.flinksight.backend.repository.JobInfoRepository;
-import com.flinksight.backend.repository.PermissionRepository;
-import com.flinksight.common.dto.JobRegisterRequestDTO;
 import com.flinksight.common.dto.JobInfoDTO;
+import com.flinksight.common.dto.JobRegisterRequestDTO;
 import com.flinksight.common.service.JobPermissionService;
 import com.flinksight.common.service.JobRegisterService;
 import com.flinksight.common.service.PermissionService;
@@ -29,7 +26,7 @@ public class JobRegisterServiceImpl implements JobRegisterService {
     private final JobInfoRepository jobInfoRepository;
     private final PermissionService permissionService; // 平台权限Service
     private final JobPermissionService jobPermissionService; // 平台jOB权限Service
-    private final JobInfoStructMapper mapper;
+    private final JobInfoStructMapper jobInfoStructMapper;
 
     /**
      * 自动注册（平台幂等、权限联动、租户隔离）
@@ -68,6 +65,6 @@ public class JobRegisterServiceImpl implements JobRegisterService {
         }
 
         // DTO返回
-        return mapper.toDTO(job);
+        return jobInfoStructMapper.toDTO(job);
     }
 }

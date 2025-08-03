@@ -1,15 +1,18 @@
 package com.flinksight.backend.service;
 
 import com.flinksight.backend.domain.UserDepartment;
-import com.flinksight.backend.mapper.UserApiStructMapper;
 import com.flinksight.backend.mapper.UserDepartmentStructMapper;
 import com.flinksight.backend.repository.UserDepartmentRepository;
-import com.flinksight.common.dto.UserApiDTO;
 import com.flinksight.common.dto.UserDepartmentDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.UserDepartmentService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -18,7 +21,7 @@ import java.util.Optional;
 @Transactional
 public class UserDepartmentServiceImpl implements UserDepartmentService {
     private final UserDepartmentRepository repository;
-    private final UserDepartmentStructMapper mapper;
+    private final UserDepartmentStructMapper userDepartmentStructMapper;
 
 
     @Override
@@ -28,12 +31,12 @@ public class UserDepartmentServiceImpl implements UserDepartmentService {
             .departmentId(departmentId)
             .isDeleted(0)
             .build();
-        return mapper.toDTO( repository.save(ud));
+        return userDepartmentStructMapper.toDTO( repository.save(ud));
     }
 
     @Override
     public boolean removeDepartmentFromUser(Long userId, Long departmentId) {
-        List<UserDepartment> list = repository.findByUserIdAndIsDeleted(userId, 0);
+        List<UserDepartment> list = repository.findByUserIdAndDepartmentIdAndIsDeleted(userId, departmentId,0);
         for (UserDepartment ud : list) {
             if (ud.getDepartmentId().equals(departmentId)) {
                 ud.setIsDeleted(1);
@@ -45,27 +48,31 @@ public class UserDepartmentServiceImpl implements UserDepartmentService {
     }
 
     @Override
-    public List<UserDepartmentDTO> findByUserId(Long userId) {
-        return mapper.toDTOList(repository.findByUserIdAndIsDeleted(userId, 0));
+    public PageResult<UserDepartmentDTO> findByUserId(Long userId,int page, int size) {
+        Page<UserDepartment> result = repository.findByUserIdAndIsDeleted(userId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<UserDepartmentDTO> dtoPage = result.map(userDepartmentStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<UserDepartmentDTO> findByDepartmentId(Long departmentId) {
-        return mapper.toDTOList(repository.findByDepartmentIdAndIsDeleted(departmentId, 0));
+    public PageResult<UserDepartmentDTO> findByDepartmentId(Long departmentId,int page, int size) {
+        Page<UserDepartment> result = repository.findByDepartmentIdAndIsDeleted(departmentId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<UserDepartmentDTO> dtoPage = result.map(userDepartmentStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public Optional<UserDepartmentDTO> getById(Long id) {
-        return repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(id).map(userDepartmentStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<UserDepartmentDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<UserDepartmentDTO> opt = repository.findById(id).map(userDepartmentStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             UserDepartmentDTO dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(userDepartmentStructMapper.toEntity(dto));
             return true;
         }
         return false;

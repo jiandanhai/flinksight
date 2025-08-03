@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.RoleMenu;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.RoleMenuDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.RoleMenuService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 角色-菜单分配管理
@@ -19,8 +18,8 @@ public class RoleMenuController {
     private final RoleMenuService service;
 
     @PostMapping("/assign")
-    public RoleMenuDTO assign(@RequestParam Long roleId, @RequestParam Long menuId) {
-        return service.assignMenuToRole(roleId, menuId);
+    public ApiResponse<RoleMenuDTO> assign(@RequestParam Long roleId, @RequestParam Long menuId) {
+        return ApiResponse.ok(service.assignMenuToRole(roleId, menuId));
     }
 
     @PostMapping("/remove")
@@ -29,18 +28,25 @@ public class RoleMenuController {
     }
 
     @GetMapping("/role/{roleId}")
-    public List<RoleMenuDTO> findByRole(@PathVariable Long roleId) {
-        return service.findByRoleId(roleId);
+    public ApiResponse<PageResult<RoleMenuDTO>> findByRole(@PathVariable Long roleId,
+                                                          @RequestParam(defaultValue = "0") int page,
+                                                          @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByRoleId(roleId,page,size));
     }
 
     @GetMapping("/menu/{menuId}")
-    public List<RoleMenuDTO> findByMenu(@PathVariable Long menuId) {
-        return service.findByMenuId(menuId);
+    public ApiResponse<PageResult<RoleMenuDTO>> findByMenu(@PathVariable Long menuId,
+                                        @RequestParam(defaultValue = "0") int page,
+                                        @RequestParam(defaultValue = "20") int size) {
+
+        return ApiResponse.ok(service.findByMenuId(menuId,page,size));
     }
 
     @GetMapping("/{id}")
-    public Optional<RoleMenuDTO> getById(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<RoleMenuDTO> getById(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @DeleteMapping("/{id}")

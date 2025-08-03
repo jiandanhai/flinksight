@@ -1,20 +1,21 @@
 package com.flinksight.backend.service;
 
-import com.flinksight.backend.domain.IntegrationConfig;
-import com.flinksight.backend.domain.JobAlertRule;
 import com.flinksight.backend.domain.JobAlertLog;
-import com.flinksight.backend.mapper.IntegrationConfigStructMapper;
+import com.flinksight.backend.domain.JobAlertRule;
 import com.flinksight.backend.mapper.JobAlertLogStructMapper;
 import com.flinksight.backend.mapper.JobAlertRuleStructMapper;
-import com.flinksight.backend.repository.JobAlertRuleRepository;
 import com.flinksight.backend.repository.JobAlertLogRepository;
+import com.flinksight.backend.repository.JobAlertRuleRepository;
 import com.flinksight.common.dto.JobAlertRuleDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.JobAlertService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,8 +23,8 @@ public class JobAlertServiceImpl implements JobAlertService {
 
     private final JobAlertRuleRepository ruleRepo;
     private final JobAlertLogRepository logRepo;
-    private final JobAlertRuleStructMapper ruleMapper;
-    private final JobAlertLogStructMapper logMapper;
+    private final JobAlertRuleStructMapper jobAlertRuleStructMapper;
+    private final JobAlertLogStructMapper jobAlertLogStructMapper;
 
     @Override
     public void checkAndAlert(JobAlertRuleDTO jobAlertRuleDTO, Long jobId, String jobName, String metricValue) {
@@ -45,15 +46,17 @@ public class JobAlertServiceImpl implements JobAlertService {
     }
 
     @Override
-    public List<JobAlertRuleDTO> getActiveRulesByTenant(Long tenantId) {
-        return ruleMapper.toDTOList(ruleRepo.findByTenantIdAndIsDeleted(tenantId,0));
+    public PageResult<JobAlertRuleDTO> getActiveRulesByTenant(Long tenantId,int page, int size) {
+        Page<JobAlertRule> result = ruleRepo.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<JobAlertRuleDTO> dtoPage = result.map(jobAlertRuleStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public void acknowledgeAlert(Long alertLogId) {
-        logRepo.findById(alertLogId).map(logMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
-        logRepo.findById(alertLogId).map(logMapper::toDTO).filter(e -> e.getIsDeleted() == 0).ifPresent(alertLogDTO -> {
-            JobAlertLog entity = logMapper.toEntity(alertLogDTO);
+        logRepo.findById(alertLogId).map(jobAlertLogStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        logRepo.findById(alertLogId).map(jobAlertLogStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0).ifPresent(alertLogDTO -> {
+            JobAlertLog entity = jobAlertLogStructMapper.toEntity(alertLogDTO);
             entity.setStatus("ACK");
             logRepo.save(entity);
         });

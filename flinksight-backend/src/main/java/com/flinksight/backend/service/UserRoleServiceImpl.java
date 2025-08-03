@@ -1,14 +1,16 @@
 package com.flinksight.backend.service;
 
 import com.flinksight.backend.domain.UserRole;
-import com.flinksight.backend.mapper.UserPostStructMapper;
 import com.flinksight.backend.mapper.UserRoleStructMapper;
 import com.flinksight.backend.repository.UserRoleRepository;
-import com.flinksight.common.dto.UserPostDTO;
 import com.flinksight.common.dto.UserRoleDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.UserRoleService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,7 +22,7 @@ import java.util.Optional;
 @Transactional
 public class UserRoleServiceImpl implements UserRoleService {
     private final UserRoleRepository repository;
-    private final UserRoleStructMapper mapper;
+    private final UserRoleStructMapper userRoleStructMapper;
 
     @Override
     public UserRoleDTO assignRoleToUser(Long userId, Long roleId, Long tenantId) {
@@ -31,12 +33,12 @@ public class UserRoleServiceImpl implements UserRoleService {
             .assignTime(LocalDateTime.now())
             .isDeleted(0)
             .build();
-        return mapper.toDTO( repository.save(userRole));
+        return userRoleStructMapper.toDTO( repository.save(userRole));
     }
 
     @Override
     public boolean removeRoleFromUser(Long userId, Long roleId) {
-        List<UserRole> list = repository.findByUserIdAndIsDeleted(userId, 0);
+        List<UserRole> list = repository.findByUserIdAndRoleIdAndIsDeleted(userId, roleId,0);
         for (UserRole ur : list) {
             if (ur.getRoleId().equals(roleId)) {
                 ur.setIsDeleted(1);
@@ -48,32 +50,38 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
-    public List<UserRoleDTO> findRolesByUserId(Long userId) {
-        return mapper.toDTOList(repository.findByUserIdAndIsDeleted(userId, 0));
+    public PageResult<UserRoleDTO> findRolesByUserId(Long userId,int page, int size) {
+        Page<UserRole> result = repository.findByUserIdAndIsDeleted(userId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<UserRoleDTO> dtoPage = result.map(userRoleStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<UserRoleDTO> findUsersByRoleId(Long roleId) {
-        return mapper.toDTOList(repository.findByRoleIdAndIsDeleted(roleId, 0));
+    public PageResult<UserRoleDTO> findUsersByRoleId(Long roleId,int page, int size) {
+        Page<UserRole> result = repository.findByRoleIdAndIsDeleted(roleId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<UserRoleDTO> dtoPage = result.map(userRoleStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<UserRoleDTO> findByTenantId(Long tenantId) {
-        return mapper.toDTOList(repository.findByTenantIdAndIsDeleted(tenantId, 0));
+    public PageResult<UserRoleDTO> findByTenantId(Long tenantId,int page, int size) {
+        Page<UserRole> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<UserRoleDTO> dtoPage = result.map(userRoleStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public Optional<UserRoleDTO> getById(Long id) {
-        return repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(id).map(userRoleStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<UserRoleDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<UserRoleDTO> opt = repository.findById(id).map(userRoleStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             UserRoleDTO dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(userRoleStructMapper.toEntity(dto));
             return true;
         }
         return false;

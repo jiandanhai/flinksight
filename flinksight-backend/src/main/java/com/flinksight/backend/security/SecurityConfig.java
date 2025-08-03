@@ -2,7 +2,6 @@ package com.flinksight.backend.security;
 
 import com.flinksight.backend.security.jwt.JwtAuthFilter;
 import com.flinksight.backend.service.UserServiceImpl;
-import com.flinksight.common.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -96,7 +95,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /**
+    /*
      * 如需多租户/多前端场景，可配置额外SecurityFilterChain（可选）
      * 如后台管理独立端口、开放接口可做隔离
      */

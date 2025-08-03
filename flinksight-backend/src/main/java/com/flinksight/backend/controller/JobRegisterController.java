@@ -1,11 +1,14 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.common.service.JobRegisterService;
-import com.flinksight.common.dto.JobRegisterRequestDTO;
-import com.flinksight.common.dto.JobInfoDTO;
 import com.flinksight.backend.common.ApiResponse;
+import com.flinksight.common.dto.JobInfoDTO;
+import com.flinksight.common.dto.JobRegisterRequestDTO;
+import com.flinksight.common.service.JobRegisterService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 作业自动注册API

@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.GroupRole;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.GroupRoleDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.GroupRoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 组织-角色分配管理
@@ -19,8 +18,8 @@ public class GroupRoleController {
     private final GroupRoleService service;
 
     @PostMapping("/assign")
-    public GroupRoleDTO assign(@RequestParam Long groupId, @RequestParam Long roleId) {
-        return service.assignRoleToGroup(groupId, roleId);
+    public ApiResponse<GroupRoleDTO> assign(@RequestParam Long groupId, @RequestParam Long roleId) {
+        return ApiResponse.ok(service.assignRoleToGroup(groupId, roleId));
     }
 
     @PostMapping("/remove")
@@ -29,18 +28,26 @@ public class GroupRoleController {
     }
 
     @GetMapping("/group/{groupId}")
-    public List<GroupRoleDTO> findByGroup(@PathVariable Long groupId) {
-        return service.findByGroupId(groupId);
+    public ApiResponse<PageResult<GroupRoleDTO>> findByGroup(
+            @PathVariable Long groupId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByGroupId(groupId,page,size));
     }
 
     @GetMapping("/role/{roleId}")
-    public List<GroupRoleDTO> findByRole(@PathVariable Long roleId) {
-        return service.findByRoleId(roleId);
+    public ApiResponse<PageResult<GroupRoleDTO>> findByRole(
+            @PathVariable Long roleId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByRoleId(roleId,page,size));
     }
 
     @GetMapping("/{id}")
-    public Optional<GroupRoleDTO> getById(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<GroupRoleDTO> getById(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @DeleteMapping("/{id}")

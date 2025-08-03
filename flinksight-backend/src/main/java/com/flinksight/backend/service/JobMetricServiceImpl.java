@@ -5,13 +5,16 @@ import com.flinksight.backend.mapper.JobMetricStructMapper;
 import com.flinksight.backend.repository.JobMetricRepository;
 import com.flinksight.backend.security.tenant.TenantRequired;
 import com.flinksight.common.dto.JobMetricDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.JobMetricService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -25,38 +28,42 @@ import java.util.Optional;
 public class JobMetricServiceImpl implements JobMetricService {
 
     private final JobMetricRepository repository;
-    private final JobMetricStructMapper mapper;
+    private final JobMetricStructMapper jobMetricStructMapper;
 
     @Override
     public JobMetricDTO createMetric(JobMetricDTO metricDTO) {
-        JobMetric entity = mapper.toEntity(metricDTO);
+        JobMetric entity = jobMetricStructMapper.toEntity(metricDTO);
         entity.setIsDeleted(0);
         JobMetric saved = repository.save(entity);
-        return mapper.toDTO(saved);
+        return jobMetricStructMapper.toDTO(saved);
     }
 
     @Override
     public Optional<JobMetricDTO> getMetricById(Long id) {
-        return repository.findById(id).map(mapper::toDTO);
+        return repository.findById(id).map(jobMetricStructMapper::toDTO);
     }
 
     @Override
-    public List<JobMetricDTO> getMetricsByJob(Long jobId, LocalDateTime start, LocalDateTime end) {
-        return mapper.toDTOList(repository.findByJobIdAndTsBetweenAndIsDeleted(jobId, start, end, 0));
+    public PageResult<JobMetricDTO> getMetricsByJob(Long jobId, LocalDateTime start, LocalDateTime end,int page, int size) {
+        Page<JobMetric> result = repository.findByJobIdAndMetricTimeBetweenAndIsDeleted(jobId, start, end,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<JobMetricDTO> dtoPage = result.map(jobMetricStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<JobMetricDTO> getMetricsByTenantAndMetric(Long tenantId, String metricKey, LocalDateTime start, LocalDateTime end) {
-        return mapper.toDTOList(repository.findByTenantIdAndMetricKeyAndTsBetweenAndIsDeleted(tenantId, metricKey, start, end, 0));
+    public PageResult<JobMetricDTO> getMetricsByTenantAndMetric(Long tenantId, String metricKey, LocalDateTime start, LocalDateTime end,int page, int size) {
+        Page<JobMetric> result = repository.findByTenantIdAndMetricKeyAndMetricTimeBetweenAndIsDeleted(tenantId, metricKey, start, end,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<JobMetricDTO> dtoPage = result.map(jobMetricStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<JobMetricDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<JobMetricDTO> opt = repository.findById(id).map(jobMetricStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             JobMetricDTO dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(jobMetricStructMapper.toEntity(dto));
             return true;
         }
         return false;

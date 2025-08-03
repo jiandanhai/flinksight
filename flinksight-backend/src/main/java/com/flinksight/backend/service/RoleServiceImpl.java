@@ -1,19 +1,19 @@
 package com.flinksight.backend.service;
 
-import com.flinksight.backend.domain.Permission;
 import com.flinksight.backend.domain.Role;
-import com.flinksight.backend.mapper.RolePermissionStructMapper;
 import com.flinksight.backend.mapper.RoleStructMapper;
 import com.flinksight.backend.repository.RoleRepository;
 import com.flinksight.backend.security.tenant.TenantRequired;
 import com.flinksight.common.dto.RoleDTO;
-import com.flinksight.common.dto.RolePermissionDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.RoleService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -27,38 +27,40 @@ import java.util.Optional;
 public class RoleServiceImpl implements RoleService  {
 
     private final RoleRepository repository;
-    private final RoleStructMapper mapper;
+    private final RoleStructMapper roleStructMapper;
 
     @Override
     public RoleDTO createRole(RoleDTO roleDTO) {
-        Role entity = mapper.toEntity(roleDTO);
+        Role entity = roleStructMapper.toEntity(roleDTO);
         entity.setIsDeleted(0);
         Role saved = repository.save(entity);
-        return mapper.toDTO(saved);
+        return roleStructMapper.toDTO(saved);
     }
 
     @Override
     public Optional<RoleDTO> getRoleById(Long roleId) {
-        return repository.findById(roleId).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(roleId).map(roleStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
     public RoleDTO getRoleByCode(String code) {
-        return mapper.toDTO(repository.findByCode(code));
+        return roleStructMapper.toDTO(repository.findByCode(code));
     }
 
     @Override
-    public List<RoleDTO> getAllRoles() {
-        return mapper.toDTOList(repository.findAll().stream().filter(e -> e.getIsDeleted() == 0).toList());
+    public PageResult<RoleDTO> getAllRoles(int page, int size) {
+        Page<Role> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<RoleDTO> dtoPage = result.map(roleStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<RoleDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<RoleDTO> opt = repository.findById(id).map(roleStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             RoleDTO dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(roleStructMapper.toEntity(dto));
             return true;
         }
         return false;

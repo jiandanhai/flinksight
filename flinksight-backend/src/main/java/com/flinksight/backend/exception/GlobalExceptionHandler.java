@@ -3,8 +3,8 @@ package com.flinksight.backend.exception;
 import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.backend.security.tenant.TenantException;
 import com.flinksight.common.enums.ErrorCode;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
  * 全局异常处理，统一所有异常返回标准API响应

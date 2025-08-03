@@ -1,12 +1,12 @@
 package com.flinksight.backend.repository;
 
-import com.flinksight.backend.domain.JobLog;
 import com.flinksight.backend.domain.JobMetric;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * 任务指标表数据访问接口
@@ -15,11 +15,11 @@ import java.util.List;
 @Repository
 public interface JobMetricRepository extends JpaRepository<JobMetric, Long>, SoftDeleteRepository<JobMetric, Long>  {
 
-    List<JobMetric> findByJobIdAndTsBetweenAndIsDeleted(Long jobId, LocalDateTime start, LocalDateTime end, Integer isDeleted);
+    Page<JobMetric> findByJobIdAndMetricTimeBetweenAndIsDeleted(Long jobId, LocalDateTime start, LocalDateTime end, Integer isDeleted, Pageable pageable);
 
-    List<JobMetric> findByTenantIdAndMetricKeyAndTsBetweenAndIsDeleted(Long tenantId, String metricKey, LocalDateTime start, LocalDateTime end, Integer isDeleted);
+    Page<JobMetric> findByTenantIdAndMetricKeyAndMetricTimeBetweenAndIsDeleted(Long tenantId, String metricKey, LocalDateTime start, LocalDateTime end, Integer isDeleted, Pageable pageable);
 
-    List<JobMetric> findByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted);
+    Page<JobMetric> findByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted, Pageable pageable);
 
 
 }

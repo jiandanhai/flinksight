@@ -1,7 +1,6 @@
 package com.flinksight.backend.security.tenant;
 
 import com.flinksight.backend.exception.BusinessException;
-import com.flinksight.backend.exception.GlobalExceptionHandler;
 import com.flinksight.common.enums.ErrorCode;
 
 /**

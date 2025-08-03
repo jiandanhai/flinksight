@@ -1,18 +1,18 @@
 package com.flinksight.backend.service;
 
 import com.flinksight.backend.domain.Resource;
-import com.flinksight.backend.domain.ResourceGroup;
-import com.flinksight.backend.mapper.ResourceLabelStructMapper;
 import com.flinksight.backend.mapper.ResourceStructMapper;
 import com.flinksight.backend.repository.ResourceRepository;
 import com.flinksight.common.dto.ResourceDTO;
-import com.flinksight.common.dto.ResourceGroupDTO;
-import com.flinksight.common.dto.ResourceLabelDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ResourceService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import java.util.List;
+
 import java.util.Optional;
 
 @Service
@@ -20,38 +20,42 @@ import java.util.Optional;
 @Transactional
 public class ResourceServiceImpl implements ResourceService {
     private final ResourceRepository repository;
-    private final ResourceStructMapper mapper;
+    private final ResourceStructMapper resourceStructMapper;
 
     @Override
     public ResourceDTO createOrUpdate(ResourceDTO resourceDTO) {
-        Resource entity = mapper.toEntity(resourceDTO);
+        Resource entity = resourceStructMapper.toEntity(resourceDTO);
         entity.setIsDeleted(0);
         Resource saved = repository.save(entity);
-        return mapper.toDTO(saved);
+        return resourceStructMapper.toDTO(saved);
     }
 
     @Override
     public Optional<ResourceDTO> getById(Long id) {
-        return repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(id).map(resourceStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
-    public List<ResourceDTO> getAll() {
-        return mapper.toDTOList(repository.findByTenantIdAndIsDeleted(null, 0));
+    public PageResult<ResourceDTO> getAll(int page, int size) {
+        Page<Resource> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<ResourceDTO> dtoPage = result.map(resourceStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<ResourceDTO> findByTenantId(Long tenantId) {
-        return mapper.toDTOList(repository.findByTenantIdAndIsDeleted(tenantId, 0));
+    public PageResult<ResourceDTO> findByTenantId(Long tenantId,int page, int size) {
+        Page<Resource> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<ResourceDTO> dtoPage = result.map(resourceStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<ResourceDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<ResourceDTO> opt = repository.findById(id).map(resourceStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             ResourceDTO dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(resourceStructMapper.toEntity(dto));
             return true;
         }
         return false;

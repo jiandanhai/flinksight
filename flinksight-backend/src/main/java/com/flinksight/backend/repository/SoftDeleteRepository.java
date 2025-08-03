@@ -1,11 +1,14 @@
 package com.flinksight.backend.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.NoRepositoryBean;
+
 import java.util.List;
 
 /**
  * 通用软删除基类Repository，所有业务Repository都应继承此接口
  */
+@NoRepositoryBean
 public interface SoftDeleteRepository<T, ID> extends JpaRepository<T, ID> {
     // 软删除
     default void softDeleteById(ID id) {

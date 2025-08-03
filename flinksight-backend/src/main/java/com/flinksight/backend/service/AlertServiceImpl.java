@@ -1,21 +1,21 @@
 package com.flinksight.backend.service;
 
 import com.flinksight.backend.domain.Alert;
-import com.flinksight.backend.domain.AlertRule;
 import com.flinksight.backend.exception.BusinessException;
-import com.flinksight.backend.mapper.AlertRuleStructMapper;
 import com.flinksight.backend.mapper.AlertStructMapper;
 import com.flinksight.backend.repository.AlertRepository;
 import com.flinksight.backend.security.tenant.TenantRequired;
 import com.flinksight.common.dto.AlertDTO;
-import com.flinksight.common.dto.AlertRuleDTO;
-import com.flinksight.common.service.AlertService;
 import com.flinksight.common.enums.ErrorCode;
+import com.flinksight.common.model.PageResult;
+import com.flinksight.common.service.AlertService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -29,34 +29,38 @@ import java.util.Optional;
 public class AlertServiceImpl implements AlertService{
 
     private final AlertRepository repository;
-    private final AlertStructMapper mapper;
+    private final AlertStructMapper alertStructMapper;
 
     @Override
     public AlertDTO createAlert(AlertDTO alertDTO) {
-        Alert entity = mapper.toEntity(alertDTO);
+        Alert entity = alertStructMapper.toEntity(alertDTO);
         entity.setIsDeleted(0);
         Alert saved = repository.save(entity);
-        return mapper.toDTO(saved);
+        return alertStructMapper.toDTO(saved);
     }
 
     @Override
     public Optional<AlertDTO> getAlertById(Long id) {
-        return repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(id).map(alertStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
-    public List<AlertDTO> getAlertsByTenantAndStatus(Long tenantId, Integer status) {
-        return mapper.toDTOList(repository.findByTenantIdAndStatusAndIsDeleted(tenantId,status,0));
+    public PageResult<AlertDTO> getAlertsByTenantAndStatus(Long tenantId, Integer status,int page, int size) {
+        Page<Alert> result = repository.findByTenantIdAndStatusAndIsDeleted(tenantId, 1,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<AlertDTO> dtoPage = result.map(alertStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<AlertDTO> getAlertsByJobAndStatus(Long jobId, Integer status) {
-        return mapper.toDTOList(repository.findByJobIdAndStatusAndIsDeleted(jobId,status,0));
+    public PageResult<AlertDTO> getAlertsByJobAndStatus(Long jobId, Integer status,int page, int size) {
+        Page<Alert> result = repository.findByJobIdAndStatusAndIsDeleted(jobId, status,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<AlertDTO> dtoPage = result.map(alertStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public AlertDTO updateAlert(AlertDTO alertDTO) {
-        Optional<AlertDTO> opt = repository.findById(alertDTO.getId()).map(mapper::toDTO);;
+        Optional<AlertDTO> opt = repository.findById(alertDTO.getId()).map(alertStructMapper::toDTO);
         if(opt.isPresent()) {
             AlertDTO a = opt.get();
             a.setLevel(alertDTO.getLevel());
@@ -66,20 +70,20 @@ public class AlertServiceImpl implements AlertService{
             a.setHandlerId(alertDTO.getHandlerId());
             a.setUpdateTime(alertDTO.getUpdateTime());
             // 其它业务字段
-            Alert entity = mapper.toEntity(a);
+            Alert entity = alertStructMapper.toEntity(a);
             Alert saved = repository.save(entity);
-            return mapper.toDTO(saved);
+            return alertStructMapper.toDTO(saved);
         }
         throw new BusinessException(ErrorCode.NOT_FOUND, "报警事件不存在");
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<AlertDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<AlertDTO> opt = repository.findById(id).map(alertStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             AlertDTO dto = opt.get();
             dto.setIsDeleted(1);
-            Alert entity = mapper.toEntity(dto);
+            Alert entity = alertStructMapper.toEntity(dto);
             repository.save(entity);
             return true;
         }

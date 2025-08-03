@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.UserDepartment;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.UserDepartmentDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.UserDepartmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 用户-部门分配管理
@@ -19,8 +18,8 @@ public class UserDepartmentController {
     private final UserDepartmentService service;
 
     @PostMapping("/assign")
-    public UserDepartmentDTO assign(@RequestParam Long userId, @RequestParam Long departmentId) {
-        return service.assignDepartmentToUser(userId, departmentId);
+    public ApiResponse<UserDepartmentDTO> assign(@RequestParam Long userId, @RequestParam Long departmentId) {
+        return ApiResponse.ok(service.assignDepartmentToUser(userId, departmentId));
     }
 
     @PostMapping("/remove")
@@ -29,18 +28,24 @@ public class UserDepartmentController {
     }
 
     @GetMapping("/user/{userId}")
-    public List<UserDepartmentDTO> findByUser(@PathVariable Long userId) {
-        return service.findByUserId(userId);
+    public ApiResponse<PageResult<UserDepartmentDTO>> findByUser(@PathVariable Long userId,
+                                                                @RequestParam(defaultValue = "0") int page,
+                                                                @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByUserId(userId,page,size));
     }
 
     @GetMapping("/department/{departmentId}")
-    public List<UserDepartmentDTO> findByDepartment(@PathVariable Long departmentId) {
-        return service.findByDepartmentId(departmentId);
+    public ApiResponse<PageResult<UserDepartmentDTO>> findByDepartment(@PathVariable Long departmentId,
+                                                    @RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByUserId(departmentId,page,size));
     }
 
     @GetMapping("/{id}")
-    public Optional<UserDepartmentDTO> getById(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<UserDepartmentDTO> getById(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @DeleteMapping("/{id}")

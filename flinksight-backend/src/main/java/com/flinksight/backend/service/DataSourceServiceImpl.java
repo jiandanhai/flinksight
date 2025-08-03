@@ -1,18 +1,18 @@
 package com.flinksight.backend.service;
 
-import com.flinksight.backend.domain.Cluster;
 import com.flinksight.backend.domain.DataSource;
-import com.flinksight.backend.mapper.ClusterStructMapper;
 import com.flinksight.backend.mapper.DataSourceStructMapper;
 import com.flinksight.backend.repository.DataSourceRepository;
-import com.flinksight.common.dto.ApiAccessLogDTO;
-import com.flinksight.common.dto.ClusterDTO;
 import com.flinksight.common.dto.DataSourceDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.DataSourceService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import java.util.List;
+
 import java.util.Optional;
 
 @Service
@@ -20,37 +20,41 @@ import java.util.Optional;
 @Transactional
 public class DataSourceServiceImpl implements DataSourceService {
     private final DataSourceRepository repository;
-    private final DataSourceStructMapper mapper;
+    private final DataSourceStructMapper dataSourceStructMapper;
 
     @Override
     public DataSourceDTO createOrUpdate(DataSourceDTO dataSourceDTO) {
-        DataSource entity = mapper.toEntity(dataSourceDTO);
+        DataSource entity = dataSourceStructMapper.toEntity(dataSourceDTO);
         entity.setIsDeleted(0);
-        return mapper.toDTO(repository.save(entity));
+        return dataSourceStructMapper.toDTO(repository.save(entity));
     }
 
     @Override
     public Optional<DataSourceDTO> getById(Long id) {
-        return repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(id).map(dataSourceStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
-    public List<DataSourceDTO> findByTenantId(Long tenantId) {
-        return mapper.toDTOList(repository.findByTenantIdAndIsDeleted(tenantId,0));
+    public PageResult<DataSourceDTO> findByTenantId(Long tenantId,int page, int size) {
+        Page<DataSource> result = repository.findByTenantIdAndIsDeleted(tenantId, 0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<DataSourceDTO> dtoPage = result.map(dataSourceStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<DataSourceDTO> getAll() {
-        return mapper.toDTOList(repository.findAll().stream().filter(e -> e.getIsDeleted() == 0).toList());
+    public PageResult<DataSourceDTO> getAll(int page, int size) {
+        Page<DataSource> result = repository.findByIsDeleted( 0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<DataSourceDTO> dtoPage = result.map(dataSourceStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<DataSourceDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<DataSourceDTO> opt = repository.findById(id).map(dataSourceStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             DataSourceDTO dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(dataSourceStructMapper.toEntity(dto));
             return true;
         }
         return false;

@@ -1,7 +1,8 @@
 package com.flinksight.backend.repository;
 
-import com.flinksight.backend.domain.Permission;
 import com.flinksight.backend.domain.Role;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -18,4 +19,6 @@ public interface RoleRepository extends JpaRepository<Role, Long>, SoftDeleteRep
      * @return 角色对象
      */
     Role findByCode(String code);
+
+    Page<Role> findByIsDeleted(Integer isDeleted, Pageable pageable);
 }

@@ -1,6 +1,8 @@
 package com.flinksight.backend.repository;
 
 import com.flinksight.backend.domain.NodeHealth;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,7 +18,7 @@ public interface NodeHealthRepository extends JpaRepository<NodeHealth, Long> {
     /**
      * 查找所有某租户下的未删除节点健康记录
      */
-    List<NodeHealth> findByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted);
+    Page<NodeHealth> findByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted, Pageable pageable);
 
     /**
      * 根据节点ID查询最新的健康状态
@@ -26,7 +28,7 @@ public interface NodeHealthRepository extends JpaRepository<NodeHealth, Long> {
     /**
      * 查询某节点所有历史健康记录
      */
-    List<NodeHealth> findByNodeIdAndIsDeleted(Long nodeId, Integer isDeleted);
+    Page<NodeHealth> findByNodeIdAndIsDeleted(Long nodeId, Integer isDeleted, Pageable pageable);
 
     /**
      * 批量根据ID查找未删除的健康记录

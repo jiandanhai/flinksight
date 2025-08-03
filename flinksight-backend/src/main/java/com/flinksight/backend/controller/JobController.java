@@ -1,16 +1,14 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.Job;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.backend.security.tenant.TenantRequired;
 import com.flinksight.common.dto.JobDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.JobService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * 任务管理接口
@@ -26,40 +24,47 @@ public class JobController {
 
     @Operation(summary = "新建任务", description = "Create new job")
     @PostMapping("/create")
-    public ResponseEntity<JobDTO> createJob(@RequestBody JobDTO dto) {
-        return ResponseEntity.ok(jobService.createJob(dto));
+    public ApiResponse<JobDTO> createJob(@RequestBody JobDTO dto) {
+        return ApiResponse.ok(jobService.createJob(dto));
     }
 
     @Operation(summary = "根据ID查询任务", description = "Get job by ID")
     @GetMapping("/{id}")
-    public ResponseEntity<JobDTO> getJobById(@PathVariable Long id) {
+    public ApiResponse<JobDTO> getJobById(@PathVariable Long id) {
         return jobService.getJobById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @Operation(summary = "查询租户下所有任务", description = "Get jobs by tenant")
     @GetMapping("/list")
-    public ResponseEntity<List<JobDTO>> getJobsByTenant(@RequestParam Long tenantId) {
-        return ResponseEntity.ok(jobService.getJobsByTenant(tenantId));
+    public ApiResponse<PageResult<JobDTO>> getJobsByTenant(
+            @RequestParam Long tenantId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(jobService.getJobsByTenant(tenantId,page,size));
     }
 
     @Operation(summary = "查询集群下所有任务", description = "Get jobs by tenant and cluster")
     @GetMapping("/listByCluster")
-    public ResponseEntity<List<JobDTO>> getJobsByTenantAndCluster(@RequestParam Long tenantId, @RequestParam Long clusterId) {
-        return ResponseEntity.ok(jobService.getJobsByTenantAndCluster(tenantId, clusterId));
+    public ApiResponse<PageResult<JobDTO>> getJobsByTenantAndCluster(
+            @RequestParam Long tenantId,
+            @RequestParam Long clusterId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(jobService.getJobsByTenantAndCluster(tenantId,clusterId,page,size));
     }
 
     @Operation(summary = "更新任务信息", description = "Update job info")
     @PutMapping("/update")
-    public ResponseEntity<JobDTO> updateJob(@RequestBody JobDTO dto) {
-        return ResponseEntity.ok(jobService.updateJob(dto));
+    public ApiResponse<JobDTO> updateJob(@RequestBody JobDTO dto) {
+        return ApiResponse.ok(jobService.updateJob(dto));
     }
 
     @Operation(summary = "删除任务（软删）", description = "Soft delete job")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteJob(@PathVariable Long id) {
+    public ApiResponse<Void> deleteJob(@PathVariable Long id) {
         jobService.softDelete(id);
-        return ResponseEntity.ok().build();
+        return ApiResponse.ok(null);
     }
 }

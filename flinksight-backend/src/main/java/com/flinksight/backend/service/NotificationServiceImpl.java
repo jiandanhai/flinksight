@@ -1,18 +1,18 @@
 package com.flinksight.backend.service;
 
-import com.flinksight.backend.domain.Node;
 import com.flinksight.backend.domain.Notification;
-import com.flinksight.backend.mapper.NodeStructMapper;
 import com.flinksight.backend.mapper.NotificationStructMapper;
 import com.flinksight.backend.repository.NotificationRepository;
-import com.flinksight.common.dto.NodeDTO;
-import com.flinksight.common.dto.NodeHealthDTO;
 import com.flinksight.common.dto.NotificationDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NotificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import java.util.List;
+
 import java.util.Optional;
 
 @Service
@@ -20,43 +20,49 @@ import java.util.Optional;
 @Transactional
 public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository repository;
-    private final NotificationStructMapper mapper;
+    private final NotificationStructMapper notificationStructMapper;
 
     @Override
     public NotificationDTO createOrUpdate(NotificationDTO notificationDTO) {
-        Notification entity = mapper.toEntity(notificationDTO);
+        Notification entity = notificationStructMapper.toEntity(notificationDTO);
         entity.setIsDeleted(0);
         Notification saved = repository.save(entity);
-        return mapper.toDTO(saved);
+        return notificationStructMapper.toDTO(saved);
     }
 
     @Override
     public Optional<NotificationDTO> getById(Long id) {
-        return repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(id).map(notificationStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
-    public List<NotificationDTO> getAll() {
-      return mapper.toDTOList(repository.findAll().stream().filter(e -> e.getIsDeleted() == 0).toList());
+    public PageResult<NotificationDTO> getAll(int page, int size) {
+        Page<Notification> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<NotificationDTO> dtoPage = result.map(notificationStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<NotificationDTO> findByUserId(Long userId) {
-        return mapper.toDTOList(repository.findByUserIdAndIsDeleted(userId, 0));
+    public PageResult<NotificationDTO> findByUserId(Long userId,int page, int size) {
+        Page<Notification> result = repository.findByUserIdAndIsDeleted(userId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<NotificationDTO> dtoPage = result.map(notificationStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<NotificationDTO> findByTenantId(Long tenantId) {
-        return mapper.toDTOList(repository.findByTenantIdAndIsDeleted(tenantId, 0));
+    public PageResult<NotificationDTO> findByTenantId(Long tenantId,int page, int size) {
+        Page<Notification> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<NotificationDTO> dtoPage = result.map(notificationStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<NotificationDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<NotificationDTO> opt = repository.findById(id).map(notificationStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             NotificationDTO dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(notificationStructMapper.toEntity(dto));
             return true;
         }
         return false;

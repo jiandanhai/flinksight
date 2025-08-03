@@ -1,17 +1,17 @@
 package com.flinksight.backend.service;
 
-import com.flinksight.backend.domain.OperationTemplate;
 import com.flinksight.backend.domain.Permission;
-import com.flinksight.backend.mapper.OperationTemplateStructMapper;
 import com.flinksight.backend.mapper.PermissionStructMapper;
 import com.flinksight.backend.repository.PermissionRepository;
-import com.flinksight.common.dto.OperationTemplateDTO;
 import com.flinksight.common.dto.PermissionDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.PermissionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -23,29 +23,31 @@ import java.util.Optional;
 public class PermissionServiceImpl implements PermissionService {
 
     private final PermissionRepository repository;
-    private final PermissionStructMapper mapper;
+    private final PermissionStructMapper permissionStructMapper;
 
     @Override
     public PermissionDTO createPermission(PermissionDTO permissionDTO) {
-        Permission entity = mapper.toEntity(permissionDTO);
+        Permission entity = permissionStructMapper.toEntity(permissionDTO);
         entity.setIsDeleted(0);
         Permission saved = repository.save(entity);
-        return mapper.toDTO(saved);
+        return permissionStructMapper.toDTO(saved);
     }
 
     @Override
     public Optional<PermissionDTO> getPermissionById(Long id) {
-        return repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(id).map(permissionStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
     public PermissionDTO  getPermissionByCode(String code) {
-        return mapper.toDTO(repository.findByCode(code));
+        return permissionStructMapper.toDTO(repository.findByCode(code));
     }
 
     @Override
-    public List<PermissionDTO> getAllPermissions() {
-        return mapper.toDTOList(repository.findAll().stream().filter(e -> e.getIsDeleted() == 0).toList());
+    public PageResult<PermissionDTO> getAllPermissions(int page, int size) {
+        Page<Permission> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<PermissionDTO> dtoPage = result.map(permissionStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
@@ -58,18 +60,18 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
-    public boolean userHasPermission(Long userId, String permissionCode) {
+    public boolean userHasPermission(Long userId, String permissionId) {
         // 一般平台级权限直接查用户-权限表，具体可根据实际模型实现
-        return repository.userHasPermission(userId, permissionCode) > 0;
+        return repository.userHasPermission(userId, permissionId) > 0;
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<PermissionDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<PermissionDTO> opt = repository.findById(id).map(permissionStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             PermissionDTO dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(permissionStructMapper.toEntity(dto));
             return true;
         }
         return false;

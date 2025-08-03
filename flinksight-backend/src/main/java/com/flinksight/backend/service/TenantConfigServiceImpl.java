@@ -1,15 +1,16 @@
 package com.flinksight.backend.service;
 
-import com.flinksight.backend.domain.Tag;
 import com.flinksight.backend.domain.TenantConfig;
-import com.flinksight.backend.mapper.TagStructMapper;
 import com.flinksight.backend.mapper.TenantConfigStructMapper;
 import com.flinksight.backend.repository.TenantConfigRepository;
-import com.flinksight.common.dto.TagDTO;
 import com.flinksight.common.dto.TenantConfigDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.TenantConfigService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,41 +23,43 @@ import java.util.Optional;
 public class TenantConfigServiceImpl implements TenantConfigService {
 
     private final TenantConfigRepository repository;
-    private final TenantConfigStructMapper mapper;
+    private final TenantConfigStructMapper tenantConfigStructMapper;
 
     @Override
     public TenantConfigDTO createOrUpdate(TenantConfigDTO tenantConfigDTO) {
-        TenantConfig entity = mapper.toEntity(tenantConfigDTO);
+        TenantConfig entity = tenantConfigStructMapper.toEntity(tenantConfigDTO);
         if (tenantConfigDTO.getId() == null) {
             entity.setCreateTime(LocalDateTime.now());
         }
         entity.setUpdateTime(LocalDateTime.now());
         entity.setIsDeleted(0);
-        return mapper.toDTO(repository.save(entity));
+        return tenantConfigStructMapper.toDTO(repository.save(entity));
     }
 
     @Override
     public Optional<TenantConfigDTO> getById(Long id) {
-        return repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(id).map(tenantConfigStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
     public Optional<TenantConfigDTO> getByTenantIdAndConfigKey(Long tenantId, String configKey) {
-        return repository.findByTenantIdAndConfigKeyAndIsDeleted(tenantId, configKey, 0).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findByTenantIdAndConfigKeyAndIsDeleted(tenantId, configKey, 0).map(tenantConfigStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
-    public List<TenantConfigDTO> listByTenantId(Long tenantId) {
-        return mapper.toDTOList(repository.findByTenantIdAndIsDeleted(tenantId, 0));
+    public PageResult<TenantConfigDTO> listByTenantId(Long tenantId,int page, int size) {
+        Page<TenantConfig> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<TenantConfigDTO> dtoPage = result.map(tenantConfigStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<TenantConfigDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<TenantConfigDTO> opt = repository.findById(id).map(tenantConfigStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             TenantConfigDTO dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(tenantConfigStructMapper.toEntity(dto));
             return true;
         }
         return false;

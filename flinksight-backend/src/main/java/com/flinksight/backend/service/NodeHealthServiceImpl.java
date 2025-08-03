@@ -1,15 +1,16 @@
 package com.flinksight.backend.service;
 
-import com.flinksight.backend.domain.MetricDashboard;
 import com.flinksight.backend.domain.NodeHealth;
-import com.flinksight.backend.mapper.MetricDashboardStructMapper;
 import com.flinksight.backend.mapper.NodeHealthStructMapper;
 import com.flinksight.backend.repository.NodeHealthRepository;
-import com.flinksight.common.dto.MetricDashboardDTO;
 import com.flinksight.common.dto.NodeHealthDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NodeHealthService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,41 +23,45 @@ import java.util.Optional;
 @Transactional
 public class NodeHealthServiceImpl implements NodeHealthService {
     private final NodeHealthRepository repository;
-    private final NodeHealthStructMapper mapper;
+    private final NodeHealthStructMapper nodeHealthStructMapper;
 
     @Override
     public NodeHealthDTO reportHealth(NodeHealthDTO nodeHealthDTO) {
-        NodeHealth entity = mapper.toEntity(nodeHealthDTO);
+        NodeHealth entity = nodeHealthStructMapper.toEntity(nodeHealthDTO);
         if (nodeHealthDTO.getId() == null) {
             entity.setCheckTime(LocalDateTime.now());
         }
         entity.setIsDeleted(0);
         NodeHealth saved = repository.save(entity);
-        return mapper.toDTO(saved);
+        return nodeHealthStructMapper.toDTO(saved);
     }
 
     @Override
     public Optional<NodeHealthDTO> getLatestByNodeId(Long nodeId) {
-        return repository.findTopByNodeIdAndIsDeletedOrderByCheckTimeDesc(nodeId,0).map(mapper::toDTO);
+        return repository.findTopByNodeIdAndIsDeletedOrderByCheckTimeDesc(nodeId,0).map(nodeHealthStructMapper::toDTO);
     }
 
     @Override
-    public List<NodeHealthDTO> getByTenantId(Long tenantId) {
-        return mapper.toDTOList(repository.findByTenantIdAndIsDeleted(tenantId, 0));
+    public PageResult<NodeHealthDTO> getByTenantId(Long tenantId,int page, int size) {
+        Page<NodeHealth> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<NodeHealthDTO> dtoPage = result.map(nodeHealthStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<NodeHealthDTO> getByNodeId(Long nodeId) {
-        return mapper.toDTOList(repository.findByNodeIdAndIsDeleted(nodeId, 0));
+    public PageResult<NodeHealthDTO> getByNodeId(Long nodeId,int page, int size) {
+        Page<NodeHealth> result = repository.findByNodeIdAndIsDeleted(nodeId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<NodeHealthDTO> dtoPage = result.map(nodeHealthStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<NodeHealthDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<NodeHealthDTO> opt = repository.findById(id).map(nodeHealthStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             NodeHealthDTO  dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(nodeHealthStructMapper.toEntity(dto));
             return true;
         }
         return false;
@@ -64,10 +69,10 @@ public class NodeHealthServiceImpl implements NodeHealthService {
 
     @Override
     public boolean batchSoftDelete(List<Long> ids) {
-        List<NodeHealthDTO> list = mapper.toDTOList(repository.findByIdInAndIsDeleted(ids, 0));
+        List<NodeHealthDTO> list = nodeHealthStructMapper.toDTOList(repository.findByIdInAndIsDeleted(ids, 0));
         List<NodeHealth> nhList = new ArrayList<>();
         for (NodeHealthDTO nh : list) {
-            NodeHealth entity = mapper.toEntity(nh);
+            NodeHealth entity = nodeHealthStructMapper.toEntity(nh);
             entity.setIsDeleted(1);
             nhList.add(entity);
         }

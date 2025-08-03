@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.Dict;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.DictDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.DictService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 数据字典管理
@@ -19,23 +18,30 @@ public class DictController {
     private final DictService service;
 
     @PostMapping
-    public DictDTO create(@RequestBody DictDTO dto) {
-        return service.createOrUpdate(dto);
+    public ApiResponse<DictDTO> create(@RequestBody DictDTO dto) {
+
+        return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @GetMapping("/{id}")
-    public Optional<DictDTO> get(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<DictDTO> get(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @GetMapping("/type/{dictType}")
-    public List<DictDTO> findByDictType(@PathVariable String dictType) {
-        return service.findByDictType(dictType);
+    public ApiResponse<PageResult<DictDTO>> findByDictType(
+            @PathVariable String dictType,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByDictType(dictType,page,size));
     }
 
     @PutMapping
-    public DictDTO update(@RequestBody DictDTO dto) {
-        return service.createOrUpdate(dto);
+    public ApiResponse<DictDTO> update(@RequestBody DictDTO dto) {
+
+        return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @DeleteMapping("/{id}")

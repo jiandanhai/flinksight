@@ -1,18 +1,18 @@
 package com.flinksight.backend.service;
 
-import com.flinksight.backend.domain.DataSource;
 import com.flinksight.backend.domain.File;
-import com.flinksight.backend.mapper.DataSourceStructMapper;
 import com.flinksight.backend.mapper.FileStructMapper;
 import com.flinksight.backend.repository.FileRepository;
-import com.flinksight.common.dto.ApiKeyDTO;
-import com.flinksight.common.dto.DataSourceDTO;
 import com.flinksight.common.dto.FileDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.FileService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import java.util.List;
+
 import java.util.Optional;
 
 @Service
@@ -20,37 +20,41 @@ import java.util.Optional;
 @Transactional
 public class FileServiceImpl implements FileService {
     private final FileRepository repository;
-    private final FileStructMapper mapper;
+    private final FileStructMapper fileStructMapper;
 
     @Override
     public FileDTO createOrUpdate(FileDTO fileDTO) {
-        File entity = mapper.toEntity(fileDTO);
+        File entity = fileStructMapper.toEntity(fileDTO);
         entity.setIsDeleted(0);
-        return mapper.toDTO(repository.save(entity));
+        return fileStructMapper.toDTO(repository.save(entity));
     }
 
     @Override
     public Optional<FileDTO> getById(Long id) {
-        return repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(id).map(fileStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
-    public List<FileDTO> findByTenantId(Long tenantId) {
-        return mapper.toDTOList(repository.findByTenantIdAndIsDeleted(tenantId,0));
+    public PageResult<FileDTO> findByTenantId(Long tenantId,int page, int size) {
+        Page<File> result = repository.findByTenantIdAndIsDeleted( tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<FileDTO> dtoPage = result.map(fileStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
-    public List<FileDTO> getAll() {
-        return mapper.toDTOList(repository.findAll().stream().filter(e -> e.getIsDeleted() == 0).toList());
+    public PageResult<FileDTO> getAll(int page, int size) {
+        Page<File> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<FileDTO> dtoPage = result.map(fileStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<FileDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<FileDTO> opt = repository.findById(id).map(fileStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             FileDTO dto = opt.get();
             dto.setIsDeleted(1);
-            repository.save(mapper.toEntity(dto));
+            repository.save(fileStructMapper.toEntity(dto));
             return true;
         }
         return false;

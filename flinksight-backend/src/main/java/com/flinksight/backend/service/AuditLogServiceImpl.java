@@ -1,21 +1,20 @@
 package com.flinksight.backend.service;
 
-import com.flinksight.backend.domain.ApiKey;
-import com.flinksight.backend.domain.ApiWhitelist;
 import com.flinksight.backend.domain.AuditLog;
-import com.flinksight.backend.mapper.ApiWhitelistStructMapper;
 import com.flinksight.backend.mapper.AuditLogStructMapper;
 import com.flinksight.backend.repository.AuditLogRepository;
 import com.flinksight.backend.security.tenant.TenantRequired;
-import com.flinksight.common.dto.ApiKeyDTO;
 import com.flinksight.common.dto.AuditLogDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.AuditLogService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -29,33 +28,35 @@ import java.util.Optional;
 public class AuditLogServiceImpl implements AuditLogService{
 
     private final AuditLogRepository repository;
-    private final AuditLogStructMapper mapper;
+    private final AuditLogStructMapper auditLogStructMapper;
 
     @Override
     public AuditLogDTO createAuditLog(AuditLogDTO auditLogDTO) {
-        AuditLog entity = mapper.toEntity(auditLogDTO);
+        AuditLog entity = auditLogStructMapper.toEntity(auditLogDTO);
         AuditLog saved = repository.save(entity);
         entity.setIsDeleted(0);
-        return mapper.toDTO(saved);
+        return auditLogStructMapper.toDTO(saved);
     }
 
     @Override
     public Optional<AuditLogDTO> getAuditLogById(Long id) {
-        return repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        return repository.findById(id).map(auditLogStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
-    public List<AuditLogDTO> getLogsByTenantAndUser(Long tenantId, Long userId) {
-        return mapper.toDTOList(repository.findByTenantIdAndUserId(tenantId,userId));
+    public PageResult<AuditLogDTO> getLogsByTenantAndUser(Long tenantId, Long userId,int page, int size) {
+        Page<AuditLog> result = repository.findByTenantIdAndUserId(tenantId,userId, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<AuditLogDTO> dtoPage = result.map(auditLogStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override
     public boolean softDelete(Long id) {
-        Optional<AuditLogDTO> opt = repository.findById(id).map(mapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+        Optional<AuditLogDTO> opt = repository.findById(id).map(auditLogStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             AuditLogDTO dto = opt.get();
             dto.setIsDeleted(1);
-            AuditLog entity = mapper.toEntity(dto);
+            AuditLog entity = auditLogStructMapper.toEntity(dto);
             repository.save(entity);
             return true;
         }

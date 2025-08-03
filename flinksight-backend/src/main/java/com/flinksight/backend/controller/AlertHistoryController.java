@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.AlertHistory;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.AlertHistoryDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.AlertHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 报警历史管理
@@ -19,29 +18,37 @@ public class AlertHistoryController {
     private final AlertHistoryService service;
 
     @PostMapping
-    public AlertHistoryDTO create(@RequestBody AlertHistoryDTO dto) {
-        return service.createOrUpdate(dto);
+    public ApiResponse<AlertHistoryDTO> create(@RequestBody AlertHistoryDTO dto) {
+
+        return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @GetMapping("/{id}")
-    public Optional<AlertHistoryDTO> get(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<AlertHistoryDTO> get(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @GetMapping
-    public List<AlertHistoryDTO> getAll() {
-        return service.getAll();
+    public ApiResponse<PageResult<AlertHistoryDTO>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.getAll(page,size));
     }
 
     @GetMapping("/tenant/{tenantId}")
-    public List<AlertHistoryDTO> findByTenantId(@PathVariable Long tenantId) {
-
-        return service.findByTenantId(tenantId);
+    public ApiResponse<PageResult<AlertHistoryDTO>> findByTenantId(
+            @PathVariable Long tenantId ,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.findByTenantId(tenantId, page,size));
     }
 
     @PutMapping
-    public AlertHistoryDTO update(@RequestBody AlertHistoryDTO dto) {
-        return service.createOrUpdate(dto);
+    public ApiResponse<AlertHistoryDTO> update(@RequestBody AlertHistoryDTO dto) {
+
+        return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @DeleteMapping("/{id}")

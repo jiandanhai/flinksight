@@ -1,8 +1,8 @@
 package com.flinksight.backend.repository;
 
-import com.flinksight.backend.domain.AuditLog;
 import com.flinksight.backend.domain.Cluster;
-import com.flinksight.common.dto.ClusterDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,5 +15,5 @@ import java.util.List;
 @Repository
 public interface ClusterRepository extends JpaRepository<Cluster, Long>, SoftDeleteRepository<Cluster, Long> {
     List<Cluster> findByStatusAndIsDeleted(Integer status, Integer isDeleted);
-    List<Cluster> findAllByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted);
+    Page<Cluster> findAllByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted, Pageable pageable);
 }

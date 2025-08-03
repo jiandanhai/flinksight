@@ -54,6 +54,10 @@ public class Permission implements Serializable {
     @Schema(description = "租户ID，多租户隔离")
     private Long tenantId;
 
+    @Column(name = "enabled", nullable = false)
+    @Schema(description = "是否启用/禁用 1=正常 0=禁用")
+    private Integer enabled = 0;
+
     @Column(name = "is_deleted", nullable = false)
     @Schema(description = "软删除标记 0=正常 1=删除")
     private Integer isDeleted = 0;

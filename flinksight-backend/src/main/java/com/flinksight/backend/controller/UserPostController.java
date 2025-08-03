@@ -1,12 +1,11 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.domain.UserPost;
+import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.UserPostDTO;
+import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.UserPostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 用户-岗位分配管理
@@ -19,8 +18,8 @@ public class UserPostController {
     private final UserPostService service;
 
     @PostMapping("/assign")
-    public UserPostDTO assign(@RequestParam Long userId, @RequestParam Long postId) {
-        return service.assignPostToUser(userId, postId);
+    public ApiResponse<UserPostDTO> assign(@RequestParam Long userId, @RequestParam Long postId) {
+        return ApiResponse.ok(service.assignPostToUser(userId, postId));
     }
 
     @PostMapping("/remove")
@@ -29,18 +28,26 @@ public class UserPostController {
     }
 
     @GetMapping("/user/{userId}")
-    public List<UserPostDTO> findByUser(@PathVariable Long userId) {
-        return service.findByUserId(userId);
+    public ApiResponse<PageResult<UserPostDTO>> findByUser(@PathVariable Long userId,
+                                                          @RequestParam(defaultValue = "0") int page,
+                                                          @RequestParam(defaultValue = "20") int size) {
+
+        return ApiResponse.ok(service.findByUserId(userId,page,size));
     }
 
     @GetMapping("/post/{postId}")
-    public List<UserPostDTO> findByPost(@PathVariable Long postId) {
-        return service.findByPostId(postId);
+    public ApiResponse<PageResult<UserPostDTO>> findByPost(@PathVariable Long postId,
+                                        @RequestParam(defaultValue = "0") int page,
+                                        @RequestParam(defaultValue = "20") int size) {
+
+        return ApiResponse.ok(service.findByPostId(postId,page,size));
     }
 
     @GetMapping("/{id}")
-    public Optional<UserPostDTO> getById(@PathVariable Long id) {
-        return service.getById(id);
+    public ApiResponse<UserPostDTO> getById(@PathVariable Long id) {
+        return service.getById(id)
+                .map(ApiResponse::ok)
+                .orElse(ApiResponse.ok(null));
     }
 
     @DeleteMapping("/{id}")

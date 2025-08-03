@@ -1,7 +1,6 @@
 // GenericMapper.java
 package com.flinksight.backend.mapper;
 
-import org.mapstruct.Mapper;
 import java.util.List;
 
 /**
