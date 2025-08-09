@@ -10,8 +10,13 @@ import java.util.Optional;
  * AlertRule Service
  */
 public interface AlertRuleService  extends SoftDeleteService<AlertRuleDTO, Long>{
-    AlertRuleDTO createRule(AlertRuleDTO rule);
-    Optional<AlertRuleDTO> getRuleById(Long id);
-    PageResult<AlertRuleDTO> getRulesByTenant(Long tenantId,int page, int size);
-    AlertRuleDTO updateRule(AlertRuleDTO rule);
+    AlertRuleDTO createAlertRule(AlertRuleDTO rule);
+    Optional<AlertRuleDTO> getAlertRuleById(Long id);
+    PageResult<AlertRuleDTO> getAlertRulesByTenant(Long tenantId, int page, int size);
+    /**
+     * 按租户与集群查询
+     */
+    PageResult<AlertRuleDTO> listByTenantAndCluster(Long tenantId, Long clusterId, int page, int size);
+
+    AlertRuleDTO updateAlertRule(AlertRuleDTO rule);
 }

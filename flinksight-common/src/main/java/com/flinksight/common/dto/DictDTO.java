@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * 数据字典DTO
  */
@@ -14,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "数据字典DTO")
-public class DictDTO {
+public class DictDTO  implements Serializable {
     private Long id;
     private String dictType;
     private String dictKey;

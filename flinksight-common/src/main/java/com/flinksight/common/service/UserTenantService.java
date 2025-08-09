@@ -11,4 +11,5 @@ public interface UserTenantService extends SoftDeleteService<UserTenantDTO, Long
     PageResult<UserTenantDTO> findByUserId(Long userId,int page, int size);
     PageResult<UserTenantDTO> findByTenantId(Long tenantId,int page, int size);
     Optional<UserTenantDTO> getById(Long id);
+    PageResult<UserTenantDTO> findByUserAndTenant(Long userId, Long tenantId,int page, int siz);
 }

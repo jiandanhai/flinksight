@@ -13,6 +13,18 @@ import java.util.Optional;
 public interface UserService extends SoftDeleteService<UserDTO, Long>  {
 
     /**
+     * 获取当前用户
+     * @return
+     */
+    UserDTO getCurrentUserProfile();
+
+    Optional<UserDTO> findByAccount(String account);
+
+    UserDTO register(UserDTO user);
+
+    void updateProfile(UserDTO user);
+
+    /**
      * 新建用户
      * @param user 用户实体
      * @return 保存后的用户
@@ -54,7 +66,8 @@ public interface UserService extends SoftDeleteService<UserDTO, Long>  {
     /**
      * 获取用户所有权限（权限码/角色码）
      * @param userId 用户ID
+     * @param tenantId 租户ID
      * @return 权限码集合
      */
-    List<String> getAuthorities(Long userId);
+    List<String> getAuthorities(Long userId,Long tenantId);
 }

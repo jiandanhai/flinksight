@@ -1,13 +1,22 @@
 package com.flinksight.common.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
 /**
  * 告警规则配置对象（根据实际配置项增删字段）
  */
+
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Schema(description = "告警规则配置DTO")
 public class AlarmRuleConfig implements Serializable {
     private Long id;
     private String ruleName;

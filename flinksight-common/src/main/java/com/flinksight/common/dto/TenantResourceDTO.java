@@ -6,12 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "租户-资源关联DTO")
-public class TenantResourceDTO {
+public class TenantResourceDTO  implements Serializable {
     private Long id;
     private Long tenantId;
     private Long resourceId;

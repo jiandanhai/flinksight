@@ -15,4 +15,5 @@ public interface TenantService  extends SoftDeleteService<TenantDTO, Long> {
     Optional<TenantDTO> getTenantByCode(String code);
     PageResult<TenantDTO> getAllTenants(int page, int size);
     TenantDTO updateTenant(TenantDTO tenant);
+
 }

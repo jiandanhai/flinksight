@@ -6,12 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "用户-API权限关联DTO")
-public class UserApiDTO {
+public class UserApiDTO  implements Serializable {
     private Long id;
     private Long userId;
     private Long apiId;

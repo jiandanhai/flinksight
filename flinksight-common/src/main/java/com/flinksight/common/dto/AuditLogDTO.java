@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -17,7 +18,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "操作审计日志DTO")
-public class AuditLogDTO {
+public class AuditLogDTO  implements Serializable {
 
     @Schema(description = "日志主键ID")
     private Long id;
@@ -68,4 +69,17 @@ public class AuditLogDTO {
 
     @Schema(description = "是否删除 0正常 1删除")
     private Integer isDeleted;
+
+    /**
+     * 租户名称（扩展字段，非DB字段）
+     * 通过租户表（tenant）联表查询，后端接口聚合时赋值
+     * 便于前端直接展示，无需多次请求
+     */
+    private String tenantName;
+
+    /**
+     * 操作用户名（扩展字段，非DB字段）
+     * 通过用户表联表查出，用于展示
+     */
+    private String userName;
 }

@@ -12,6 +12,15 @@ import java.util.Optional;
 public interface RoleService extends SoftDeleteService<RoleDTO, Long> {
     RoleDTO createRole(RoleDTO role);
     Optional<RoleDTO> getRoleById(Long roleId);
-    RoleDTO getRoleByCode(String code);
+    Optional<RoleDTO> getRoleByCode(String code);
     PageResult<RoleDTO> getAllRoles(int page, int size);
+    /**
+     * 编辑角色
+     */
+    RoleDTO update(RoleDTO dto);
+    /**
+     * 分页条件查询
+     */
+    PageResult<RoleDTO> pageList(String name, int page, int size);
+
 }

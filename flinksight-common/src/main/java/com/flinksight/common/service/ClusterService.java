@@ -13,4 +13,5 @@ public interface ClusterService extends SoftDeleteService<ClusterDTO, Long>  {
     ClusterDTO createOrUpdate(ClusterDTO clusterDTO);
     Optional<ClusterDTO> getClusterById(Long clusterId);
     PageResult<ClusterDTO> getClustersByTenant(Long tenantId,int page, int size);
+    PageResult<ClusterDTO> getAll(int page, int size);
 }

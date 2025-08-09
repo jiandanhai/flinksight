@@ -12,6 +12,7 @@ import java.util.Optional;
 public interface JobService extends SoftDeleteService<JobDTO, Long>   {
     JobDTO createJob(JobDTO job);
     Optional<JobDTO> getJobById(Long jobId);
+    PageResult<JobDTO> getAll(int page, int size);
     PageResult<JobDTO> getJobsByTenant(Long tenantId,int page, int size);
     PageResult<JobDTO> getJobsByTenantAndCluster(Long tenantId, Long clusterId,int page, int size);
     JobDTO updateJob(JobDTO job);

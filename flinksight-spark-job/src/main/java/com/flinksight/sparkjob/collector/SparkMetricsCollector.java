@@ -1,7 +1,7 @@
 package com.flinksight.sparkjob.collector;
 
 import com.flinksight.common.dto.JobMetricsEventDTO;
-import com.flinksight.common.tenant.TenantContext;
+import com.flinksight.common.tenant.TenantContextHolder;
 import com.flinksight.common.utils.TraceUtil;
 import com.flinksight.sparkjob.metrics.MetricsReporter;
 import org.apache.spark.scheduler.SparkListener;
@@ -26,7 +26,7 @@ public class SparkMetricsCollector extends SparkListener {
 
     @Override
     public void onJobStart(SparkListenerJobStart jobStart) {
-        TenantContext.setTenantId(tenantId);
+        TenantContextHolder.setTenantId(tenantId);
         JobMetricsEventDTO event = JobMetricsEventDTO.builder()
                 .jobName(jobName)
                 .tenantId(tenantId)
@@ -40,7 +40,7 @@ public class SparkMetricsCollector extends SparkListener {
 
     @Override
     public void onJobEnd(SparkListenerJobEnd jobEnd) {
-        TenantContext.setTenantId(tenantId);
+        TenantContextHolder.setTenantId(tenantId);
         JobMetricsEventDTO event = JobMetricsEventDTO.builder()
                 .jobName(jobName)
                 .tenantId(tenantId)

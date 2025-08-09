@@ -6,12 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "标签DTO")
-public class TagDTO {
+public class TagDTO  implements Serializable {
     @Schema(description = "主键")
     private Long id;
 

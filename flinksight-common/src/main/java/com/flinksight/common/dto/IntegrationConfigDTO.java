@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "第三方集成配置DTO")
-public class IntegrationConfigDTO {
+public class IntegrationConfigDTO  implements Serializable {
     private Long id;
     private String name;
     private String type;

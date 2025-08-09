@@ -19,4 +19,11 @@ public class PageResult<T> {
         this.size = pageData.getSize();
         this.data = pageData.getContent();
     }
+    // 增加此构造方法！
+    public PageResult(List<T> data, long total, int page, int size) {
+        this.data = data;
+        this.total = total;
+        this.page = page;
+        this.size = size;
+    }
 }

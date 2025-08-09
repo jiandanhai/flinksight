@@ -3,6 +3,7 @@ package com.flinksight.common.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @Schema(description = "API访问日志DTO")
-public class ApiAccessLogDTO {
+public class ApiAccessLogDTO  implements Serializable {
     private Long id;
     private String url;
     private String httpMethod;

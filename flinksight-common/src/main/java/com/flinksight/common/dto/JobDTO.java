@@ -18,7 +18,7 @@ public class JobDTO implements Serializable {
     private Long clusterId;
     private String name;
     private String type; // streaming/batch
-    private String status;
+    private Integer status;
     private Long ownerId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;

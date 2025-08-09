@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "标签登录历史DTO")
-public class LabelLoginHistoryDTO {
+public class LabelLoginHistoryDTO  implements Serializable {
 
     @Schema(description = "主键ID")
     private Long id;

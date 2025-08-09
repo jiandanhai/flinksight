@@ -6,12 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "角色-数据权限范围关联DTO")
-public class RoleDataScopeDTO {
+public class RoleDataScopeDTO  implements Serializable {
     private Long id;
     private Long roleId;
     private Long dataScopeId;

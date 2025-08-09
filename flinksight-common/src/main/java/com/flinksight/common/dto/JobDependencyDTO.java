@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * 作业依赖DTO
  */
@@ -14,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "作业依赖DTO")
-public class JobDependencyDTO {
+public class JobDependencyDTO  implements Serializable {
 
     @Schema(description = "主键ID")
     private Long id;

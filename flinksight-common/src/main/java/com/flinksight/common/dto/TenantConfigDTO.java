@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "租户配置DTO")
-public class TenantConfigDTO {
+public class TenantConfigDTO  implements Serializable {
     @Schema(description = "主键")
     private Long id;
 

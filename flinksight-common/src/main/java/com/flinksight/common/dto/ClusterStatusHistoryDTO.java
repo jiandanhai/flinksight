@@ -6,6 +6,7 @@
     import lombok.Data;
     import lombok.NoArgsConstructor;
 
+    import java.io.Serializable;
     import java.time.LocalDateTime;
 
 /**
@@ -16,7 +17,7 @@
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClusterStatusHistoryDTO {
+public class ClusterStatusHistoryDTO  implements Serializable {
 
     /** 主键ID */
     private Long id;

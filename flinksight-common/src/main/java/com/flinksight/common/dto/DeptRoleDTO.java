@@ -6,12 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "部门-角色关联DTO")
-public class DeptRoleDTO {
+public class DeptRoleDTO  implements Serializable {
     private Long id;
     private Long deptId;
     private Long roleId;

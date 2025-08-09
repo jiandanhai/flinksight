@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * 标签DTO
  */
@@ -14,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "标签DTO")
-public class LabelDTO {
+public class LabelDTO  implements Serializable {
     private Long id;
     private String name;
     private String color;

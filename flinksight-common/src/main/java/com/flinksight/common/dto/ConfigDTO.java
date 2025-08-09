@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * 系统配置DTO
  */
@@ -14,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "系统配置DTO")
-public class ConfigDTO {
+public class ConfigDTO  implements Serializable {
 
     @Schema(description = "主键ID")
     private Long id;

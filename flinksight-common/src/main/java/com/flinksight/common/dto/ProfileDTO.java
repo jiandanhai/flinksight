@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "用户扩展档案DTO")
-public class ProfileDTO {
+public class ProfileDTO  implements Serializable {
     private Long id;
     private Long userId;
     private String avatar;
