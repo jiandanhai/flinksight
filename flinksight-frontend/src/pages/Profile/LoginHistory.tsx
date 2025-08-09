@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { getLoginLogs } from '../../api/profile';
-import type { LoginLog } from '../../types/profile';
-import { Table } from 'antd';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {LoginLogDTO} from '../../api/gen/data-contracts.ts';
+import {Table} from 'antd';
 
 /**
  * 登录日志/安全日志
  */
 const LoginHistory: React.FC = () => {
-  const [logs, setLogs] = useState<LoginLog[]>([]);
+  const [logs, setLogs] = useState<LoginLogDTO[]>([]);
   useEffect(() => {
-    getLoginLogs().then(res => setLogs(res.data || []));
+    api.getLoginLogs().then(res => setLogs(res.data || []));
   }, []);
   return (
     <Table<LoginLog>

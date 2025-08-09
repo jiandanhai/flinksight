@@ -2,10 +2,11 @@
  * @file 新建/编辑租户弹窗
  * @desc 支持租户基础信息、负责人、状态、表单校验
  */
-import React, { useEffect } from 'react';
-import { Modal, Form, Input, Switch, message } from 'antd';
-import { createTenant, updateTenant, getTenantDetail } from '../../api/tenant';
-import type { Tenant, TenantCreateReq, TenantUpdateReq } from '../../types/tenant';
+import React, {useEffect} from 'react';
+import {Form, Input, message, Modal, Switch} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {TenantDTO} from '../../api/gen/data-contracts.ts';
 
 interface Props {
   id?: number | null;
@@ -19,7 +20,7 @@ const EditTenantModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
 
   useEffect(() => {
     if (id) {
-      getTenantDetail(id).then(res => form.setFieldsValue(res.data));
+      api.getTenant(id).then(res => form.setFieldsValue(res.data));
     } else {
       form.resetFields();
     }
@@ -28,10 +29,10 @@ const EditTenantModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
   const handleSubmit = async () => {
     const values = await form.validateFields();
     if (id) {
-      await updateTenant(id, values as TenantUpdateReq);
+      await api.updateTenant(id, values as TenantDTO);
       message.success('编辑成功');
     } else {
-      await createTenant(values as TenantCreateReq);
+      await api.createTenant(values as TenantDTO);
       message.success('新建成功');
     }
     onOk();

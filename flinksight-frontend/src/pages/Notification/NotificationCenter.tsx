@@ -3,9 +3,10 @@
  * @desc 支持平台推送的告警、运营、系统消息查看和批量操作
  */
 import React, { useEffect, useState } from 'react';
-import { Table, Badge, Button, Modal, message } from 'antd';
-import http from '@/api/http';
+import { Badge, Button, message, Modal, Table } from 'antd';
+import { Api } from '../../api/gen/api.ts';
 
+// 建议用后端 openapi 自动生成的 NotificationDTO 类型
 interface Notification {
   id: number;
   title: string;
@@ -15,21 +16,25 @@ interface Notification {
   createTime: string;
 }
 
+const api = new Api();
+
 const NotificationCenter: React.FC = () => {
   const [list, setList] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // 获取通知列表
   const fetch = async () => {
     setLoading(true);
-    const res = await http.get('/notifications');
+    const res = await api.notificationControllerList();
     setList(res.data || []);
     setLoading(false);
   };
+
   useEffect(() => { fetch(); }, []);
 
   // 批量标记已读
   const markRead = async (ids: number[]) => {
-    await http.post('/notifications/read', { ids });
+    await api.notificationControllerMarkRead({ ids });
     message.success('标记为已读');
     fetch();
   };
@@ -39,7 +44,7 @@ const NotificationCenter: React.FC = () => {
     Modal.confirm({
       title: '确认删除？',
       onOk: async () => {
-        await http.delete('/notifications', { data: { ids } });
+        await api.notificationControllerDelete({ ids });
         message.success('删除成功');
         fetch();
       }
@@ -57,14 +62,22 @@ const NotificationCenter: React.FC = () => {
         loading={loading}
         dataSource={list}
         columns={[
-          { title: '类型', dataIndex: 'type', render: v =>
-            v === 'ALERT' ? <Badge status="error" text="报警" /> :
-            v === 'SYSTEM' ? <Badge status="processing" text="系统" /> :
-            <Badge status="success" text="运营" /> },
+          {
+            title: '类型',
+            dataIndex: 'type',
+            render: v =>
+              v === 'ALERT' ? <Badge status="error" text="报警" /> :
+                v === 'SYSTEM' ? <Badge status="processing" text="系统" /> :
+                  <Badge status="success" text="运营" />
+          },
           { title: '标题', dataIndex: 'title' },
           { title: '内容', dataIndex: 'content', ellipsis: true },
           { title: '时间', dataIndex: 'createTime' },
-          { title: '状态', dataIndex: 'status', render: v => v === 0 ? <Badge color="red" text="未读" /> : <span>已读</span> },
+          {
+            title: '状态',
+            dataIndex: 'status',
+            render: v => v === 0 ? <Badge color="red" text="未读" /> : <span>已读</span>
+          },
           {
             title: '操作',
             render: (_, record) => (
@@ -80,4 +93,5 @@ const NotificationCenter: React.FC = () => {
     </div>
   );
 };
+
 export default NotificationCenter;

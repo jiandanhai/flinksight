@@ -2,10 +2,11 @@
  * @file 报警规则新建/编辑弹窗
  * @desc 支持规则新增、编辑，字段校验、权限、错误处理、API/type全自动联动
  */
-import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select, Switch, message } from 'antd';
-import { createAlertRule, updateAlertRule, getAlertRuleDetail } from '../../api/alert';
-import type { AlertRule, AlertRuleCreateReq, AlertRuleUpdateReq } from '../../types/alert';
+import React, {useEffect} from 'react';
+import {Form, Input, message, Modal, Select, Switch} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {AlertRuleDTO} from '../../api/gen/data-contracts.ts';
 
 const { Option } = Select;
 
@@ -28,7 +29,7 @@ const EditRuleModal: React.FC<Props> = ({ alertId, ruleId, onOk, onCancel }) => 
 
   useEffect(() => {
     if (ruleId) {
-      getAlertRuleDetail(ruleId).then(res => {
+      api.getAlertRulesByRule(ruleId).then(res => {
         form.setFieldsValue(res.data);
       });
     } else {
@@ -39,10 +40,10 @@ const EditRuleModal: React.FC<Props> = ({ alertId, ruleId, onOk, onCancel }) => 
   const handleSubmit = async () => {
     const values = await form.validateFields();
     if (ruleId) {
-      await updateAlertRule(ruleId, values as AlertRuleUpdateReq);
+      await api.updateAlertRule(ruleId, values as AlertRuleDTO);
       message.success('编辑成功');
     } else {
-      await createAlertRule({ ...values, alertId } as AlertRuleCreateReq);
+      await api.createAlertRule({ ...values, alertId } as AlertRuleDTO);
       message.success('新建成功');
     }
     onOk();

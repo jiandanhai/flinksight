@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { forgotPassword } from '../../api/auth';
-import type { ForgotPwdReq } from '../../types/auth';
+import React, {useState} from 'react';
+import { api } from 'src/api/gen/client';
+
 
 /**
  * 找回密码页面
@@ -16,7 +16,7 @@ const ForgotPwdPage: React.FC = () => {
     setLoading(true);
     setMsg('');
     try {
-      await forgotPassword({ email });
+      await api.forgotPassword({ email });
       setMsg('已发送重置邮件，请查收。');
     } catch (e: any) {
       setMsg(e?.message || '发送失败');

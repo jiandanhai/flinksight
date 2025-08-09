@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { createMetric, updateMetric, getMetricDetail } from '../../api/metric';
-import type { Metric, MetricCreateReq, MetricUpdateReq } from '../../types/metric';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {MetricDashboardDTO} from '../../api/gen/data-contracts.ts';
 
 interface Props {
   id: number | null;
@@ -12,7 +13,7 @@ interface Props {
  * 新建/编辑指标弹窗
  */
 const EditMetricModal: React.FC<Props> = ({ id, onClose, onOk }) => {
-  const [form, setForm] = useState<MetricCreateReq | MetricUpdateReq>({
+  const [form, setForm] = useState<MetricDashboardDTO | MetricDashboardDTO>({
     name: '', code: '', desc: '', type: '', unit: '', tags: ''
   });
   const [loading, setLoading] = useState(false);
@@ -20,7 +21,7 @@ const EditMetricModal: React.FC<Props> = ({ id, onClose, onOk }) => {
   useEffect(() => {
     if (id) {
       setLoading(true);
-      getMetricDetail(id).then(data => setForm({
+      api.getMetric(id).then(data => setForm({
         name: data.name, code: data.code, desc: data.desc, type: data.type, unit: data.unit, tags: data.tags
       })).finally(() => setLoading(false));
     } else {
@@ -33,9 +34,9 @@ const EditMetricModal: React.FC<Props> = ({ id, onClose, onOk }) => {
     setLoading(true);
     try {
       if (id) {
-        await updateMetric(id, form as MetricUpdateReq);
+        await api.updateMetricDashboard(id, form as MetricDashboardDTO);
       } else {
-        await createMetric(form as MetricCreateReq);
+        await api.createMetric(form as MetricDashboardDTO);
       }
       onClose();
       onOk();

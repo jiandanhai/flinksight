@@ -1,14 +1,15 @@
 import React from 'react';
-import { useUser } from '../../store/user';
-import { logout } from '../../api/auth';
-import { useNavigate } from 'react-router-dom';
+import {useUser} from '../../../store/user';
+import { api } from 'src/api/gen/client';
+
+import {useNavigate} from 'react-router-dom';
 
 //退出/强制登出
 const Header: React.FC = () => {
   const { username, logout: localLogout } = useUser();
   const navigate = useNavigate();
   const handleLogout = async () => {
-    await logout();
+    await api.logout();
     localLogout();
     navigate('/login');
   };

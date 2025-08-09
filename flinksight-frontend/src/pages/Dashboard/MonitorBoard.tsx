@@ -3,9 +3,10 @@
  * @desc 展示核心指标、报警、各子系统状态等（支持大屏展示）
  */
 import React, { useEffect, useState } from 'react';
-import { Card, Row, Col, Statistic } from 'antd';
-import http from '@/api/http';
+import { Card, Col, Row, Statistic } from 'antd';
+import { Api } from '../../api/gen/api.ts';
 
+// 建议直接用 openapi 生成的类型（如 MetricsDTO），没有就临时 interface
 interface Metrics {
   alertCount: number;
   jobRunning: number;
@@ -13,16 +14,25 @@ interface Metrics {
   userCount: number;
 }
 
+const api = new Api();
+
 const MonitorBoard: React.FC = () => {
-  const [metrics, setMetrics] = useState<Metrics>({ alertCount: 0, jobRunning: 0, clusterHealthy: 0, userCount: 0 });
+  const [metrics, setMetrics] = useState<Metrics>({
+    alertCount: 0,
+    jobRunning: 0,
+    clusterHealthy: 0,
+    userCount: 0
+  });
 
   useEffect(() => {
-    // 实时拉取数据，可用WebSocket替换为推送
-    http.get('/dashboard/metrics').then(res => setMetrics(res.data));
-    const timer = setInterval(() => {
-      http.get('/dashboard/metrics').then(res => setMetrics(res.data));
-    }, 5000);
+    // 实时拉取数据（如后端支持 WebSocket，可优化为推送）
+    const fetchData = () => {
+      api.dashboardControllerGetMetrics().then(res => setMetrics(res.data || metrics));
+    };
+    fetchData();
+    const timer = setInterval(fetchData, 5000);
     return () => clearInterval(timer);
+    // eslint-disable-next-line
   }, []);
 
   return (

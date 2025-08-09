@@ -2,10 +2,11 @@
  * @file 角色新建/编辑弹窗
  * @desc 支持权限分配、表单校验、API联动，管理员权限校验
  */
-import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select, message } from 'antd';
-import { createRole, updateRole, getRoleDetail } from '../../api/role';
-import type { Role, RoleCreateReq, RoleUpdateReq } from '../../types/role';
+import React, {useEffect} from 'react';
+import {Form, Input, message, Modal, Select} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {RoleDTO} from '../../api/gen/data-contracts.ts';
 
 const { Option } = Select;
 
@@ -27,7 +28,7 @@ const EditRoleModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
 
   useEffect(() => {
     if (id) {
-      getRoleDetail(id).then(res => form.setFieldsValue(res.data));
+      api.getRole(id).then(res => form.setFieldsValue(res.data));
     } else {
       form.resetFields();
     }
@@ -36,10 +37,10 @@ const EditRoleModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
   const handleSubmit = async () => {
     const values = await form.validateFields();
     if (id) {
-      await updateRole(id, values as RoleUpdateReq);
+      await api.updateRole(id, values as RoleDTO);
       message.success('编辑成功');
     } else {
-      await createRole(values as RoleCreateReq);
+      await api.createRole(values as RoleDTO);
       message.success('新建成功');
     }
     onOk();

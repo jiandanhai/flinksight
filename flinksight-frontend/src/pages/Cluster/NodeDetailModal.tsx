@@ -2,10 +2,11 @@
  * @file 节点明细弹窗
  * @desc 展示节点基础信息、健康历史、指标趋势等
  */
-import React, { useEffect, useState } from "react";
-import { Modal, Descriptions, Tag, Spin } from "antd";
-import { getNodeDetail, getNodeMetrics } from "../../api/cluster";
-import type { Node, NodeMetric } from "../../types/cluster";
+import React, {useEffect, useState} from "react";
+import {Descriptions, Modal, Spin, Tag} from "antd";
+import { api } from 'src/api/gen/client';
+
+import type {NodeDTO, NodeMetricDTO} from '../../api/gen/data-contracts.ts';
 import * as echarts from "echarts";
 
 interface Props {
@@ -15,14 +16,14 @@ interface Props {
 }
 
 const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
-  const [data, setData] = useState<Node | null>(null);
-  const [metrics, setMetrics] = useState<NodeMetric[]>([]);
+  const [data, setData] = useState<NodeDTO | null>(null);
+  const [metrics, setMetrics] = useState<NodeMetricDTO[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!open) return;
     setLoading(true);
-    Promise.all([getNodeDetail(id), getNodeMetrics(id)]).then(([res, mres]) => {
+    Promise.all([api.getNode(id), api.getNodeMetric(id)]).then(([res, mres]) => {
       setData(res.data);
       setMetrics(mres.data || []);
     }).finally(() => setLoading(false));

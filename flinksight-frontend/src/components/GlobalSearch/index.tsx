@@ -2,10 +2,10 @@
  * @file 全局搜索组件
  * @desc 支持多模块多表模糊搜索，带跳转
  */
-import React, { useState } from 'react';
-import { Input, AutoComplete } from 'antd';
-import http from '@/api/http';
-import { useNavigate } from 'react-router-dom';
+import React, {useState} from 'react';
+import {AutoComplete, Input} from 'antd';
+import http from '../api/gen/http-client';
+import {useNavigate} from 'react-router-dom';
 
 const GlobalSearch: React.FC = () => {
   const [options, setOptions] = useState([]);

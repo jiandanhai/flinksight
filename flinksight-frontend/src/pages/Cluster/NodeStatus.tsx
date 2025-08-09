@@ -2,14 +2,14 @@
  * @file 集群节点状态页面
  * @desc 展示各Flink/Spark集群的节点实时状态
  */
-import React, { useEffect, useState } from "react";
-import { Card, Table, Tag, Tooltip } from "antd";
-import http from "@/api/http";
+import React, {useEffect, useState} from "react";
+import {Card, Table, Tag} from "antd";
+import { api } from 'src/api/gen/client';
 
 const NodeStatus: React.FC = () => {
   const [data, setData] = useState<any[]>([]);
   useEffect(() => {
-    http.get("/cluster/nodes").then(res => setData(res.data));
+    api.getNodesByCluster(clusterId).then(res => setData(res.data));
   }, []);
 
   return (

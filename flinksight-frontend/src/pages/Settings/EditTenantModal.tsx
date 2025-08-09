@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { createTenant, updateTenant, getTenantDetail } from '../../api/settings';
-import type { Tenant, TenantCreateReq, TenantUpdateReq } from '../../types/settings';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {TenantDTO} from '../../api/gen/data-contracts.ts';
 
 interface Props {
   id: number | null;
@@ -12,13 +13,13 @@ interface Props {
  * 新建/编辑租户弹窗
  */
 const EditTenantModal: React.FC<Props> = ({ id, onClose, onOk }) => {
-  const [form, setForm] = useState<TenantCreateReq | TenantUpdateReq>({ name: '', code: '', desc: '' });
+  const [form, setForm] = useState<TenantDTO | TenantDTO>({ name: '', code: '', desc: '' });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
       setLoading(true);
-      getTenantDetail(id).then(data => setForm({ name: data.name, code: data.code, desc: data.desc }))
+      api.getTenant(id).then(data => setForm({ name: data.name, code: data.code, desc: data.desc }))
         .finally(() => setLoading(false));
     } else {
       setForm({ name: '', code: '', desc: '' });
@@ -30,9 +31,9 @@ const EditTenantModal: React.FC<Props> = ({ id, onClose, onOk }) => {
     setLoading(true);
     try {
       if (id) {
-        await updateTenant(id, form as TenantUpdateReq);
+        await api.updateTenant(id, form as TenantDTO);
       } else {
-        await createTenant(form as TenantCreateReq);
+        await api.createTenant(form as TenantDTO);
       }
       onClose();
       onOk();

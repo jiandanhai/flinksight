@@ -3,11 +3,11 @@
  * @desc 动态多级侧边菜单，自动聚合、角色权限过滤、国际化、图标、激活高亮，适配 MENUS 多场景
  */
 import React from 'react';
-import { MENUS } from '../constants/menus';
-import { useUser } from '../store/user';
-import { useLocale } from '../store/locale';
-import { NavLink, useLocation } from 'react-router-dom';
-import type { MenuItem } from '../types/menu';
+import {MENUS} from '../constants/menus';
+import {useUser} from '../store/user';
+import {useLocale} from '../store/locale';
+import {NavLink, useLocation} from 'react-router-dom';
+import type {MenuItem} from '../types/menu';
 
 /**
  * 动态递归多级菜单

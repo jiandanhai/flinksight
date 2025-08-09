@@ -3,10 +3,10 @@
  * @desc 未登录时优先自动跳SSO，回调自动写入token/user，权限自动校验
  */
 import React from 'react';
-import { Outlet, Navigate, useLocation } from 'react-router-dom';
-import { useUser } from '../../store/user';
+import {Navigate, Outlet, useLocation} from 'react-router-dom';
+import {useUser} from '../../store/user';
 
-const SSO_LOGIN_URL = process.env.REACT_APP_SSO_LOGIN_URL || '/api/auth/sso-login';
+const SSO_LOGIN_URL = import.meta.env.VITE_SSO_LOGIN_URL || '/api/sso/sso-login';
 
 const AuthRoute: React.FC = () => {
   const { id, token } = useUser();

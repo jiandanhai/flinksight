@@ -2,15 +2,16 @@
  * @file 报警流表格页面 - 企业级全功能增强
  * @desc 支持分页、批量、搜索、详情、新建/编辑/删除/权限、级别筛选、导出、状态管理、表头配置、列自定义
  */
-import React, { useEffect, useMemo, useState } from 'react';
-import { Input, Button, Modal, message, Tag, Space, Select, Dropdown, Menu, Checkbox, Table } from 'antd';
-import { getAlerts, deleteAlert, deleteAlerts, exportAlerts, updateAlert } from '../../api/alert';
-import type { Alert, AlertQuery } from '../../types/alert';
+import React, {useEffect, useMemo, useState} from 'react';
+import {Button, Checkbox, Dropdown, Input, Menu, message, Modal, Select, Space, Table, Tag} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {AlertDTO} from '../../api/gen/data-contracts.ts';
 import EditAlertModal from './EditAlertModal';
 import AlertDetail from './AlertDetail';
 import Loading from '../../components/Loading';
 import ExportButton from '../../components/common/ExportButton';
-import { useUser } from '../../store/user';
+import {useUser} from '../../store/user';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -29,12 +30,12 @@ const DEFAULT_COLUMNS = [
 ];
 
 const AlertList: React.FC = () => {
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [alerts, setAlerts] = useState<AlertDTO[]>([]);
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState<AlertQuery>({});
+  const [query, setQuery] = useState<AlertDTO>({});
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -51,7 +52,7 @@ const AlertList: React.FC = () => {
   const fetchAlerts = async () => {
     setLoading(true);
     try {
-      const res = await getAlerts({ ...query, page, size, level, status });
+      const res = await api.getAlertsByLevelAndStatus({ ...query, page, size, level, status });
       setAlerts(res.data?.records || []);
       setTotal(res.data?.total || 0);
     } finally {
@@ -86,7 +87,7 @@ const AlertList: React.FC = () => {
         setLoading(true);
         try {
           if (ids.length === 1) {
-            await deleteAlert(ids[0]);
+            await api.deleteAlert(ids[0]);
           } else {
             await deleteAlerts(ids);
           }
@@ -102,14 +103,14 @@ const AlertList: React.FC = () => {
 
   /** 状态管理（激活/关闭切换，持久化） */
   async function handleStatusChange(alert: Alert) {
-    await updateAlert(alert.id, { status: alert.status === 1 ? 0 : 1 });
+    await api.updateAlert(alert.id, { status: alert.status === 1 ? 0 : 1 });
     message.success(alert.status === 1 ? '已关闭' : '已激活');
     fetchAlerts();
   }
 
   /** 导出报警流 */
   async function handleExport() {
-    await exportAlerts({ ...query, level, status });
+    await api.exportAlerts({ ...query, level, status });
     message.success('导出请求已提交');
   }
 

@@ -2,7 +2,7 @@
  * @file 节点健康分布卡片
  * @desc 展示健康/预警/异常节点统计，支持 props 注入 stats 数据，自动刷新
  */
-import React, { useEffect, useRef } from "react";
+import React, {useEffect, useRef} from "react";
 import * as echarts from "echarts";
 
 /**

@@ -2,10 +2,11 @@
  * @file 报警流新建/编辑弹窗
  * @desc 支持新增、编辑，表单校验，权限、错误处理，自动联动API/types/constants
  */
-import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select, message } from 'antd';
-import { createAlert, updateAlert, getAlertDetail } from '../../api/alert';
-import type { Alert, AlertCreateReq, AlertUpdateReq } from '../../types/alert';
+import React, {useEffect} from 'react';
+import {Form, Input, message, Modal, Select} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {AlertDTO} from '../../api/gen/data-contracts.ts';
 
 const { Option } = Select;
 
@@ -29,7 +30,7 @@ const EditAlertModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
   // 拉取详情填充
   useEffect(() => {
     if (id) {
-      getAlertDetail(id).then(res => {
+      api.getAlert(id).then(res => {
         form.setFieldsValue(res.data);
       });
     } else {
@@ -41,10 +42,10 @@ const EditAlertModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
   const handleSubmit = async () => {
     const values = await form.validateFields();
     if (id) {
-      await updateAlert(id, values as AlertUpdateReq);
+      await api.updateAlert(id, values as AlertDTO);
       message.success('编辑成功');
     } else {
-      await createAlert(values as AlertCreateReq);
+      await api.createAlert(values as AlertDTO);
       message.success('新建成功');
     }
     onOk();

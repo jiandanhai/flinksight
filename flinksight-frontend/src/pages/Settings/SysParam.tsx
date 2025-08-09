@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { getSysParams, updateSysParam } from '../../api/settings';
-import type { SysParam } from '../../types/settings';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {SysParamDTO} from '../../api/gen/data-contracts.ts';
 import Loading from '../../components/Loading';
 
 /**
@@ -8,13 +9,13 @@ import Loading from '../../components/Loading';
  * - 支持直接编辑和保存
  */
 const SysParam: React.FC = () => {
-  const [params, setParams] = useState<SysParam[]>([]);
+  const [params, setParams] = useState<SysParamDTO[]>([]);
   const [loading, setLoading] = useState(false);
 
   async function fetchParams() {
     setLoading(true);
     try {
-      const data = await getSysParams({});
+      const data = await api.getAllSysParams({});
       setParams(data);
     } finally {
       setLoading(false);
@@ -24,10 +25,10 @@ const SysParam: React.FC = () => {
   useEffect(() => { fetchParams(); }, []);
 
   // 修改并保存
-  async function handleSave(p: SysParam, value: string) {
+  async function handleSave(p: SysParamDTO, value: string) {
     setLoading(true);
     try {
-      await updateSysParam(p.id, { ...p, value });
+      await api.updateSysParam(p.id, { ...p, value });
       fetchParams();
     } finally {
       setLoading(false);

@@ -2,9 +2,9 @@
  * @file 语言切换按钮
  */
 import React from 'react';
-import { Dropdown, Button } from 'antd';
-import { GlobalOutlined } from '@ant-design/icons';
-import { setLocale } from '@/locales';
+import {Button, Dropdown} from 'antd';
+import {GlobalOutlined} from '@ant-design/icons';
+import {setLocale} from '@/locales';
 
 const LocaleSwitcher: React.FC = () => (
   <Dropdown

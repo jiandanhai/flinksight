@@ -1,8 +1,8 @@
 import React from 'react';
-import { useLocation, Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { menus } from '../routes/menuConfig';
-import type { RootState } from '../store';
+import {Link, useLocation} from 'react-router-dom';
+import {useSelector} from 'react-redux';
+import {menus} from '../routes/menuConfig';
+import type {RootState} from '../store';
 
 const Sidebar: React.FC = () => {
   const location = useLocation();

@@ -1,21 +1,30 @@
 /**
  * @file 路由菜单配置（含权限与多级页面结构）
  */
-import { HomeOutlined, UserOutlined, BellOutlined, DatabaseOutlined, SettingOutlined, CloudOutlined ,AreaChartOutlined,FundOutlined } from '@ant-design/icons';
-import Dashboard from "@/pages/Dashboard";
-import TenantList from "@/pages/Tenant/TenantList";
-import UserList from "@/pages/User/UserList";
-import AlertList from "@/pages/Alert/AlertList";
-import ClusterList from "@/pages/Cluster/ClusterList";
-import JobList from "@/pages/Job/JobList";
-import NotificationCenter from "@/pages/Notification/NotificationCenter";
-import SystemSettings from "@/pages/System/SystemSettings";
-import FileManager from "@/pages/File/FileManager";
-import Profile from "@/pages/User/Profile";
-import JobDetail from "@/pages/Job/JobDetail";
-import NodeStatus from "@/pages/Cluster/NodeStatus";
-import MetricDashboard from "@/pages/Metric/MetricDashboard";
-import OpsDashboard from "@/pages/Ops/OpsDashboard";
+import {
+    AreaChartOutlined,
+    BellOutlined,
+    CloudOutlined,
+    DatabaseOutlined,
+    FundOutlined,
+    HomeOutlined,
+    SettingOutlined,
+    UserOutlined
+} from '@ant-design/icons';
+import Dashboard from "../pages/Dashboard";
+import TenantList from "../pages/Tenant/TenantList";
+import UserList from "../pages/User/UserList";
+import AlertList from "../pages/Alert/AlertList";
+import ClusterList from "../pages/Cluster/ClusterList";
+import JobList from "../pages/Job/JobList";
+import NotificationCenter from "../pages/Notification/NotificationCenter";
+import SystemSettings from "../pages/System/SystemSettings";
+import FileManager from "../pages/File/FileManager";
+import Profile from "../pages/User/Profile";
+import JobDetail from "../pages/Job/JobDetail";
+import NodeStatus from "../pages/Cluster/NodeStatus";
+import MetricDashboard from "../pages/Metric/MetricDashboard";
+import OpsDashboard from "../pages/Ops/OpsDashboard";
 
 export interface RouteMeta {
   path: string;

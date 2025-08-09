@@ -3,9 +3,10 @@
  * @desc SaaS租户自服务入口，支持切换/加入/创建组织
  */
 import React, { useEffect, useState } from 'react';
-import { Modal, Button, Select, Form, Input, message } from 'antd';
-import http from '@/api/http';
+import { Button, Form, Input, message, Modal, Select } from 'antd';
+import { api } from 'src/api/gen/client';
 
+// 假设你的 openapi 已生成 Tenant 类型，如果没有可以用下面的 interface 临时代替
 interface Tenant {
   id: number;
   name: string;
@@ -16,19 +17,25 @@ const TenantSwitcher: React.FC<{ visible: boolean, onClose: () => void }> = ({ v
   const [showNew, setShowNew] = useState(false);
   const [form] = Form.useForm();
 
+  // 拉取当前用户可切换租户列表
   useEffect(() => {
-    if (visible) http.get('/tenants/self').then(res => setList(res.data || []));
+    if (visible) {
+      api.tenantControllerListSelf().then(res => setList(res.data || []));
+    }
+    // eslint-disable-next-line
   }, [visible]);
 
+  // 切换租户
   const handleSwitch = async (tenantId: number) => {
-    await http.post(`/tenants/switch`, { tenantId });
+    await api.tenantControllerSwitch({ tenantId });
     message.success('切换成功');
     onClose();
     window.location.reload();
   };
 
+  // 创建租户
   const handleCreate = async (values: any) => {
-    await http.post('/tenants', values);
+    await api.tenantControllerCreate(values);
     message.success('新租户已创建');
     setShowNew(false);
     onClose();

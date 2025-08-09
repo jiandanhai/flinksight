@@ -2,11 +2,11 @@
  * @file 个人中心聚合页
  * @desc 资料编辑、修改密码、登录日志，多Tab可扩展
  */
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import ProfileInfo from './ProfileInfo';
 import ChangePassword from './ChangePassword';
 import LoginHistory from './LoginHistory';
-import { Card } from 'antd';
+import {Card} from 'antd';
 
 const ProfilePage: React.FC = () => {
   const [tab, setTab] = useState<'info' | 'password' | 'log'>('info');

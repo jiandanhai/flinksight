@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { getFunnelData } from '../../api/dashboard';
-import type { FunnelData } from '../../types/dashboard';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {JobFunnelDTO} from '../../api/gen/data-contracts.ts';
 import Loading from '../../components/Loading';
 
 /**
@@ -8,13 +9,13 @@ import Loading from '../../components/Loading';
  * - 展示各阶段业务流转统计
  */
 const JobFunnel: React.FC = () => {
-  const [funnel, setFunnel] = useState<FunnelData | null>(null);
+  const [funnel, setFunnel] = useState<JobFunnelDTO | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function fetchFunnel() {
     setLoading(true);
     try {
-      const data = await getFunnelData();
+      const data = await api.getJobFunnelsByTenant();
       setFunnel(data);
     } finally {
       setLoading(false);

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { createCluster, updateCluster, getClusterDetail } from '../../api/cluster';
-import type { Cluster, ClusterCreateReq, ClusterUpdateReq } from '../../types/cluster';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {ClusterDTO} from '../../api/gen/data-contracts.ts';
 
 interface Props {
   id: number | null;          // null为新建，否则为编辑
@@ -14,7 +15,7 @@ interface Props {
  * - 新建/编辑复用
  */
 const EditClusterModal: React.FC<Props> = ({ id, onClose, onOk }) => {
-  const [form, setForm] = useState<ClusterCreateReq | ClusterUpdateReq>({
+  const [form, setForm] = useState<ClusterDTO | ClusterDTO>({
     name: '', type: 'YARN', endpoint: '', version: '', tags: '', remark: ''
   });
   const [loading, setLoading] = useState(false);
@@ -23,7 +24,8 @@ const EditClusterModal: React.FC<Props> = ({ id, onClose, onOk }) => {
   useEffect(() => {
     if (id) {
       setLoading(true);
-      getClusterDetail(id).then(data => {
+      api.getCluster(id).then(res => {
+        const data = res.data
         setForm({
           name: data.name, type: data.type, endpoint: data.endpoint,
           version: data.version || '', tags: data.tags || '', remark: data.remark || ''
@@ -40,9 +42,9 @@ const EditClusterModal: React.FC<Props> = ({ id, onClose, onOk }) => {
     setLoading(true);
     try {
       if (id) {
-        await updateCluster(id, form as ClusterUpdateReq);
+        await api.updateCluster(id, form as ClusterDTO);
       } else {
-        await createCluster(form as ClusterCreateReq);
+        await api.createCluster(form as ClusterDTO);
       }
       onClose();
       onOk();

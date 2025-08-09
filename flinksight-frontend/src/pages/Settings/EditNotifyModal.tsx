@@ -2,10 +2,11 @@
  * @file 编辑/新建通知渠道弹窗
  * @desc 支持多类型，配置表单自动切换与校验
  */
-import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select, Switch, message } from 'antd';
-import { createNotifyChannel, updateNotifyChannel, getNotifyChannelDetail } from '../../api/settings';
-import type { NotifyChannel, NotifyChannelCreateReq, NotifyChannelUpdateReq } from '../../types/settings';
+import React, {useEffect} from 'react';
+import {Form, Input, message, Modal, Select, Switch} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {NotifyChannelDTO} from '../../api/gen/data-contracts.ts';
 
 const { Option } = Select;
 
@@ -27,7 +28,7 @@ const EditNotifyModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
 
   useEffect(() => {
     if (id) {
-      getNotifyChannelDetail(id).then(res => form.setFieldsValue(res.data));
+      api.getNotifyChannel(id).then(res => form.setFieldsValue(res.data));
     } else {
       form.resetFields();
     }
@@ -36,10 +37,10 @@ const EditNotifyModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
   const handleSubmit = async () => {
     const values = await form.validateFields();
     if (id) {
-      await updateNotifyChannel(id, values as NotifyChannelUpdateReq);
+      await api.updateNotifyChannel(values as NotifyChannelDTO);
       message.success('编辑成功');
     } else {
-      await createNotifyChannel(values as NotifyChannelCreateReq);
+      await api.createNotifyChannel(values as NotifyChannelDTO);
       message.success('新建成功');
     }
     onOk();

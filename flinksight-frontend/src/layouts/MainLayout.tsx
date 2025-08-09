@@ -3,9 +3,9 @@
  * @desc 商业级主框架布局，自动集成多级权限侧边菜单、国际化、退出、顶部栏，适合B端SaaS
  */
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import {Outlet} from 'react-router-dom';
 import SideMenu from './SideMenu'; // 动态权限/国际化多级菜单
-import { useUser } from '../store/user';
+import {useUser} from '../store/user';
 
 const MainLayout: React.FC = () => {
   const { username, logout } = useUser();

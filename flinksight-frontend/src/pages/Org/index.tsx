@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { getOrgTree, deleteOrgNode } from '../../api/org';
-import type { OrgNode } from '../../types/org';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {OrgNodeDTO} from '../../api/gen/data-contracts.ts';
 import Loading from '../../components/Loading';
 
 /**
@@ -8,24 +9,24 @@ import Loading from '../../components/Loading';
  * - 展示组织树，支持删除节点
  */
 const OrgPage: React.FC = () => {
-  const [tree, setTree] = useState<OrgNode[]>([]);
+  const [tree, setTree] = useState<OrgNodeDTO[]>([]);
   const [loading, setLoading] = useState(false);
 
   async function fetchTree() {
     setLoading(true);
     try {
-      const data = await getOrgTree();
+      const data = await api.getOrgNodeTree();
       setTree(data);
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleDelete(node: OrgNode) {
+  async function handleDelete(node: OrgNodeDTO) {
     if (!window.confirm(`确认删除【${node.name}】？`)) return;
     setLoading(true);
     try {
-      await deleteOrgNode(node.id);
+      await api.deleteOrgNode(node.id);
       fetchTree();
     } finally {
       setLoading(false);
@@ -35,7 +36,7 @@ const OrgPage: React.FC = () => {
   useEffect(() => { fetchTree(); }, []);
 
   // 递归渲染树节点
-  function renderTree(nodes: OrgNode[]) {
+  function renderTree(nodes: OrgNodeDTO[]) {
     return (
       <ul className="pl-4">
         {nodes.map(n => (

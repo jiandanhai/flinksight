@@ -2,7 +2,7 @@
  * @file 设置中心主页
  * @desc 支持配置列表、通知渠道、租户参数等聚合Tab切换
  */
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import ConfigList from './ConfigList';
 import NotificationConfig from './NotificationConfig';
 import TenantConfig from './TenantConfig';

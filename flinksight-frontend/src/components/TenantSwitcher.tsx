@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Select, Spin } from 'antd';
-import { getTenants } from '../api/tenant';
-import { useTenant } from '../store/tenant';
+import React, {useEffect, useState} from 'react';
+import {Select, Spin} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import {useTenant} from '../store/tenant';
 
 
 /**租户选择器和多租户数据隔离 （全局，顶部栏/下拉）*/
@@ -11,7 +12,7 @@ const TenantSwitcher: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getTenants().then(res => {
+    api.getTenants().then(res => {
       setOptions((res.data || []).map((t: any) => ({ label: t.name, value: t.id })));
       setLoading(false);
     });

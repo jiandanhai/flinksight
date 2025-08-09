@@ -2,12 +2,13 @@
  * @file 报警流规则列表
  * @desc 展示单报警流下所有规则，支持启停/编辑/删除/批量，自动对接API/types，权限、交互、注释齐全
  */
-import React, { useEffect, useState } from 'react';
-import { Table, Tag, Button, Space, Modal, message } from 'antd';
-import { getAlertRules, updateAlertRule, deleteAlertRule, deleteAlertRules } from '../../api/alert';
-import type { AlertRule } from '../../types/alert';
+import React, {useEffect, useState} from 'react';
+import {Button, message, Modal, Space, Table, Tag} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {AlertRuleDTO} from '../../api/gen/data-contracts.ts';
 import EditRuleModal from './EditRuleModal';
-import { useUser } from '../../store/user';
+import {useUser} from '../../store/user';
 
 interface Props {
   alertId: number;
@@ -17,7 +18,7 @@ interface Props {
 const LEVEL_MAP = ['未知', '低', '中', '高', '致命'];
 
 const RuleList: React.FC<Props> = ({ alertId, onRulesChange }) => {
-  const [list, setList] = useState<AlertRule[]>([]);
+  const [list, setList] = useState<AlertRuleDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -28,7 +29,7 @@ const RuleList: React.FC<Props> = ({ alertId, onRulesChange }) => {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await getAlertRules(alertId);
+      const res = await api.getAlertRuleByRule(alertId);
       setList(res.data || []);
     } finally {
       setLoading(false);
@@ -37,8 +38,8 @@ const RuleList: React.FC<Props> = ({ alertId, onRulesChange }) => {
   useEffect(() => { fetch(); }, [alertId]);
 
   // 启停
-  async function handleEnable(rule: AlertRule) {
-    await updateAlertRule(rule.id, { enabled: !rule.enabled });
+  async function handleEnable(rule: AlertRuleDTO) {
+    await api.updateAlertRule(rule.id, { enabled: !rule.enabled });
     message.success(rule.enabled ? '已停用' : '已启用');
     fetch();
     onRulesChange && onRulesChange();
@@ -50,9 +51,9 @@ const RuleList: React.FC<Props> = ({ alertId, onRulesChange }) => {
       title: `确认删除${ids.length > 1 ? ids.length + '条' : ''}规则？`,
       onOk: async () => {
         if (ids.length === 1) {
-          await deleteAlertRule(ids[0]);
+          await api.deleteAlertRule(ids[0]);
         } else {
-          await deleteAlertRules(ids);
+          await api.deleteAlertRules(ids);
         }
         message.success('删除成功');
         setSelectedRowKeys([]);

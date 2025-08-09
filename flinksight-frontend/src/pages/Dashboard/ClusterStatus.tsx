@@ -1,6 +1,7 @@
-    import React, { useEffect, useState } from 'react';
-import { getHealthDistribution } from '../../api/dashboard';
-import type { HealthDistribution } from '../../types/dashboard';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {ClusterStatusHistoryDTO} from '../../api/gen/data-contracts.ts';
 import Loading from '../../components/Loading';
 
 /**
@@ -8,13 +9,13 @@ import Loading from '../../components/Loading';
  * - 展示健康/警告/异常集群数量  
  */
 const ClusterStatus: React.FC = () => {
-  const [dist, setDist] = useState<HealthDistribution | null>(null);
+  const [dist, setDist] = useState<ClusterStatusHistoryDTO | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function fetchDist() {
     setLoading(true);
     try {
-      const data = await getHealthDistribution();
+      const data = await api.getHealthDistribution();
       setDist(data);
     } finally {
       setLoading(false);

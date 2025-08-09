@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import {Navigate, Route, Routes} from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import AuthRoute from './layouts/AuthRoute';
 import NotFound from './components/NotFound';

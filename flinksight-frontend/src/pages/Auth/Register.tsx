@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-import { register } from '../../api/auth';
-import { useNavigate } from 'react-router-dom';
-import type { RegisterReq } from '../../types/auth';
+import React, {useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import {useNavigate} from 'react-router-dom';
+import type {UserDTO} from '../../api/gen/data-contracts.ts';
 
 /**
  * 注册页面
  * - 支持注册后自动跳转登录
  */
 const RegisterPage: React.FC = () => {
-  const [form, setForm] = useState<RegisterReq>({ username: '', password: '', email: '' });
+  const [form, setForm] = useState<UserDTO>({ username: '', password: '', email: '' });
   const [loading, setLoading] = useState(false);
   const [errMsg, setErrMsg] = useState('');
   const [success, setSuccess] = useState(false);
@@ -19,7 +20,7 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
     setErrMsg('');
     try {
-      await register(form);
+      await api.createUser(form);
       setSuccess(true);
       setTimeout(() => navigate('/auth/login', { replace: true }), 1200);
     } catch (e: any) {

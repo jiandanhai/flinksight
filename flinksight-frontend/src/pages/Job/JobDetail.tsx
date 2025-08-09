@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { getJobDetail } from '../../api/job';
-import type { Job } from '../../types/job';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {JobDTO} from '../../api/gen/data-contracts.ts';
 import Loading from '../../components/Loading';
 
 interface Props {
@@ -13,12 +14,12 @@ interface Props {
  * - 展示基本信息、状态、配置、实时监控
  */
 const JobDetail: React.FC<Props> = ({ id, onBack }) => {
-  const [job, setJob] = useState<Job | null>(null);
+  const [job, setJob] = useState<JobDTO | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    getJobDetail(id).then(data => setJob(data)).finally(() => setLoading(false));
+    api.getJob(id).then(data => setJob(data)).finally(() => setLoading(false));
   }, [id]);
 
   if (loading || !job) return <Loading />;

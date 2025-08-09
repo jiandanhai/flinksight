@@ -2,15 +2,16 @@
  * @file 通知渠道管理
  * @desc 支持新增、编辑、启停、删除、批量、权限自动校验
  */
-import React, { useEffect, useState } from 'react';
-import { Table, Button, Tag, Space, Modal, message } from 'antd';
-import { getNotifications, updateNotification, deleteNotification } from '../../api/notification';
-import type { Notification } from '../../types/notification';
+import React, {useEffect, useState} from 'react';
+import {Button, message, Modal, Space, Table, Tag} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {NotificationDTO} from '../../api/gen/data-contracts.ts';
 import EditNotificationModal from './EditNotificationModal';
-import { useUser } from '../../store/user';
+import {useUser} from '../../store/user';
 
 const NotificationList: React.FC = () => {
-  const [list, setList] = useState<Notification[]>([]);
+  const [list, setList] = useState<NotificationDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -21,7 +22,7 @@ const NotificationList: React.FC = () => {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await getNotifications();
+      const res = await api.getAllNotifications();
       setList(res.data || []);
     } finally {
       setLoading(false);
@@ -30,8 +31,8 @@ const NotificationList: React.FC = () => {
   useEffect(() => { fetch(); }, []);
 
   // 启停
-  async function handleEnable(n: Notification) {
-    await updateNotification(n.id, { enabled: !n.enabled });
+  async function handleEnable(n: NotificationDTO) {
+    await api.updateNotification(n.id, { enabled: !n.enabled });
     message.success(n.enabled ? '已停用' : '已启用');
     fetch();
   }
@@ -41,7 +42,7 @@ const NotificationList: React.FC = () => {
     Modal.confirm({
       title: '确认删除该通知渠道？',
       onOk: async () => {
-        await deleteNotification(id);
+        await api.deleteNotification(id);
         message.success('已删除');
         fetch();
       }

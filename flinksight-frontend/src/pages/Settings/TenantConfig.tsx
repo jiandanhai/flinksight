@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { getTenants, deleteTenant } from '../../api/settings';
-import type { Tenant } from '../../types/settings';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {TenantDTO} from '../../api/gen/data-contracts.ts';
 import EditTenantModal from './EditTenantModal';
 import PageTable from '../../components/PageTable';
 import Loading from '../../components/Loading';
@@ -10,7 +11,7 @@ import Loading from '../../components/Loading';
  * - 支持新建/编辑/删除
  */
 const TenantConfig: React.FC = () => {
-  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [tenants, setTenants] = useState<TenantDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -18,7 +19,7 @@ const TenantConfig: React.FC = () => {
   async function fetchTenants() {
     setLoading(true);
     try {
-      const data = await getTenants({});
+      const data = await api.getAllTenants({});
       setTenants(data);
     } finally {
       setLoading(false);
@@ -32,11 +33,11 @@ const TenantConfig: React.FC = () => {
     setModalVisible(true);
   }
 
-  async function handleDelete(t: Tenant) {
+  async function handleDelete(t: TenantDTO) {
     if (!window.confirm(`确认删除租户：${t.name}？`)) return;
     setLoading(true);
     try {
-      await deleteTenant(t.id);
+      await api.deleteTenant(t.id);
       fetchTenants();
     } finally {
       setLoading(false);

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { login } from '../../api/auth';
-import { useNavigate } from 'react-router-dom';
-import type { LoginReq } from '../../types/auth';
+import React, {useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import {useNavigate} from 'react-router-dom';
+import type {LoginDTO} from '../../api/gen/data-contracts.ts';
 
 /**
  * 登录页面
@@ -9,7 +10,7 @@ import type { LoginReq } from '../../types/auth';
  * - 登录后自动跳转首页
  */
 const LoginPage: React.FC = () => {
-  const [form, setForm] = useState<LoginReq>({ username: '', password: '' });
+  const [form, setForm] = useState<LoginDTO>({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [errMsg, setErrMsg] = useState('');
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ const LoginPage: React.FC = () => {
     setLoading(true);
     setErrMsg('');
     try {
-      await login(form);
+      await api.login(form);
       navigate('/', { replace: true });
     } catch (e: any) {
       setErrMsg(e?.message || '登录失败');

@@ -1,4 +1,4 @@
-import { message, notification } from 'antd';
+import {message, notification} from 'antd';
 
 export const notifyMsg = (content: string, type: 'success'|'error'|'info'|'warning' = 'info') => {
   message[type]?.(content);

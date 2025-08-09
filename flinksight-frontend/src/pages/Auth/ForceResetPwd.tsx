@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { forceResetPassword } from '../../api/auth';
-import { useNavigate } from 'react-router-dom';
+import React, {useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import {useNavigate} from 'react-router-dom';
 
 /**
  * 强制修改密码页面（首次/安全要求）
@@ -16,7 +17,7 @@ const ForceResetPwdPage: React.FC = () => {
     setLoading(true);
     setMsg('');
     try {
-      await forceResetPassword({ password });
+      await api.forceResetPassword({ password });
       setMsg('密码修改成功，正在跳转...');
       setTimeout(() => navigate('/', { replace: true }), 1200);
     } catch (e: any) {

@@ -3,8 +3,8 @@
  * @desc 用户可修改昵称、头像、密码，管理API Token等
  */
 import React, { useEffect, useState } from 'react';
-import { Card, Form, Input, Button, Upload, message, Modal } from 'antd';
-import http from '@/api/http';
+import { Button, Card, Form, Input, message, Modal, Upload } from 'antd';
+import { api } from 'src/api/gen/client';
 
 const ProfileCenter: React.FC = () => {
   const [info, setInfo] = useState<any>({});
@@ -12,15 +12,16 @@ const ProfileCenter: React.FC = () => {
   const [form] = Form.useForm();
 
   useEffect(() => {
-    http.get('/profile').then(res => {
+    api.profileControllerGetProfile().then(res => {
       setInfo(res.data || {});
       form.setFieldsValue(res.data || {});
     });
+    // eslint-disable-next-line
   }, []);
 
   // 修改基本资料
   const handleSave = async (values: any) => {
-    await http.put('/profile', values);
+    await api.profileControllerUpdateProfile(values);
     message.success('资料已更新');
     setEdit(false);
     setInfo({ ...info, ...values });
@@ -35,17 +36,13 @@ const ProfileCenter: React.FC = () => {
           id="passwordForm"
           layout="vertical"
           onFinish={async (vals) => {
-            await http.post('/profile/change-password', vals);
+            await api.profileControllerChangePassword(vals);
             message.success('密码已修改');
             Modal.destroyAll();
           }}
         >
-          <Form.Item label="原密码" name="oldPassword" rules={[{ required: true }]}>
-            <Input.Password />
-          </Form.Item>
-          <Form.Item label="新密码" name="newPassword" rules={[{ required: true, min: 6 }]}>
-            <Input.Password />
-          </Form.Item>
+          <Form.Item label="原密码" name="oldPassword" rules={[{ required: true }]}><Input.Password /></Form.Item>
+          <Form.Item label="新密码" name="newPassword" rules={[{ required: true, min: 6 }]}><Input.Password /></Form.Item>
         </Form>
       ),
       okText: '提交',
@@ -65,9 +62,7 @@ const ProfileCenter: React.FC = () => {
     <div style={{ maxWidth: 500, margin: '0 auto', padding: 32 }}>
       <Card
         title="个人信息"
-        extra={
-          !edit ? <Button onClick={() => setEdit(true)}>编辑</Button> : null
-        }
+        extra={!edit ? <Button onClick={() => setEdit(true)}>编辑</Button> : null}
       >
         <Form
           form={form}
@@ -90,9 +85,9 @@ const ProfileCenter: React.FC = () => {
               showUploadList={false}
               action="/api/profile/avatar"
               name="file"
-              onChange={info => {
-                if (info.file.status === 'done') {
-                  setInfo({ ...info, avatar: info.file.response.url });
+              onChange={fileInfo => {
+                if (fileInfo.file.status === 'done') {
+                  setInfo({ ...info, avatar: fileInfo.file.response.url });
                   message.success('头像已上传');
                 }
               }}

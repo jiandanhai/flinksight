@@ -3,10 +3,11 @@
  * @desc 支持单节点手动/批量CSV导入扩容，自动接入API/types，扩容成功自动回调，权限/校验/提示完善
  */
 import React, { useState } from "react";
-import { Modal, Form, Input, Button, Upload, message, Switch } from "antd";
-import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
-import { addNode, batchAddNodes } from "../../api/cluster";
-import type { NodeCreateReq } from "../../types/cluster";
+import { Button, Form, Input, message, Modal, Switch, Upload, Tooltip } from "antd";
+import { UploadOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { api } from 'src/api/gen/client';
+
+import type { NodeDTO } from '../../api/gen/data-contracts.ts';
 import { useUser } from "../../store/user";
 
 /**
@@ -34,12 +35,17 @@ const ExpandNodeModal: React.FC<Props> = ({ open, onOk, onClose, clusterId }) =>
 
   // 单节点提交
   const handleSubmit = async () => {
-    const values = await form.validateFields();
-    if (clusterId) values.clusterId = clusterId;
-    await addNode(values as NodeCreateReq);
-    message.success("节点扩容成功");
-    onOk && onOk({ success: 1, fail: 0 });
-    onClose();
+    try {
+      const values = await form.validateFields();
+      if (clusterId) values.clusterId = clusterId;
+      await api.createNode(values as NodeDTO);
+      message.success("节点扩容成功");
+      onOk && onOk({ success: 1, fail: 0 });
+      onClose();
+      form.resetFields();
+    } catch (err) {
+      // 校验失败自动提示，无需catch
+    }
   };
 
   // 批量CSV上传
@@ -50,14 +56,13 @@ const ExpandNodeModal: React.FC<Props> = ({ open, onOk, onClose, clusterId }) =>
       const reader = new FileReader();
       reader.onload = async (e: any) => {
         const content = e.target.result as string;
-        // 假设CSV第一行为字段名，后面每行为节点：name,ip,role
+        // 假设CSV第一行为字段名，后面每行为节点：name,ip,role[,clusterName]
         const lines = content.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
         if (lines.length < 2) {
-          message.error("CSV内容格式错误！");
+          message.error("CSV内容格式错误，至少包含一行数据！");
           setUploading(false);
           return;
         }
-        // 解析字段
         const headers = lines[0].split(",");
         const idx = (name: string) => headers.indexOf(name);
         // 必需字段检测
@@ -67,23 +72,26 @@ const ExpandNodeModal: React.FC<Props> = ({ open, onOk, onClose, clusterId }) =>
           return;
         }
         // 解析每个节点
-        const nodes: NodeCreateReq[] = lines.slice(1).map(line => {
+        const nodes: NodeDTO[] = lines.slice(1).map(line => {
           const arr = line.split(",");
-          const node: NodeCreateReq = {
+          const node: NodeDTO = {
             name: arr[idx('name')],
             ip: arr[idx('ip')],
             role: arr[idx('role')],
-            clusterName: arr[idx('clusterName')] || "", // clusterName可选
+            clusterName: arr[idx('clusterName')] || "",
             enabled: true,
           };
           if (clusterId) (node as any).clusterId = clusterId;
           return node;
         });
-        // 去除空行/错误行
         const filteredNodes = nodes.filter(n => n.name && n.ip && n.role);
-
+        if (filteredNodes.length === 0) {
+          message.error("无有效节点数据！");
+          setUploading(false);
+          return;
+        }
         // 批量扩容
-        const result = await batchAddNodes(filteredNodes);
+        const result = await api.batchAddNodes(filteredNodes);
         message.success(`批量扩容完成，成功${result.data.success}台，失败${result.data.fail}台`);
         onOk && onOk(result.data);
         setUploading(false);
@@ -91,7 +99,7 @@ const ExpandNodeModal: React.FC<Props> = ({ open, onOk, onClose, clusterId }) =>
       };
       reader.readAsText(file);
     } catch (e) {
-      message.error("批量导入失败");
+      message.error("批量导入失败：" + (e as Error).message);
       setUploading(false);
     }
   };
@@ -126,7 +134,22 @@ const ExpandNodeModal: React.FC<Props> = ({ open, onOk, onClose, clusterId }) =>
           disabled={uploading}
         />
         <span className="ml-4 text-gray-500">
-          {batchMode ? "支持CSV导入，示例：name,ip,role,clusterName" : "单节点信息手动录入"}
+          {batchMode ? (
+            <>
+              支持CSV导入，示例：<code>name,ip,role,clusterName</code>
+              <Tooltip title={
+                <>
+                  <div>CSV首行为表头，后面为节点，如：</div>
+                  <pre>name,ip,role,clusterName
+worker01,192.168.1.10,worker,集群A
+master01,192.168.1.11,master,集群A
+</pre>
+                </>
+              }>
+                <InfoCircleOutlined className="ml-1" />
+              </Tooltip>
+            </>
+          ) : "单节点信息手动录入"}
         </span>
       </div>
       {batchMode ? (
@@ -142,5 +165,27 @@ const ExpandNodeModal: React.FC<Props> = ({ open, onOk, onClose, clusterId }) =>
           </Button>
         </Upload>
       ) : (
-        <Form form={form} layout="vertical">
-          <Form.Item name="name" label="节点名" rules={[{ required: true, message:]()
+        <Form form={form} layout="vertical" autoComplete="off">
+          <Form.Item name="name" label="节点名" rules={[{ required: true, message: "请输入节点名" }]}>
+            <Input placeholder="worker01" disabled={!canEdit} />
+          </Form.Item>
+          <Form.Item name="ip" label="节点IP" rules={[
+            { required: true, message: "请输入节点IP" },
+            { pattern: /^(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)$/, message: "IP格式不正确" }
+          ]}>
+            <Input placeholder="192.168.1.100" disabled={!canEdit} />
+          </Form.Item>
+          <Form.Item name="role" label="角色" rules={[{ required: true, message: "请输入节点角色" }]}>
+            <Input placeholder="worker/master" disabled={!canEdit} />
+          </Form.Item>
+          <Form.Item name="clusterName" label="集群名" required={false}>
+            <Input placeholder="集群A" disabled={!canEdit} />
+          </Form.Item>
+        </Form>
+      )}
+      {!canEdit && <div className="text-red-500 mt-3">无扩容权限，仅管理员/运维可操作</div>}
+    </Modal>
+  );
+};
+
+export default ExpandNodeModal;

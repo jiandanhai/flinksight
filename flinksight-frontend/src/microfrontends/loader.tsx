@@ -2,7 +2,7 @@
  * @file 微前端子应用加载器
  * @desc 支持qiankun/Module Federation等一键挂载，自动隔离
  */
-import React, { useEffect, useRef } from 'react';
+import React, {useEffect, useRef} from 'react';
 
 export function loadMicroApp(appName: string): React.FC {
   return () => {

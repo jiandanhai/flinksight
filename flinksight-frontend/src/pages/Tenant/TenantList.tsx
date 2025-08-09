@@ -2,15 +2,16 @@
  * @file 租户管理
  * @desc 支持新增、编辑、启用、禁用、删除、批量、权限管理
  */
-import React, { useEffect, useState } from 'react';
-import { Table, Button, Tag, Space, Modal, message } from 'antd';
-import { getTenants, updateTenant, deleteTenant } from '../../api/tenant';
-import type { Tenant } from '../../types/tenant';
+import React, {useEffect, useState} from 'react';
+import {Button, message, Modal, Space, Table, Tag} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {TenantDTO} from '../../api/gen/data-contracts.ts';
 import EditTenantModal from './EditTenantModal';
-import { useUser } from '../../store/user';
+import {useUser} from '../../store/user';
 
 const TenantList: React.FC = () => {
-  const [list, setList] = useState<Tenant[]>([]);
+  const [list, setList] = useState<TenantDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -21,7 +22,7 @@ const TenantList: React.FC = () => {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await getTenants();
+      const res = await api.getAllTenants();
       setList(res.data || []);
     } finally {
       setLoading(false);
@@ -30,8 +31,8 @@ const TenantList: React.FC = () => {
   useEffect(() => { fetch(); }, []);
 
   // 启停
-  async function handleEnable(t: Tenant) {
-    await updateTenant(t.id, { enabled: !t.enabled });
+  async function handleEnable(t: TenantDTO) {
+    await api.updateTenant(t.id, { enabled: !t.enabled });
     message.success(t.enabled ? '已禁用' : '已启用');
     fetch();
   }
@@ -41,7 +42,7 @@ const TenantList: React.FC = () => {
     Modal.confirm({
       title: '确认删除该租户？',
       onOk: async () => {
-        await deleteTenant(id);
+        await api.deleteTenant(id);
         message.success('已删除');
         fetch();
       }
@@ -66,7 +67,7 @@ const TenantList: React.FC = () => {
           { title: '状态', dataIndex: 'enabled', render: (v: boolean) => v ? <Tag color="green">启用</Tag> : <Tag>禁用</Tag> },
           {
             title: '操作',
-            render: (_: any, t: Tenant) => (
+            render: (_: any, t: TenantDTO) => (
               <Space>
                 <Button type="link" size="small" onClick={() => { setEditId(t.id); setModalVisible(true); }} disabled={!canEdit}>编辑</Button>
                 <Button type="link" size="small" onClick={() => handleEnable(t)} disabled={!canEdit}>

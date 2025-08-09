@@ -2,13 +2,14 @@
  * @file 文件上传与管理
  * @desc 支持多格式上传（CSV/XLSX/JSON/图片等）、列表、批量删除、预览/下载，API/types联动
  */
-import React, { useEffect, useState } from 'react';
-import { Upload, Table, Button, Modal, message, Tag, Space } from 'antd';
-import { getFiles, deleteFile, uploadFile } from '../../api/file';
-import type { FileMeta } from '../../types/file';
+import React, {useEffect, useState} from 'react';
+import {Button, message, Modal, Space, Table, Tag, Upload} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {FileDTO} from '../../api/gen/data-contracts.ts';
 
 const FileManager: React.FC = () => {
-  const [list, setList] = useState<FileMeta[]>([]);
+  const [list, setList] = useState<FileDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
 
@@ -16,7 +17,7 @@ const FileManager: React.FC = () => {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await getFiles();
+      const res = await api.getAllFiles();
       setList(res.data || []);
     } finally {
       setLoading(false);
@@ -29,7 +30,7 @@ const FileManager: React.FC = () => {
     Modal.confirm({
       title: `确认删除选中${selectedRowKeys.length}个文件？`,
       onOk: async () => {
-        await Promise.all(selectedRowKeys.map(id => deleteFile(id)));
+        await Promise.all(selectedRowKeys.map(id => api.deleteFile(id)));
         message.success('已删除');
         setSelectedRowKeys([]);
         fetch();

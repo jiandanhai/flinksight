@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { getMetricDetail } from '../../api/metric';
-import type { Metric } from '../../types/metric';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {MetricDashboardDTO} from '../../api/gen/data-contracts.ts';
 import Loading from '../../components/Loading';
 
 interface Props {
@@ -12,12 +13,12 @@ interface Props {
  * 指标详情页
  */
 const MetricDetail: React.FC<Props> = ({ id, onBack }) => {
-  const [metric, setMetric] = useState<Metric | null>(null);
+  const [metric, setMetric] = useState<MetricDashboardDTO | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    getMetricDetail(id).then(setMetric).finally(() => setLoading(false));
+    api.getMetric(id).then(setMetric).finally(() => setLoading(false));
   }, [id]);
 
   if (loading || !metric) return <Loading />;

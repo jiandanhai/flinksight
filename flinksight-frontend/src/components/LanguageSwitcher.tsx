@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocale } from '../store/locale';
+import {useLocale} from '../store/locale';
 
 const langs = [
   { key: 'zh', label: '中文' },

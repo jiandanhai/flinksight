@@ -2,30 +2,31 @@
  * @file 用户管理列表
  * @desc 支持分页、搜索、批量启用禁用、角色分配、用户详情/编辑，API/types全联动
  */
-import React, { useEffect, useState } from 'react';
-import { Table, Button, Input, Space, Modal, Tag, Select, message } from 'antd';
-import { getUsers, updateUser, deleteUser, batchUpdateUserRole, batchEnableUsers } from '../../api/user';
-import type { User, UserQuery, UserRole } from '../../types/user';
+import React, {useEffect, useState} from 'react';
+import {Button, Input, message, Modal, Select, Space, Table, Tag} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {UserDTO, UserRoleDTO} from '../../api/gen/data-contracts.ts';
 import EditUserModal from './EditUserModal';
 import UserDetail from './UserDetail';
-import { useUser } from '../../store/user';
+import {useUser} from '../../store/user';
 
 const { Search } = Input;
 const { Option } = Select;
 
-const ROLE_LABELS: Record<UserRole, string> = {
+const ROLE_LABELS: Record<UserDTO, string> = {
   admin: '管理员',
   ops: '运维',
   user: '普通用户'
 };
 
 const UserList: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserDTO[]>([]);
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState<UserQuery>({});
+  const [query, setQuery] = useState<UserDTO>({});
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -38,7 +39,7 @@ const UserList: React.FC = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await getUsers({ ...query, page, size });
+      const res = await api.getAllUsers({ ...query, page, size });
       setUsers(res.data?.records || []);
       setTotal(res.data?.total || 0);
     } finally {
@@ -69,7 +70,7 @@ const UserList: React.FC = () => {
     Modal.confirm({
       title: '确认删除该用户？',
       onOk: async () => {
-        await deleteUser(id);
+        await api.deleteUser(id);
         message.success('已删除');
         fetchUsers();
       }
@@ -78,15 +79,15 @@ const UserList: React.FC = () => {
 
   // 批量启用/禁用
   async function handleBatchEnable(enable: boolean) {
-    await batchEnableUsers(selectedRowKeys, enable);
+    await api.batchEnableUsers(selectedRowKeys, enable);
     message.success(enable ? '已启用' : '已禁用');
     setSelectedRowKeys([]);
     fetchUsers();
   }
 
   // 批量分配角色
-  async function handleBatchRole(newRole: UserRole) {
-    await batchUpdateUserRole(selectedRowKeys, newRole);
+  async function handleBatchRole(newRole: UserRoleDTO) {
+    await api.batchUpdateUserRole(selectedRowKeys, newRole);
     message.success('角色分配完成');
     setSelectedRowKeys([]);
     fetchUsers();
@@ -103,7 +104,7 @@ const UserList: React.FC = () => {
           <Select
             placeholder="批量分配角色"
             style={{ width: 120 }}
-            onChange={role => handleBatchRole(role as UserRole)}
+            onChange={role => handleBatchRole(role as UserRoleDTO)}
             disabled={!selectedRowKeys.length || !canEdit}
             allowClear
           >
@@ -137,7 +138,7 @@ const UserList: React.FC = () => {
           },
           { title: '昵称', dataIndex: 'nickname' },
           { title: '邮箱', dataIndex: 'email' },
-          { title: '角色', dataIndex: 'role', render: (r: UserRole) => <Tag>{ROLE_LABELS[r]}</Tag> },
+          { title: '角色', dataIndex: 'role', render: (r: UserRoleDTO) => <Tag>{ROLE_LABELS[r]}</Tag> },
           { title: '状态', dataIndex: 'enabled', render: (v: boolean) => v ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag> },
           { title: '创建时间', dataIndex: 'createTime', render: (v: string) => new Date(v).toLocaleString() },
           {

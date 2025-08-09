@@ -3,28 +3,27 @@
  * @desc 全局参数、业务开关、通知通道等配置中心，支持动态调整
  */
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, Input, Switch, message } from 'antd';
-import http from '@/api/http';
+import { Button, Form, Input, message, Modal, Switch, Table } from 'antd';
+import { Api } from '../../api/gen/api.ts';
 
-interface ConfigItem {
-  id: number;
-  key: string;
-  value: string;
-  desc?: string;
-  enable: boolean;
-}
+// 建议后端openapi生成ConfigItemDTO类型
+// interface ConfigItem { ... }
+
+const api = new Api();
 
 const ConfigList: React.FC = () => {
-  const [list, setList] = useState<ConfigItem[]>([]);
+  const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [editing, setEditing] = useState<ConfigItem | null>(null);
+  const [editing, setEditing] = useState<any | null>(null);
   const [form] = Form.useForm();
 
+  // 拉取配置参数列表
   const fetchList = async () => {
     setLoading(true);
     try {
-      const res = await http.get('/config');
+      // 根据后端接口命名（举例configControllerList）
+      const res = await api.configControllerList();
       setList(res.data || []);
     } finally {
       setLoading(false);
@@ -33,18 +32,27 @@ const ConfigList: React.FC = () => {
 
   useEffect(() => { fetchList(); }, []);
 
+  // 新增或编辑参数
   const handleAddOrEdit = async (values: any) => {
     if (editing) {
-      await http.put(`/config/${editing.id}`, values);
+      // 编辑：假设接口为 configControllerUpdate
+      await api.configControllerUpdate({ id: editing.id, ...values });
       message.success('修改成功');
     } else {
-      await http.post('/config', values);
+      // 新增：假设接口为 configControllerCreate
+      await api.configControllerCreate(values);
       message.success('添加成功');
     }
     setModalVisible(false);
     fetchList();
     form.resetFields();
     setEditing(null);
+  };
+
+  // 开关切换
+  const handleSwitch = async (checked: boolean, record: any) => {
+    await api.configControllerUpdate({ id: record.id, enable: checked });
+    fetchList();
   };
 
   return (
@@ -58,10 +66,7 @@ const ConfigList: React.FC = () => {
           { title: '描述', dataIndex: 'desc' },
           {
             title: '开关', dataIndex: 'enable', render: (val, record) =>
-              <Switch checked={val} onChange={async (checked) => {
-                await http.patch(`/config/${record.id}`, { enable: checked });
-                fetchList();
-              }} />
+              <Switch checked={val} onChange={checked => handleSwitch(checked, record)} />
           },
           {
             title: '操作', render: (_, record) => (
@@ -75,11 +80,12 @@ const ConfigList: React.FC = () => {
       />
       <Modal
         title={editing ? '编辑参数' : '新建参数'}
-        visible={modalVisible}
+        open={modalVisible}
         onCancel={() => setModalVisible(false)}
         onOk={() => form.submit()}
+        destroyOnClose
       >
-        <Form form={form} onFinish={handleAddOrEdit} layout="vertical">
+        <Form form={form} onFinish={handleAddOrEdit} layout="vertical" initialValues={editing || {}}>
           <Form.Item label="参数Key" name="key" rules={[{ required: true }]}>
             <Input disabled={!!editing} />
           </Form.Item>

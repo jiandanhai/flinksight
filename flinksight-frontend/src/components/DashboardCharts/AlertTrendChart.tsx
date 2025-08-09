@@ -2,9 +2,9 @@
  * @file 大屏报警趋势图表
  * @desc 用于监控大屏，展示报警数随时间变化（可拓展为所有统计图）
  */
-import React, { useEffect, useState } from 'react';
-import { Line } from '@ant-design/charts'; // 推荐用antv，也支持echarts
-import http from '@/api/http';
+import React, {useEffect, useState} from 'react';
+import {Line} from '@ant-design/charts'; // 推荐用antv，也支持echarts
+import http from '../api/gen/http-client';
 
 const AlertTrendChart: React.FC = () => {
   const [data, setData] = useState([]);

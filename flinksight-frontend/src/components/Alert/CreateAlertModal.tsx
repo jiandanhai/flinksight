@@ -1,8 +1,9 @@
 // src/components/Alert/CreateAlertModal.tsx
 import React from 'react';
-import { Modal, Form, Input, Select, message } from 'antd';
-import { createAlertApi } from '../../api/alert';
-import { AlertLevel } from '../../api/types';
+import {Form, Input, message, Modal, Select} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import {AlertLevelDTO} from '../../api/gen/data-contracts.ts';
 
 /**
  * 新建报警流弹窗组件
@@ -17,7 +18,7 @@ const CreateAlertModal: React.FC<{
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
-      await createAlertApi(values);
+      await api.createAlertApi(values);
       message.success('新建报警成功');
       onClose();
       onSuccess();
@@ -39,7 +40,7 @@ const CreateAlertModal: React.FC<{
       <Form form={form} layout="vertical">
         <Form.Item label="报警内容" name="message" rules={[{ required: true, message: '请输入报警内容' }]}> <Input.TextArea rows={3} maxLength={100} /></Form.Item>
         <Form.Item label="级别" name="level" rules={[{ required: true }]}>
-          <Select options={AlertLevel.map(l => ({ label: l.label, value: l.value }))} />
+          <Select options={AlertLevelDTO.map(l => ({ label: l.label, value: l.value }))} />
         </Form.Item>
         <Form.Item label="租户ID" name="tenantId" rules={[{ required: true }]}>
           <Input />

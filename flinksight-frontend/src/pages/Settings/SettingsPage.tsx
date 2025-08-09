@@ -2,23 +2,23 @@
  * @file 系统设置页
  * @desc 系统参数、报警配置等全量管理，支持自动表单同步
  */
-import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, message, Card } from 'antd';
-import { getSettings, updateSettings } from '../../api/settings';
-import type { Settings } from '../../types/settings';
+import React, {useEffect, useState} from 'react';
+import {Button, Card, Form, Input, message} from 'antd';
+import { api } from 'src/api/gen/client';
+
 
 const SettingsPage: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    getSettings().then(res => form.setFieldsValue(res.data));
+    api.getAllSettings().then(res => form.setFieldsValue(res.data));
   }, [form]);
 
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      await updateSettings(form.getFieldsValue());
+      await api.updateSetting(form.getFieldsValue());
       message.success('设置已保存');
     } finally {
       setLoading(false);

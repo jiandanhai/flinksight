@@ -2,16 +2,17 @@
  * @file 个人中心/Profile页
  * @desc 展示当前登录用户的基础信息、修改资料、修改密码、历史登录记录等，自动对接API/types，权限、交互、注释齐全
  */
-import React, { useEffect, useState } from 'react';
-import { Card, Descriptions, Button, Modal, Form, Input, message, Spin, Table } from 'antd';
-import { useUser } from '../../store/user';
-import { getProfile, updateProfile, changePassword, getUserLoginHistory } from '../../api/profile';
-import type { Profile, UserLoginHistory } from '../../types/profile';
+import React, {useEffect, useState} from 'react';
+import {Button, Card, Descriptions, Form, Input, message, Modal, Spin, Table} from 'antd';
+import {useUser} from '../../store/user';
+import { api } from 'src/api/gen/client';
+
+import type {ProfileDTO, UserLoginHistoryDTO} from '../../api/gen/data-contracts.ts';
 
 const ProfilePage: React.FC = () => {
   const { id } = useUser();
-  const [data, setData] = useState<Profile|null>(null);
-  const [loginHistory, setLoginHistory] = useState<UserLoginHistory[]>([]);
+  const [data, setData] = useState<ProfileDTO|null>(null);
+  const [loginHistory, setLoginHistory] = useState<UserLoginHistoryDTO[]>([]);
   const [editVisible, setEditVisible] = useState(false);
   const [pwdVisible, setPwdVisible] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -20,8 +21,8 @@ const ProfilePage: React.FC = () => {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      getProfile(),
-      getUserLoginHistory(id)
+      api.getProfile(),
+      api.getUserLoginHistory(id)
     ]).then(([res, loginRes]) => {
       setData(res.data);
       setLoginHistory(loginRes.data || []);
@@ -30,18 +31,18 @@ const ProfilePage: React.FC = () => {
 
   // 修改个人资料
   const handleProfileSave = async (values: any) => {
-    await updateProfile(values);
+    await api.updateProfile(values);
     message.success('资料已更新');
     setEditVisible(false);
     setLoading(true);
-    const res = await getProfile();
+    const res = await api.getProfile();
     setData(res.data);
     setLoading(false);
   };
 
   // 修改密码
   const handlePwdSave = async (values: { oldPassword: string; newPassword: string }) => {
-    await changePassword(values.oldPassword, values.newPassword);
+    await api.changePassword(values.oldPassword, values.newPassword);
     message.success('密码修改成功，请重新登录');
     setPwdVisible(false);
     // 可跳转到登录页或强制退出

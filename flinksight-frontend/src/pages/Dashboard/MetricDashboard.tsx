@@ -3,10 +3,10 @@
  * @desc 支持多指标聚合可视化、区间选择、实时刷新
  */
 import React, { useEffect, useRef, useState } from "react";
-import { Card, Select, DatePicker, Button, Row, Col } from "antd";
+import { Button, Card, Col, DatePicker, Row, Select } from "antd";
 import * as echarts from "echarts";
-import http from "@/api/http";
-import dayjs from "dayjs";
+import { Api } from "../../api/gen/api.ts";
+import dayjs, { Dayjs } from "dayjs";
 
 const { RangePicker } = DatePicker;
 
@@ -17,27 +17,45 @@ const metricsList = [
   { key: "delay", name: "延迟(ms)" }
 ];
 
+const api = new Api();
+
 const MetricDashboard: React.FC = () => {
   const [metric, setMetric] = useState<string>("cpu");
-  const [range, setRange] = useState<[any, any]>([dayjs().subtract(1, "d"), dayjs()]);
+  const [range, setRange] = useState<[Dayjs, Dayjs]>([dayjs().subtract(1, "d"), dayjs()]);
   const chartRef = useRef<HTMLDivElement>(null);
+  const chartInstance = useRef<echarts.ECharts | null>(null);
 
-  useEffect(() => {
-    if (!chartRef.current) return;
-    http.get("/metrics/data", {
-      params: { metric, from: range[0].toISOString(), to: range[1].toISOString() }
+  const fetchData = () => {
+    api.metricsControllerGetData({
+      metric,
+      from: range[0].toISOString(),
+      to: range[1].toISOString()
     }).then(res => {
       const data = res.data || { times: [], values: [] };
-      const chart = echarts.init(chartRef.current!);
-      chart.setOption({
-        title: { text: metricsList.find(m => m.key === metric)?.name, left: "center" },
-        tooltip: { trigger: "axis" },
-        xAxis: { type: "category", data: data.times },
-        yAxis: { type: "value" },
-        series: [{ data: data.values, type: "line", areaStyle: {} }]
-      });
+      if (chartRef.current) {
+        if (!chartInstance.current) {
+          chartInstance.current = echarts.init(chartRef.current);
+        }
+        chartInstance.current.setOption({
+          title: { text: metricsList.find(m => m.key === metric)?.name, left: "center" },
+          tooltip: { trigger: "axis" },
+          xAxis: { type: "category", data: data.times },
+          yAxis: { type: "value" },
+          series: [{ data: data.values, type: "line", areaStyle: {} }]
+        });
+      }
     });
-    return () => { chartRef.current && echarts.dispose(chartRef.current); }
+  };
+
+  useEffect(() => {
+    fetchData();
+    return () => {
+      if (chartInstance.current) {
+        chartInstance.current.dispose();
+        chartInstance.current = null;
+      }
+    };
+    // eslint-disable-next-line
   }, [metric, range]);
 
   return (
@@ -51,16 +69,17 @@ const MetricDashboard: React.FC = () => {
         <Col>
           <RangePicker
             value={range}
-            onChange={v => setRange(v as [any, any])}
+            onChange={v => v && setRange(v as [Dayjs, Dayjs])}
             allowClear={false}
           />
         </Col>
         <Col>
-          <Button type="primary" onClick={() => window.location.reload()}>刷新</Button>
+          <Button type="primary" onClick={fetchData}>刷新</Button>
         </Col>
       </Row>
       <div ref={chartRef} style={{ height: 400, background: "#fff" }} />
     </Card>
   );
 };
+
 export default MetricDashboard;

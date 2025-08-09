@@ -2,10 +2,11 @@
  * @file 用户详情页
  * @desc 展示用户基础信息、历史登录、操作日志等，权限/注释齐全
  */
-import React, { useEffect, useState } from 'react';
-import { Card, Descriptions, Tag, Table, Button, Spin } from 'antd';
-import { getUserDetail, getUserLoginHistory, getUserOpLog } from '../../api/user';
-import type { User, UserLoginHistory, UserOpLog } from '../../types/user';
+import React, {useEffect, useState} from 'react';
+import {Button, Card, Descriptions, Spin, Table, Tag} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {UserDTO, UserLoginHistoryDTO, UserOpLogDTO} from '../../api/gen/data-contracts.ts';
 
 interface Props {
   id: number;
@@ -19,17 +20,17 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const UserDetail: React.FC<Props> = ({ id, onBack }) => {
-  const [data, setData] = useState<User|null>(null);
-  const [loginHistory, setLoginHistory] = useState<UserLoginHistory[]>([]);
-  const [opLogs, setOpLogs] = useState<UserOpLog[]>([]);
+  const [data, setData] = useState<UserDTO|null>(null);
+  const [loginHistory, setLoginHistory] = useState<UserLoginHistoryDTO[]>([]);
+  const [opLogs, setOpLogs] = useState<UserOpLogDTO[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      getUserDetail(id),
-      getUserLoginHistory(id),
-      getUserOpLog(id)
+      api.getUser(id),
+      api.getUserLoginHistory(id),
+      api.getUserOpLog(id)
     ]).then(([res, logins, logs]) => {
       setData(res.data);
       setLoginHistory(logins.data || []);

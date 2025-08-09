@@ -2,10 +2,11 @@
  * @file 租户详情页
  * @desc 展示租户基础信息、关联用户、操作日志
  */
-import React, { useEffect, useState } from 'react';
-import { Card, Descriptions, Button, Spin, Table } from 'antd';
-import { getTenantDetail, getTenantUsers, getTenantOpLog } from '../../api/tenant';
-import type { Tenant, TenantUser, TenantOpLog } from '../../types/tenant';
+import React, {useEffect, useState} from 'react';
+import {Button, Card, Descriptions, Spin, Table} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {TenantDTO, TenantOpLogDTO, TenantUserDTO} from '../../api/gen/data-contracts.ts';
 
 interface Props {
   id: number;
@@ -13,17 +14,17 @@ interface Props {
 }
 
 const TenantDetail: React.FC<Props> = ({ id, onBack }) => {
-  const [data, setData] = useState<Tenant|null>(null);
-  const [users, setUsers] = useState<TenantUser[]>([]);
-  const [ops, setOps] = useState<TenantOpLog[]>([]);
+  const [data, setData] = useState<TenantDTO|null>(null);
+  const [users, setUsers] = useState<TenantUserDTO[]>([]);
+  const [ops, setOps] = useState<TenantOpLogDTO[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      getTenantDetail(id),
-      getTenantUsers(id),
-      getTenantOpLog(id)
+      api.getTenant(id),
+      api.getTenantUsers(id),
+      api.getTenantOpLog(id)
     ]).then(([res, usersRes, opsRes]) => {
       setData(res.data);
       setUsers(usersRes.data || []);

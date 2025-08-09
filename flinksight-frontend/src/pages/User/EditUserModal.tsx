@@ -2,10 +2,11 @@
  * @file 用户新建/编辑弹窗
  * @desc 支持新增、编辑、重置密码，表单校验，API/types自动对接
  */
-import React, { useEffect } from 'react';
-import { Modal, Form, Input, Select, Switch, message } from 'antd';
-import { createUser, updateUser, getUserDetail, resetUserPassword } from '../../api/user';
-import type { User, UserCreateReq, UserUpdateReq, UserRole } from '../../types/user';
+import React, {useEffect} from 'react';
+import {Form, Input, message, Modal, Select, Switch} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {UserDTO} from '../../api/gen/data-contracts.ts';
 
 const { Option } = Select;
 
@@ -21,7 +22,7 @@ const EditUserModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
 
   useEffect(() => {
     if (id) {
-      getUserDetail(id).then(res => form.setFieldsValue(res.data));
+      api.getUser(id).then(res => form.setFieldsValue(res.data));
     } else {
       form.resetFields();
     }
@@ -31,10 +32,10 @@ const EditUserModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
   const handleSubmit = async () => {
     const values = await form.validateFields();
     if (id) {
-      await updateUser(id, values as UserUpdateReq);
+      await api.updateUser(id, values as UserDTO);
       message.success('编辑成功');
     } else {
-      await createUser(values as UserCreateReq);
+      await api.createUser(values as UserDTO);
       message.success('新建成功');
     }
     onOk();
@@ -44,7 +45,7 @@ const EditUserModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
   // 重置密码（仅编辑时可见）
   const handleResetPwd = async () => {
     if (!id) return;
-    await resetUserPassword(id);
+    await api.resetUserPassword(id);
     message.success('已重置密码（新密码请通过通知渠道获取）');
   };
 

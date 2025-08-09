@@ -2,16 +2,17 @@
  * @file 角色分配/角色管理页
  * @desc 支持所有角色的增删改查、权限设置，API/type全自动联动，权限控制、注释齐全
  */
-import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Input, Space, Tag, message } from 'antd';
-import { getRoles, createRole, updateRole, deleteRole, getRoleDetail } from '../../api/role';
-import type { Role } from '../../types/role';
+import React, {useEffect, useState} from 'react';
+import {Button, message, Modal, Space, Table, Tag} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {RoleDTO} from '../../api/gen/data-contracts.ts';
 import EditRoleModal from './EditRoleModal';
 import RoleDetail from './RoleDetail';
-import { useUser } from '../../store/user';
+import {useUser} from '../../store/user';
 
 const RoleList: React.FC = () => {
-  const [list, setList] = useState<Role[]>([]);
+  const [list, setList] = useState<RoleDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -24,7 +25,7 @@ const RoleList: React.FC = () => {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await getRoles();
+      const res = await api.getAllRoles();
       setList(res.data || []);
     } finally {
       setLoading(false);
@@ -42,7 +43,7 @@ const RoleList: React.FC = () => {
     Modal.confirm({
       title: '确认删除该角色？',
       onOk: async () => {
-        await deleteRole(id);
+        await api.deleteRole(id);
         message.success('已删除');
         fetch();
       }
@@ -69,7 +70,7 @@ const RoleList: React.FC = () => {
           { title: '描述', dataIndex: 'desc' },
           {
             title: '操作',
-            render: (_: any, r: Role) => (
+            render: (_: any, r: RoleDTO) => (
               <Space>
                 <Button type="link" size="small" onClick={() => { setEditId(r.id); setModalVisible(true); }} disabled={!canEdit}>编辑</Button>
                 <Button type="link" size="small" danger onClick={() => handleDelete(r.id)} disabled={!canEdit}>删除</Button>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, Suspense } from "react";
+import React, {Suspense, useEffect, useState} from "react"; 
 import KPIStats from './KPIStats';
 import ClusterStatus from './ClusterStatus';
 import JobFunnel from './JobFunnel';
@@ -30,13 +30,13 @@ const DashboardPage: React.FC = () => {
         {/* Tab导航，可继续添加其它Tab */}
         <div className="flex space-x-4">
           <button
-            className={`px-4 py-1 rounded-t-md ${tab === 'overview' ? 'bg-white shadow font-bold' : 'bg-gray-100 text-gray-500'}`}
+            className={px-4 py-1 rounded-t-md ${tab === 'overview' ? 'bg-white shadow font-bold' : 'bg-gray-100 text-gray-500'}}
             onClick={() => setTab('overview')}
           >
             运营总览
           </button>
           <button
-            className={`px-4 py-1 rounded-t-md ${tab === 'metric' ? 'bg-white shadow font-bold' : 'bg-gray-100 text-gray-500'}`}
+            className={px-4 py-1 rounded-t-md ${tab === 'metric' ? 'bg-white shadow font-bold' : 'bg-gray-100 text-gray-500'}}
             onClick={() => setTab('metric')}
           >
             指标可视化大屏

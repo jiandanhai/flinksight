@@ -1,20 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { getDashboardSummary } from '../../api/dashboard';
-import type { DashboardSummary } from '../../types/dashboard';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {DashboardSummaryDTO} from '../../api/gen/data-contracts.ts';
 import Loading from '../../components/Loading';
 
 /**
- * KPI统计组件
- * - 展示核心数据：集群数、任务数、报警数、活跃任务、健康度等
+   * KPI统计组件
+   * - 展示核心数据：集群数、任务数、报警数、活跃任务、健康度等
  */
 const KPIStats: React.FC = () => {
-  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [summary, setSummary] = useState<DashboardSummaryDTO | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function fetchSummary() {
     setLoading(true);
     try {
-      const data = await getDashboardSummary();
+      const data = await api.getDashboardStatisticsSummaryByTenant();
       setSummary(data);
     } finally {
       setLoading(false);

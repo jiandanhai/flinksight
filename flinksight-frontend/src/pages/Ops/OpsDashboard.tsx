@@ -3,21 +3,25 @@
  * @desc 平台活跃、付费、漏斗、实时告警等
  */
 import React, { useEffect, useRef } from "react";
-import { Row, Col, Card, Statistic, Progress } from "antd";
+import { Card, Col, Progress, Row, Statistic } from "antd";
 import * as echarts from "echarts";
-import http from "@/api/http";
+import { api } from 'src/api/gen/client';
 
 const OpsDashboard: React.FC = () => {
   const kpiRef = useRef<HTMLDivElement>(null);
   const funnelRef = useRef<HTMLDivElement>(null);
+  const kpiChart = useRef<echarts.ECharts | null>(null);
+  const funnelChart = useRef<echarts.ECharts | null>(null);
 
   useEffect(() => {
     // KPI 趋势
-    http.get("/ops/kpi").then(res => {
+    api.opsControllerGetKpi().then(res => {
       const d = res.data || { date: [], active: [], paid: [] };
       if (kpiRef.current) {
-        const chart = echarts.init(kpiRef.current);
-        chart.setOption({
+        if (!kpiChart.current) {
+          kpiChart.current = echarts.init(kpiRef.current);
+        }
+        kpiChart.current.setOption({
           title: { text: "日活/付费趋势", left: "center" },
           tooltip: { trigger: "axis" },
           legend: { data: ["日活", "付费"] },
@@ -31,11 +35,13 @@ const OpsDashboard: React.FC = () => {
       }
     });
     // 漏斗
-    http.get("/ops/funnel").then(res => {
+    api.opsControllerGetFunnel().then(res => {
       const d = res.data || { steps: [], values: [] };
       if (funnelRef.current) {
-        const chart = echarts.init(funnelRef.current);
-        chart.setOption({
+        if (!funnelChart.current) {
+          funnelChart.current = echarts.init(funnelRef.current);
+        }
+        funnelChart.current.setOption({
           title: { text: "平台漏斗", left: "center" },
           series: [{
             name: 'Funnel',
@@ -51,8 +57,8 @@ const OpsDashboard: React.FC = () => {
       }
     });
     return () => {
-      kpiRef.current && echarts.dispose(kpiRef.current);
-      funnelRef.current && echarts.dispose(funnelRef.current);
+      if (kpiChart.current) { kpiChart.current.dispose(); kpiChart.current = null; }
+      if (funnelChart.current) { funnelChart.current.dispose(); funnelChart.current = null; }
     };
   }, []);
 

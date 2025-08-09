@@ -2,23 +2,24 @@
  * @file 任务/作业管理页
  * @desc 支持任务查询、分页、批量启停、详情、编辑弹窗，权限自动校验
  */
-import React, { useEffect, useState } from 'react';
-import { Table, Button, Input, Tag, Space, Modal, message } from 'antd';
-import { getJobs, updateJob, deleteJob, batchUpdateJobStatus } from '../../api/job';
-import type { Job, JobQuery } from '../../types/job';
+import React, {useEffect, useState} from 'react';
+import {Button, Input, message, Modal, Space, Table, Tag} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {JobDTO} from '../../api/gen/data-contracts.ts';
 import EditJobModal from './EditJobModal';
 import JobDetail from './JobDetail';
-import { useUser } from '../../store/user';
+import {useUser} from '../../store/user';
 
 const { Search } = Input;
 
 const JobList: React.FC = () => {
-  const [list, setList] = useState<Job[]>([]);
+  const [list, setList] = useState<JobDTO[]>([]);
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState<JobQuery>({});
+  const [query, setQuery] = useState<JobDTO>({});
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -31,7 +32,7 @@ const JobList: React.FC = () => {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await getJobs({ ...query, page, size });
+      const res = await api.getAllJobs({ ...query, page, size });
       setList(res.data?.records || []);
       setTotal(res.data?.total || 0);
     } finally {
@@ -62,7 +63,7 @@ const JobList: React.FC = () => {
     Modal.confirm({
       title: '确认删除该任务？',
       onOk: async () => {
-        await deleteJob(id);
+        await api.deleteJob(id);
         message.success('已删除');
         fetch();
       }
@@ -71,7 +72,7 @@ const JobList: React.FC = () => {
 
   // 批量启用/停用
   async function handleBatchEnable(enable: boolean) {
-    await batchUpdateJobStatus(selectedRowKeys, enable);
+    await api.batchUpdateJobStatus(selectedRowKeys, enable);
     message.success(enable ? '已启用' : '已停用');
     setSelectedRowKeys([]);
     fetch();

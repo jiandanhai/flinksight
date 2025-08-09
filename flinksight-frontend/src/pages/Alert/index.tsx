@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import AlertList from './AlertList';
 import RuleList from './RuleList';
 

@@ -1,28 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { getProfile, updateProfile } from '../../api/profile';
-import type { Profile, ProfileUpdateReq } from '../../types/profile';
-import { Form, Input, Button, Avatar, message } from 'antd';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {ProfileDTO} from '../../api/gen/data-contracts.ts';
+import {Avatar, Button, Form, Input, message} from 'antd';
 
 /**
  * 个人资料展示与编辑
  */
 const ProfileInfo: React.FC = () => {
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<ProfileDTO | null>(null);
   const [editing, setEditing] = useState(false);
   const [form] = Form.useForm();
 
   useEffect(() => {
-    getProfile().then(res => {
+    api.getProfileByUserId().then(res => {
       setProfile(res.data);
       form.setFieldsValue(res.data);
     });
   }, [form]);
 
-  const handleSubmit = async (values: ProfileUpdateReq) => {
-    await updateProfile(values);
+  const handleSubmit = async (values: ProfileDTO) => {
+    await api.updateProfile(values);
     message.success('资料已更新');
     setEditing(false);
-    getProfile().then(res => setProfile(res.data));
+    api.getProfile().then(res => setProfile(res.data));
   };
 
   if (!profile) return <div>加载中...</div>;

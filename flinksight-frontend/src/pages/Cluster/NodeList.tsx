@@ -2,22 +2,23 @@
  * @file 节点明细与健康管理
  * @desc 展示所有节点的状态、健康、资源利用、批量操作等
  */
-import React, { useEffect, useState } from 'react';
-import { Table, Button, Tag, Space, Modal, message, Input, Tooltip } from 'antd';
-import { getNodes, updateNode, batchEnableNodes, deleteNode, getNodeDetail } from '../../api/cluster';
-import type { Node, NodeQuery } from '../../types/cluster';
+import React, {useEffect, useState} from 'react';
+import {Button, Input, message, Modal, Space, Table, Tag, Tooltip} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {NodeDTO} from '../../api/gen/data-contracts.ts';
 import NodeDetailModal from './NodeDetailModal';
-import { useUser } from '../../store/user';
+import {useUser} from '../../store/user';
 
 const { Search } = Input;
 
 const NodeList: React.FC = () => {
-  const [list, setList] = useState<Node[]>([]);
+  const [list, setList] = useState<NodeDTO[]>([]);
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState<NodeQuery>({});
+  const [query, setQuery] = useState<NodeDTO>({});
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [detailId, setDetailId] = useState<number | null>(null);
   const { role } = useUser();
@@ -28,7 +29,7 @@ const NodeList: React.FC = () => {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await getNodes({ ...query, page, size });
+      const res = await api.getAllNodes({ ...query, page, size });
       setList(res.data?.records || []);
       setTotal(res.data?.total || 0);
     } finally {
@@ -48,7 +49,7 @@ const NodeList: React.FC = () => {
 
   // 启用/禁用
   async function handleBatchEnable(enable: boolean) {
-    await batchEnableNodes(selectedRowKeys, enable);
+    await api.batchEnableNodes(selectedRowKeys, enable);
     message.success(enable ? '已启用' : '已禁用');
     setSelectedRowKeys([]);
     fetch();
@@ -59,7 +60,7 @@ const NodeList: React.FC = () => {
     Modal.confirm({
       title: '确认删除该节点？',
       onOk: async () => {
-        await deleteNode(id);
+        await api.deleteNode(id);
         message.success('已删除');
         fetch();
       }

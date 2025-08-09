@@ -2,17 +2,18 @@
  * @file 通知渠道配置
  * @desc 支持邮件、短信、Webhook等多渠道编辑、测试、启用禁用，自动API/type对接
  */
-import React, { useEffect, useState } from 'react';
-import { Table, Button, Input, Space, Tag, Modal, Switch, message } from 'antd';
-import { getNotifyChannels, updateNotifyChannel, deleteNotifyChannel, createNotifyChannel, testNotifyChannel } from '../../api/settings';
-import type { NotifyChannel, NotifyChannelCreateReq, NotifyChannelUpdateReq } from '../../types/settings';
+import React, {useEffect, useState} from 'react';
+import {Button, Input, message, Modal, Space, Table, Tag} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {NotifyChannelDTO} from '../../api/gen/data-contracts.ts';
 import EditNotifyModal from './EditNotifyModal';
-import { useUser } from '../../store/user';
+import {useUser} from '../../store/user';
 
 const { Search } = Input;
 
 const NotificationConfig: React.FC = () => {
-  const [list, setList] = useState<NotifyChannel[]>([]);
+  const [list, setList] = useState<NotifyChannelDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState<string>('');
   const [modalVisible, setModalVisible] = useState(false);
@@ -24,7 +25,7 @@ const NotificationConfig: React.FC = () => {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await getNotifyChannels({ keyword: query });
+      const res = await api.getAllNotifyChannels({ keyword: query });
       setList(res.data || []);
     } finally {
       setLoading(false);
@@ -46,7 +47,7 @@ const NotificationConfig: React.FC = () => {
     Modal.confirm({
       title: '确认删除该通知渠道？',
       onOk: async () => {
-        await deleteNotifyChannel(id);
+        await api.deleteNotifyChannel(id);
         message.success('已删除');
         fetch();
       }
@@ -54,15 +55,15 @@ const NotificationConfig: React.FC = () => {
   }
 
   // 启用/禁用
-  async function handleToggle(channel: NotifyChannel) {
-    await updateNotifyChannel(channel.id, { enabled: !channel.enabled } as NotifyChannelUpdateReq);
+  async function handleToggle(channel: NotifyChannelDTO) {
+    await api.updateNotifyChannel(channel.id, { enabled: !channel.enabled } as NotifyChannelDTO);
     message.success(channel.enabled ? '已禁用' : '已启用');
     fetch();
   }
 
   // 测试通知
-  async function handleTest(channel: NotifyChannel) {
-    await testNotifyChannel(channel.id);
+  async function handleTest(channel: NotifyChannelDTO) {
+    await api.testNotifyChannel(channel.id);
     message.success('通知测试已发送');
   }
 
@@ -83,7 +84,7 @@ const NotificationConfig: React.FC = () => {
           { title: '状态', dataIndex: 'enabled', render: (v: boolean) => v ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag> },
           {
             title: '操作',
-            render: (_: any, r: NotifyChannel) => (
+            render: (_: any, r: NotifyChannelDTO) => (
               <Space>
                 <Button size="small" type="link" onClick={() => openModal(r.id)} disabled={!canEdit}>编辑</Button>
                 <Button size="small" type="link" onClick={() => handleToggle(r)} disabled={!canEdit}>{r.enabled ? '禁用' : '启用'}</Button>

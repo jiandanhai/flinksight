@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import MetricList from './MetricList';
 import MetricDetail from './MetricDetail';
 

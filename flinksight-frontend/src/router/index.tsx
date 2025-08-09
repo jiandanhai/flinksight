@@ -1,26 +1,27 @@
 import React, { Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import AuthRoute from '../components/AuthRoute/AuthRoute';
 import MainLayout from '../layouts/MainLayout';
-import LoginPage from '../pages/login';
-import SSOCallback from '../pages/login/SSOCallback';
-import { MENUS, MenuItem } from '../constants/menus';
+import LoginPage from '../pages/Login';
+import SSOCallback from '../pages/Login/SSOCallback';
+import type { MenuItem } from '../constants/menus';
+import { MENUS } from '../constants/menus';
 import { useUser } from '../store/user';
 import { useLocale } from '../store/locale'; // 动态获取当前语言环境
 import { loadMicroApp } from '../microfrontends/loader'; // 微前端挂载器
 
 const Pages: Record<string, React.LazyExoticComponent<React.FC>> = {
-  DashboardPage: React.lazy(() => import('../pages/dashboard')),
-  ClusterPage: React.lazy(() => import('../pages/cluster')),
-  NodePage: React.lazy(() => import('../pages/cluster/Node')),
-  JobPage: React.lazy(() => import('../pages/job')),
-  AlertPage: React.lazy(() => import('../pages/alert')),
-  RulePage: React.lazy(() => import('../pages/alert/Rule')),
-  UserPage: React.lazy(() => import('../pages/user')),
-  RolePage: React.lazy(() => import('../pages/role')),
-  TenantPage: React.lazy(() => import('../pages/tenant')),
-  SettingsPage: React.lazy(() => import('../pages/settings')),
-  OpsPage: React.lazy(() => import('../pages/ops')),
+  DashboardPage: React.lazy(() => import('../pages/Dashboard')),
+  ClusterPage: React.lazy(() => import('../pages/Cluster')),
+  NodePage: React.lazy(() => import('../pages/Cluster/Node')),
+  JobPage: React.lazy(() => import('../pages/Job')),
+  AlertPage: React.lazy(() => import('../pages/Alert')),
+  RulePage: React.lazy(() => import('../pages/Alert/Rule')),
+  UserPage: React.lazy(() => import('../pages/User')),
+  RolePage: React.lazy(() => import('../pages/Role')),
+  TenantPage: React.lazy(() => import('../pages/Tenant')),
+  SettingsPage: React.lazy(() => import('../pages/Settings')),
+  OpsPage: React.lazy(() => import('../pages/Ops')),
   // ...扩展其它本地页面
 };
 
@@ -65,8 +66,10 @@ const AppRoutes: React.FC = () => {
 
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      {/* ✅ 白名单在守卫外，且把回调放在 /login 前更稳 */}
       <Route path="/login/sso-callback" element={<SSOCallback />} />
+      <Route path="/login" element={<LoginPage />} />
+      {/* ✅ 受保护区域 */}
       <Route element={<AuthRoute />}>
         <Route element={<MainLayout />}>
           {renderRoutes(routes, locale, role)}
@@ -78,4 +81,5 @@ const AppRoutes: React.FC = () => {
     </Routes>
   );
 };
+
 export default AppRoutes;

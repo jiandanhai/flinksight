@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { getMetrics, deleteMetric } from '../../api/metric';
-import type { Metric } from '../../types/metric';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {MetricDashboardDTO} from '../../api/gen/data-contracts.ts';
 import EditMetricModal from './EditMetricModal';
 import PageTable from '../../components/PageTable';
 import Loading from '../../components/Loading';
@@ -13,7 +14,7 @@ interface Props {
  * 指标列表页面
  */
 const MetricList: React.FC<Props> = ({ onSelect }) => {
-  const [metrics, setMetrics] = useState<Metric[]>([]);
+  const [metrics, setMetrics] = useState<MetricDashboardDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -21,7 +22,7 @@ const MetricList: React.FC<Props> = ({ onSelect }) => {
   async function fetchMetrics() {
     setLoading(true);
     try {
-      const data = await getMetrics({});
+      const data = await api.getAllMetricDashboards({});
       setMetrics(data);
     } finally {
       setLoading(false);
@@ -34,11 +35,11 @@ const MetricList: React.FC<Props> = ({ onSelect }) => {
     setModalVisible(true);
   }
 
-  async function handleDelete(m: Metric) {
+  async function handleDelete(m: MetricDashboardDTO) {
     if (!window.confirm(`确认删除指标：${m.name}？`)) return;
     setLoading(true);
     try {
-      await deleteMetric(m.id);
+      await api.deleteMetric(m.id);
       fetchMetrics();
     } finally {
       setLoading(false);
@@ -51,7 +52,7 @@ const MetricList: React.FC<Props> = ({ onSelect }) => {
         <button className="btn-primary" onClick={() => openModal()}>新建指标</button>
         <span>共{metrics.length}个指标</span>
       </div>
-      <PageTable<Metric>
+      <PageTable<MetricDashboardDTO>
         columns={[
           { key: 'name', title: '名称', render: m => (
             <span className="text-blue-600 cursor-pointer" onClick={() => onSelect(m.id)}>{m.name}</span>

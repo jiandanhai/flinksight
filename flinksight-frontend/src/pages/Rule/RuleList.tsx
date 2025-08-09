@@ -2,23 +2,24 @@
  * @file 告警规则管理页
  * @desc 全量管理所有告警规则，支持筛选、编辑、批量删除、启停、类型/级别筛选
  */
-import React, { useEffect, useState } from 'react';
-import { Table, Button, Input, Tag, Space, Modal, Select, message } from 'antd';
-import { getRules, updateRule, deleteRule, batchUpdateRuleStatus } from '../../api/rule';
-import type { Rule, RuleQuery } from '../../types/rule';
+import React, {useEffect, useState} from 'react';
+import {Button, Input, message, Modal, Select, Space, Table, Tag} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {AlertRuleDTO} from '../../api/gen/data-contracts.ts';
 import EditRuleModal from './EditRuleModal';
-import { useUser } from '../../store/user';
+import {useUser} from '../../store/user';
 
 const { Search } = Input;
 const { Option } = Select;
 
 const RuleList: React.FC = () => {
-  const [list, setList] = useState<Rule[]>([]);
+  const [list, setList] = useState<AlertRuleDTO[]>([]);
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState<RuleQuery>({});
+  const [query, setQuery] = useState<AlertRuleDTO>({});
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -28,7 +29,7 @@ const RuleList: React.FC = () => {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await getRules({ ...query, page, size });
+      const res = await api.getAllRules({ ...query, page, size });
       setList(res.data?.records || []);
       setTotal(res.data?.total || 0);
     } finally {
@@ -54,7 +55,7 @@ const RuleList: React.FC = () => {
     Modal.confirm({
       title: '确认删除该规则？',
       onOk: async () => {
-        await deleteRule(id);
+        await api.deleteRule(id);
         message.success('已删除');
         fetch();
       }
@@ -63,7 +64,7 @@ const RuleList: React.FC = () => {
 
   // 批量启用/停用
   async function handleBatchEnable(enable: boolean) {
-    await batchUpdateRuleStatus(selectedRowKeys, enable);
+    await api.batchUpdateRuleStatus(selectedRowKeys, enable);
     message.success(enable ? '已启用' : '已停用');
     setSelectedRowKeys([]);
     fetch();

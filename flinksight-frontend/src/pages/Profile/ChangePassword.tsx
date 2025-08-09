@@ -1,6 +1,7 @@
 import React from 'react';
-import { Form, Input, Button, message } from 'antd';
-import { updatePassword } from '../../api/profile';
+import {Button, Form, Input, message} from 'antd';
+import { api } from 'src/api/gen/client';
+
 
 /**
  * 修改密码
@@ -13,7 +14,7 @@ const ChangePassword: React.FC = () => {
       message.error('两次新密码输入不一致');
       return;
     }
-    await updatePassword({ oldPassword: values.oldPassword, newPassword: values.newPassword });
+    await api.updatePassword({ oldPassword: values.oldPassword, newPassword: values.newPassword });
     message.success('密码修改成功');
     form.resetFields();
   };

@@ -2,23 +2,24 @@
  * @file 集群列表
  * @desc 支持分页、搜索、批量启用/停用、健康检查、集群详情、节点扩容，API/types联动
  */
-import React, { useEffect, useState } from 'react';
-import { Table, Button, Input, Space, Tag, Modal, message } from 'antd';
-import { getClusters, deleteCluster, updateCluster, getClusterDetail, batchEnableClusters } from '../../api/cluster';
-import type { Cluster, ClusterQuery } from '../../types/cluster';
+import React, {useEffect, useState} from 'react';
+import {Button, Input, message, Modal, Space, Table, Tag} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {ClusterDTO} from '../../api/gen/data-contracts.ts';
 import EditClusterModal from './EditClusterModal';
 import ClusterDetail from './ClusterDetail';
-import { useUser } from '../../store/user';
+import {useUser} from '../../store/user';
 
 const { Search } = Input;
 
 const ClusterList: React.FC = () => {
-  const [list, setList] = useState<Cluster[]>([]);
+  const [list, setList] = useState<ClusterDTO[]>([]);
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState<ClusterQuery>({});
+  const [query, setQuery] = useState<ClusterDTO>({});
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -31,7 +32,7 @@ const ClusterList: React.FC = () => {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await getClusters({ ...query, page, size });
+      const res = await api.getAllClusters({ ...query, page, size });
       setList(res.data?.records || []);
       setTotal(res.data?.total || 0);
     } finally {
@@ -62,7 +63,7 @@ const ClusterList: React.FC = () => {
     Modal.confirm({
       title: '确认删除该集群？',
       onOk: async () => {
-        await deleteCluster(id);
+        await api.deleteCluster(id);
         message.success('已删除');
         fetch();
       }
@@ -71,7 +72,7 @@ const ClusterList: React.FC = () => {
 
   // 批量启用/停用
   async function handleBatchEnable(enable: boolean) {
-    await batchEnableClusters(selectedRowKeys, enable);
+    await api.batchEnableClusters(selectedRowKeys, enable);
     message.success(enable ? '已启用' : '已停用');
     setSelectedRowKeys([]);
     fetch();

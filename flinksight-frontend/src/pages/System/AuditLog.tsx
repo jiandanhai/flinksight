@@ -2,25 +2,26 @@
  * @file 系统审计日志
  * @desc 记录所有用户操作，支持搜索、分页、导出
  */
-import React, { useEffect, useState } from 'react';
-import { Table, Input, Tag, Button, Space } from 'antd';
-import { getAuditLogs, exportAuditLogs } from '../../api/system';
-import type { AuditLog, AuditLogQuery } from '../../types/system';
+import React, {useEffect, useState} from 'react';
+import {Button, Input, Table, Tag} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {AuditLogDTO} from '../../api/gen/data-contracts.ts';
 
 const { Search } = Input;
 
 const AuditLogPage: React.FC = () => {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [logs, setLogs] = useState<AuditLogDTO[]>([]);
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(20);
   const [total, setTotal] = useState(0);
-  const [query, setQuery] = useState<AuditLogQuery>({});
+  const [query, setQuery] = useState<AuditLogDTO>({});
   const [loading, setLoading] = useState(false);
 
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await getAuditLogs({ ...query, page, size });
+      const res = await api.getAllAuditLogs({ ...query, page, size });
       setLogs(res.data?.records || []);
       setTotal(res.data?.total || 0);
     } finally {
@@ -30,7 +31,7 @@ const AuditLogPage: React.FC = () => {
   useEffect(() => { fetch(); }, [query, page, size]);
 
   const handleExport = async () => {
-    await exportAuditLogs({ ...query, page, size });
+    await api.exportAuditLogs({ ...query, page, size });
     // 可直接 window.open(url) 或下载文件流
   };
 

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { createJob, updateJob, getJobDetail } from '../../api/job';
-import type { Job, JobCreateReq, JobUpdateReq } from '../../types/job';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {JobDTO} from '../../api/gen/data-contracts.ts';
 
 interface Props {
   id: number | null;          // null为新建，否则为编辑
@@ -14,7 +15,7 @@ interface Props {
  * - 新建/编辑复用
  */
 const EditJobModal: React.FC<Props> = ({ id, onClose, onOk }) => {
-  const [form, setForm] = useState<JobCreateReq | JobUpdateReq>({
+  const [form, setForm] = useState<JobDTO | JobDTO>({
     name: '', type: '', clusterId: 0, owner: '', config: '', remark: ''
   });
   const [loading, setLoading] = useState(false);
@@ -23,7 +24,7 @@ const EditJobModal: React.FC<Props> = ({ id, onClose, onOk }) => {
   useEffect(() => {
     if (id) {
       setLoading(true);
-      getJobDetail(id).then(data => {
+      api.getJob(id).then(data => {
         setForm({
           name: data.name, type: data.type, clusterId: data.clusterId, owner: data.owner,
           config: data.config || '', remark: data.remark || ''
@@ -40,9 +41,9 @@ const EditJobModal: React.FC<Props> = ({ id, onClose, onOk }) => {
     setLoading(true);
     try {
       if (id) {
-        await updateJob(id, form as JobUpdateReq);
+        await api.updateJob(id, form as JobDTO);
       } else {
-        await createJob(form as JobCreateReq);
+        await api.createJob(form as JobDTO);
       }
       onClose();
       onOk();

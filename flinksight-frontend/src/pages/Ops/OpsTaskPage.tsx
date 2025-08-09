@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { getOpsTasks, runOpsTask, deleteOpsTask } from '../../api/ops';
-import type { OpsTask } from '../../types/ops';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {OpsTaskDTO} from '../../api/gen/data-contracts.ts';
 import PageTable from '../../components/PageTable';
 import Loading from '../../components/Loading';
 
@@ -9,13 +10,13 @@ import Loading from '../../components/Loading';
  * - 运维任务新建、执行、删除
  */
 const OpsTaskPage: React.FC = () => {
-  const [tasks, setTasks] = useState<OpsTask[]>([]);
+  const [tasks, setTasks] = useState<OpsTaskDTO[]>([]);
   const [loading, setLoading] = useState(false);
 
   async function fetchTasks() {
     setLoading(true);
     try {
-      const data = await getOpsTasks({ page: 1, size: 30 });
+      const data = await api.getAllOpsTasks({ page: 1, size: 30 });
       setTasks(data);
     } finally {
       setLoading(false);
@@ -25,7 +26,7 @@ const OpsTaskPage: React.FC = () => {
   async function handleRun(id: number) {
     setLoading(true);
     try {
-      await runOpsTask(id);
+      await api.runOpsTask(id);
       fetchTasks();
     } finally {
       setLoading(false);
@@ -35,7 +36,7 @@ const OpsTaskPage: React.FC = () => {
   async function handleDelete(id: number) {
     setLoading(true);
     try {
-      await deleteOpsTask(id);
+      await api.deleteOpsTask(id);
       fetchTasks();
     } finally {
       setLoading(false);
@@ -47,7 +48,7 @@ const OpsTaskPage: React.FC = () => {
   return (
     <div>
       <h3 className="font-bold text-lg mb-6">运维自动化任务</h3>
-      <PageTable<OpsTask>
+      <PageTable<OpsTaskDTO>
         columns={[
           { key: 'name', title: '任务名' },
           { key: 'script', title: '脚本' },

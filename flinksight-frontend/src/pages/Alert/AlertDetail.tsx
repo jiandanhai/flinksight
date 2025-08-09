@@ -2,11 +2,12 @@
  * @file 报警流详情页面
  * @desc 展示单条报警流的详细信息，包括规则、历史记录、操作日志，支持权限、错误处理、全注释。
  */
-import React, { useEffect, useState } from 'react';
-import { Card, Tag, Descriptions, Table, Button, Spin } from 'antd';
-import { getAlertDetail, getAlertHistory, getAlertOps, getAlertRules } from '../../api/alert';
-import type { Alert, AlertRule, AlertEvent, AlertOpLog } from '../../types/alert';
-import { useUser } from '../../store/user';
+import React, {useEffect, useState} from 'react';
+import {Button, Card, Descriptions, Spin, Table, Tag} from 'antd';
+import { api } from 'src/api/gen/client';
+
+import type {AlertDTO, AlertOpLogDTO, AlertRuleDTO} from '../../api/gen/data-contracts.ts';
+import {useUser} from '../../store/user';
 
 interface Props {
   id: number;
@@ -16,10 +17,10 @@ interface Props {
 const LEVEL_MAP = ['未知', '低', '中', '高', '致命'];
 
 const AlertDetail: React.FC<Props> = ({ id, onBack }) => {
-  const [data, setData] = useState<Alert|null>(null);
-  const [rules, setRules] = useState<AlertRule[]>([]);
-  const [history, setHistory] = useState<AlertEvent[]>([]);
-  const [ops, setOps] = useState<AlertOpLog[]>([]);
+  const [data, setData] = useState<AlertDTO|null>(null);
+  const [rules, setRules] = useState<AlertRuleDTO[]>([]);
+  const [history, setHistory] = useState<AlertDTO[]>([]);
+  const [ops, setOps] = useState<AlertOpLogDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const { role } = useUser();
 
@@ -27,10 +28,10 @@ const AlertDetail: React.FC<Props> = ({ id, onBack }) => {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      getAlertDetail(id),
-      getAlertRules(id),
-      getAlertHistory(id),
-      getAlertOps(id)
+      api.getAlert(id),
+      api.getAlertRules(id),
+      api.getAlertHistory(id),
+      api.getAlertOps(id)
     ]).then(([res, rulesRes, histRes, opsRes]) => {
       setData(res.data);
       setRules(rulesRes.data || []);

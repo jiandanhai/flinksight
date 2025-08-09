@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { Button, message, Row, Col, Card } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
-import { getClusterDetail, getClusterNodes, getNodeHealthStats } from '../../api/cluster';
-import type { Cluster, Node } from '../../types/cluster';
+import React, {useEffect, useState} from 'react';
+import {Button, Card, Col, message, Row} from 'antd';
+import {PlusOutlined} from '@ant-design/icons';
+import { api } from 'src/api/gen/client';
+
+import type {ClusterDTO, NodeDTO} from '../../api/gen/data-contracts.ts';
 import Loading from '../../components/Loading';
 import ExpandNodeModal from './ExpandNodeModal';
 import NodeHealthCard from './NodeHealthCard';
 import NodeList from './NodeList';
-import { useUser } from '../../store/user';
+import {useUser} from '../../store/user';
 
 /**
  * 集群详情页
@@ -19,10 +20,10 @@ interface Props {
 }
 
 const ClusterDetail: React.FC<Props> = ({ id, onBack }) => {
-  const [cluster, setCluster] = useState<Cluster | null>(null);
+  const [cluster, setCluster] = useState<ClusterDTO | null>(null);
   const [loading, setLoading] = useState(false);
   const [expandOpen, setExpandOpen] = useState(false);
-  const [nodeList, setNodeList] = useState<Node[]>([]);
+  const [nodeList, setNodeList] = useState<NodeDTO[]>([]);
   const [healthStats, setHealthStats] = useState<{ healthy: number; warning: number; error: number }>({ healthy: 0, warning: 0, error: 0 });
   const { role } = useUser();
   const canEdit = role === 'admin' || role === 'ops';
@@ -30,15 +31,15 @@ const ClusterDetail: React.FC<Props> = ({ id, onBack }) => {
   // 拉取集群信息
   const fetchDetail = () => {
     setLoading(true);
-    getClusterDetail(id)
+    api.getCluster(id)
       .then(data => setCluster(data))
       .finally(() => setLoading(false));
   };
 
   // 拉取节点列表和健康分布
   const fetchNodesAndHealth = () => {
-    getClusterNodes(id, { page: 1, size: 1000 }).then(res => setNodeList(res.data?.records || []));
-    getNodeHealthStats(id).then(res => setHealthStats(res.data || { healthy: 0, warning: 0, error: 0 }));
+    api.getNodesByCluster(id, { page: 1, size: 1000 }).then(res => setNodeList(res.data?.records || []));
+    api.getNodeHealth(id).then(res => setHealthStats(res.data || { healthy: 0, warning: 0, error: 0 }));
   };
 
   // 初始化

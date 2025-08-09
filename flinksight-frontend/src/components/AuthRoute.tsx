@@ -1,6 +1,6 @@
 // src/components/AuthRoute.tsx
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import {Navigate} from 'react-router-dom';
 
 /**
  * 登录鉴权路由包装

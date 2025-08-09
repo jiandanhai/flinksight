@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { getOperationLogs, deleteOperationLog } from '../../api/operation';
-import type { OperationLog } from '../../types/operation';
+import React, {useEffect, useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import type {OperationLogDTO} from '../../api/gen/data-contracts.ts';
 import PageTable from '../../components/PageTable';
 import Loading from '../../components/Loading';
 
@@ -9,24 +10,24 @@ import Loading from '../../components/Loading';
  * - 查询/删除/展示操作日志
  */
 const OperationLogPage: React.FC = () => {
-  const [logs, setLogs] = useState<OperationLog[]>([]);
+  const [logs, setLogs] = useState<OperationLogDTO[]>([]);
   const [loading, setLoading] = useState(false);
 
   async function fetchLogs() {
     setLoading(true);
     try {
-      const data = await getOperationLogs({ page: 1, size: 50 });
+      const data = await api.getOperationLogs({ page: 1, size: 50 });
       setLogs(data);
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleDelete(log: OperationLog) {
+  async function handleDelete(log: OperationLogDTO) {
     if (!window.confirm(`确定删除该操作日志？`)) return;
     setLoading(true);
     try {
-      await deleteOperationLog(log.id);
+      await api.deleteOperationLog(log.id);
       fetchLogs();
     } finally {
       setLoading(false);

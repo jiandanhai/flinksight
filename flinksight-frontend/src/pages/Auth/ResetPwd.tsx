@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-import { resetPassword } from '../../api/auth';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import type { ResetPwdReq } from '../../types/auth';
+import React, {useState} from 'react';
+import { api } from 'src/api/gen/client';
+
+import {useNavigate, useSearchParams} from 'react-router-dom';
+import type {UserDTO} from '../../api/gen/data-contracts.ts';
 
 /**
  * 重置密码页面（通过邮箱token）
  */
 const ResetPwdPage: React.FC = () => {
   const [params] = useSearchParams();
-  const [form, setForm] = useState<ResetPwdReq>({ token: params.get('token') || '', password: '' });
+  const [form, setForm] = useState<UserDTO>({ token: params.get('token') || '', password: '' });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const ResetPwdPage: React.FC = () => {
     setLoading(true);
     setMsg('');
     try {
-      await resetPassword(form);
+      await api.resetPassword(form);
       setMsg('密码重置成功，正在跳转登录...');
       setTimeout(() => navigate('/auth/login', { replace: true }), 1200);
     } catch (e: any) {

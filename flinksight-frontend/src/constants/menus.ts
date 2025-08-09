@@ -1,7 +1,7 @@
 /**
  * @file 菜单声明文件（多级、国际化、微前端、权限全自动）
  */
-import { ReactNode } from 'react';
+import {ReactNode} from 'react';
 
 // 通用菜单类型
 export interface MenuItem {
