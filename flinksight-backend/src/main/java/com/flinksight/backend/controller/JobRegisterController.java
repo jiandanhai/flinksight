@@ -4,6 +4,7 @@ import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.JobInfoDTO;
 import com.flinksight.common.dto.JobRegisterRequestDTO;
 import com.flinksight.common.service.JobRegisterService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,6 +25,7 @@ public class JobRegisterController {
     /**
      * 自动注册作业，平台幂等/权限校验/多租户
      */
+    @Operation(summary = "", description = "",operationId = "registerJob")
     @PostMapping("/register")
     public ApiResponse<JobInfoDTO> registerJob(@RequestBody JobRegisterRequestDTO req) {
         // （建议接口层可加租户/平台黑白名单防刷）

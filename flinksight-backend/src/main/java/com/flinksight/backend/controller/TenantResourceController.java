@@ -4,6 +4,7 @@ import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.TenantResourceDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.TenantResourceService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,16 +18,19 @@ public class TenantResourceController {
 
     private final TenantResourceService service;
 
+    @Operation(summary = "创建", description = "Delete tenant",operationId = "assignTenantResource")
     @PostMapping("/assign")
     public ApiResponse<TenantResourceDTO> assign(@RequestParam Long tenantId, @RequestParam Long resourceId) {
         return ApiResponse.ok(service.assignResourceToTenant(tenantId, resourceId));
     }
 
+    @Operation(summary = "删除租户", description = "Delete tenant",operationId = "removeTenantResource")
     @PostMapping("/remove")
     public boolean remove(@RequestParam Long tenantId, @RequestParam Long resourceId) {
         return service.removeResourceFromTenant(tenantId, resourceId);
     }
 
+    @Operation(summary = "删除租户", description = "Delete tenant",operationId = "getTenantResourcesByTenant")
     @GetMapping("/tenant/{tenantId}")
     public ApiResponse<PageResult<TenantResourceDTO>> findByTenant(
             @PathVariable Long tenantId,
@@ -35,6 +39,7 @@ public class TenantResourceController {
         return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
     }
 
+    @Operation(summary = "删除租户", description = "Delete tenant",operationId = "getTenantResourcesByResource")
     @GetMapping("/resource/{resourceId}")
     public ApiResponse<PageResult<TenantResourceDTO>> findByResource(
             @PathVariable Long resourceId,
@@ -43,6 +48,7 @@ public class TenantResourceController {
         return ApiResponse.ok(service.findByResourceId(resourceId,page,size));
     }
 
+    @Operation(summary = "删除租户", description = "Delete tenant",operationId = "getTenantResource")
     @GetMapping("/{id}")
     public ApiResponse<TenantResourceDTO> getById(@PathVariable Long id) {
         return service.getById(id)
@@ -50,6 +56,7 @@ public class TenantResourceController {
                 .orElse(ApiResponse.ok(null));
     }
 
+    @Operation(summary = "删除租户", description = "Delete tenant",operationId = "deleteTenantResource")
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);

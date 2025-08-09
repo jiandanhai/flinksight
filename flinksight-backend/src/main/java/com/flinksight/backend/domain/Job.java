@@ -54,7 +54,7 @@ public class Job implements Serializable {
 
     @Column(length = 16)
     @Schema(description = "状态 (运行/异常/已停止等)")
-    private String status;
+    private Integer status;
 
     @Column(name = "owner_id")
     @Schema(description = "负责人ID")

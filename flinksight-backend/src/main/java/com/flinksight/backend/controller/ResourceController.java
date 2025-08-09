@@ -4,6 +4,7 @@ import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.ResourceDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ResourceService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,19 +18,22 @@ public class ResourceController {
 
     private final ResourceService service;
 
+    @Operation(summary = "", description = "",operationId = "createResource")
     @PostMapping
     public ApiResponse<ResourceDTO> create(@RequestBody ResourceDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
+    @Operation(summary = "", description = "",operationId = "getResource")
     @GetMapping("/{id}")
-    public ApiResponse<ResourceDTO> get(@PathVariable Long id) {
+    public ApiResponse<ResourceDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
                 .orElse(ApiResponse.ok(null));
     }
 
+    @Operation(summary = "", description = "",operationId = "getAllResources")
     @GetMapping
     public ApiResponse<PageResult<ResourceDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -37,6 +41,7 @@ public class ResourceController {
         return ApiResponse.ok(service.getAll(page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "getResourcesByTenant")
     @GetMapping("/tenant/{tenantId}")
     public ApiResponse<PageResult<ResourceDTO>> findByTenantId(
             @PathVariable Long tenantId,
@@ -45,12 +50,14 @@ public class ResourceController {
         return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "updateResource")
     @PutMapping
     public ApiResponse<ResourceDTO> update(@RequestBody ResourceDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
+    @Operation(summary = "", description = "",operationId = "deleteResource")
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);

@@ -13,7 +13,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -35,15 +34,9 @@ public class UserTenantServiceImpl implements UserTenantService {
 
     @Override
     public boolean removeTenantFromUser(Long userId, Long tenantId) {
-        List<UserTenant> list = repository.findByUserIdAndTenantIdAndIsDeleted(userId, tenantId,0);
-        for (UserTenant ut : list) {
-            if (ut.getTenantId().equals(tenantId)) {
-                ut.setIsDeleted(1);
-                repository.save(ut);
-                return true;
-            }
-        }
-        return false;
+        // 直接软删除
+        int updated = repository.softDeleteByUserIdAndTenantId(userId, tenantId);
+        return updated > 0;
     }
 
     @Override
@@ -63,6 +56,13 @@ public class UserTenantServiceImpl implements UserTenantService {
     @Override
     public Optional<UserTenantDTO> getById(Long id) {
         return repository.findById(id).map(userTenantStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
+    }
+
+    @Override
+    public PageResult<UserTenantDTO> findByUserAndTenant(Long userId, Long tenantId,int page, int size) {
+        Page<UserTenant> result = repository.findByUserIdAndTenantIdAndIsDeleted(userId, tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<UserTenantDTO> dtoPage = result.map(userTenantStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
     }
 
     @Override

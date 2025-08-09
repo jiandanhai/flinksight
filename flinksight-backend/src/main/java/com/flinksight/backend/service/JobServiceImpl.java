@@ -45,6 +45,13 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    public PageResult<JobDTO> getAll(int page, int size) {
+        Page<Job> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<JobDTO> dtoPage = result.map(jobStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
+    }
+
+    @Override
     public PageResult<JobDTO> getJobsByTenant(Long tenantId,int page, int size) {
         Page<Job> result = repository.findAllByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
         Page<JobDTO> dtoPage = result.map(jobStructMapper::toDTO);

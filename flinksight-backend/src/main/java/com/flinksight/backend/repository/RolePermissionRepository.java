@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Set;
 
 @Repository
 public interface RolePermissionRepository extends JpaRepository<RolePermission, Long> {
@@ -37,7 +36,11 @@ public interface RolePermissionRepository extends JpaRepository<RolePermission, 
     @Query("select rp.roleId from RolePermission rp where rp.permissionId = :permissionId and rp.isDeleted = 0")
     Page<Long> findRoleIdsByPermissionId(@Param("permissionId") Long permissionId, Pageable pageable);
 
-    Set<String> findPermissionCodesByRoleIdAndIsDeleted(Long roleId, Integer isDeleted);
+
+    @Query("SELECT p.code FROM RolePermission rp JOIN Permission p ON rp.permissionId = p.id WHERE rp.roleId = :roleId AND rp.isDeleted = :isDeleted")
+    List<String> findPermissionCodesByRoleIdAndIsDeleted(@Param("roleId") Long roleId,
+                                                                @Param("isDeleted") Integer isDeleted
+                                                                );
 
     @Query("SELECT rp.permissionId FROM RolePermission rp WHERE rp.roleId = :roleId AND rp.isDeleted = 0")
     List<Long> findPermissionIdsByRoleId(@Param("roleId") Long roleId);

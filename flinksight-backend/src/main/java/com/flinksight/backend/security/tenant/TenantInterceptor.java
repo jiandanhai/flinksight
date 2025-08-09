@@ -12,23 +12,21 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @Component
 public class TenantInterceptor implements HandlerInterceptor {
 
-    public static final ThreadLocal<Long> TENANT_CTX = new ThreadLocal<>();
-
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        // 获取请求头中的租户ID
         String tenantId = request.getHeader("X-Tenant-Id");
+
         if (tenantId != null) {
-            TENANT_CTX.set(Long.parseLong(tenantId));
+            // 设置租户ID到 TenantContext 中
+            TenantContext.setTenantId(Long.parseLong(tenantId));
         }
         return true;
     }
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
-        TENANT_CTX.remove();
-    }
-
-    public static Long getCurrentTenantId() {
-        return TENANT_CTX.get();
+        // 清理租户ID
+        TenantContext.clear();
     }
 }

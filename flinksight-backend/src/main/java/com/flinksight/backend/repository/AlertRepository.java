@@ -16,4 +16,8 @@ public interface AlertRepository extends JpaRepository<Alert, Long> , SoftDelete
     Page<Alert> findByTenantIdAndStatusAndIsDeleted(Long tenantId, Integer status, Integer isDeleted, Pageable pageable);
 
     Page<Alert> findByJobIdAndStatusAndIsDeleted(Long jobId, Integer status, Integer isDeleted, Pageable pageable);
+
+    Page<Alert> findByLevelAndStatusAndIsDeleted(String level, Integer status, Integer isDeleted, Pageable pageable);
+
+    int countByTenantIdAndIsDeleted(Long tenantId, int isDeleted);
 }

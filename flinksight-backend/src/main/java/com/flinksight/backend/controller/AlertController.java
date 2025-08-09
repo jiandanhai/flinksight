@@ -22,13 +22,13 @@ public class AlertController {
 
     private final AlertService alertService;
 
-    @Operation(summary = "新建报警事件", description = "Create alert")
+    @Operation(summary = "新建报警事件", operationId = "createAlert")
     @PostMapping("/create")
     public ApiResponse<AlertDTO> createAlert(@RequestBody AlertDTO alert) {
         return ApiResponse.ok(alertService.createAlert(alert));
     }
 
-    @Operation(summary = "根据ID查询报警事件", description = "Get alert by ID")
+    @Operation(summary = "根据ID查询报警事件", operationId = "getAlert")
     @GetMapping("/{id}")
     public ApiResponse<AlertDTO> getAlertById(@PathVariable Long id) {
         return alertService.getAlertById(id)
@@ -36,8 +36,8 @@ public class AlertController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "查询租户下报警事件", description = "Get alerts by tenant and status")
-    @GetMapping("/listByTenant")
+    @Operation(summary = "查询租户下报警事件", description = "Get alerts by tenant and status",operationId = "getAlertsByTenantAndStatus")
+    @GetMapping("/listByTenantAndStatus")
     public ApiResponse<PageResult<AlertDTO>> getAlertsByTenantAndStatus(
             @RequestParam Long tenantId,
             @RequestParam Integer status,
@@ -46,8 +46,8 @@ public class AlertController {
         return ApiResponse.ok(alertService.getAlertsByTenantAndStatus(tenantId, status, page,size));
     }
 
-    @Operation(summary = "查询任务下报警事件", description = "Get alerts by job and status")
-    @GetMapping("/listByJob")
+    @Operation(summary = "查询任务下报警事件", description = "Get alerts by job and status",operationId = "getAlertsByJobAndStatus")
+    @GetMapping("/listByJobAndStatus")
     public ApiResponse<PageResult<AlertDTO>> getAlertsByJobAndStatus(
             @RequestParam Long jobId,
             @RequestParam Integer status,
@@ -56,13 +56,23 @@ public class AlertController {
         return ApiResponse.ok(alertService.getAlertsByJobAndStatus(jobId, status, page,size));
     }
 
-    @Operation(summary = "更新报警事件", description = "Update alert info")
+    @Operation(summary = "查询任务下报警事件", description = "Get alerts by job and status",operationId = "getAlertsByLevelAndStatus")
+    @GetMapping("/listByLevelAndStatus")
+    public ApiResponse<PageResult<AlertDTO>> getAlertsByLevelAndStatus(
+            @RequestParam String level,
+            @RequestParam Integer status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(alertService.getAlertsByLevelAndStatus(level, status, page,size));
+    }
+
+    @Operation(summary = "更新报警事件", description = "Update alert info",operationId = "updateAlert")
     @PutMapping("/update")
     public ApiResponse<AlertDTO> updateAlert(@RequestBody AlertDTO alert) {
         return ApiResponse.ok(alertService.updateAlert(alert));
     }
 
-    @Operation(summary = "删除报警事件（软删）", description = "Soft delete alert")
+    @Operation(summary = "删除报警事件（软删）", description = "Soft delete alert",operationId = "deleteAlert")
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteAlert(@PathVariable Long id) {
         alertService.softDelete(id);

@@ -4,6 +4,7 @@ import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.NotificationDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NotificationService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,18 +18,21 @@ public class NotificationController {
 
     private final NotificationService service;
 
+    @Operation(summary = "", description = "",operationId = "createNotification")
     @PostMapping
     public ApiResponse<NotificationDTO> create(@RequestBody NotificationDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
+    @Operation(summary = "", description = "",operationId = "getNotification")
     @GetMapping("/{id}")
-    public ApiResponse<NotificationDTO> get(@PathVariable Long id) {
+    public ApiResponse<NotificationDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
                 .orElse(ApiResponse.ok(null));
     }
 
+    @Operation(summary = "", description = "",operationId = "getAllNotifications")
     @GetMapping
     public ApiResponse<PageResult<NotificationDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -36,7 +40,7 @@ public class NotificationController {
         return ApiResponse.ok(service.getAll(page,size));
     }
 
-
+    @Operation(summary = "", description = "",operationId = "getNotificationsByUser")
     @GetMapping("/user/{userId}")
     public ApiResponse<PageResult<NotificationDTO>> findByUserId(
             @PathVariable Long userId,
@@ -45,6 +49,7 @@ public class NotificationController {
         return ApiResponse.ok(service.findByUserId(userId,page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "getNotificationsByTenant")
     @GetMapping("/tenant/{tenantId}")
     public ApiResponse<PageResult<NotificationDTO>> findByTenantId(
             @PathVariable Long tenantId,
@@ -53,12 +58,14 @@ public class NotificationController {
         return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "createNotification")
     @PutMapping
     public ApiResponse<NotificationDTO> update(@RequestBody NotificationDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
+    @Operation(summary = "", description = "",operationId = "deleteNotification")
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);

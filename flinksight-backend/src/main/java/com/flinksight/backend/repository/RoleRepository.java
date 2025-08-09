@@ -6,6 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 /**
  * 角色表数据访问接口
  * Role Repository
@@ -18,7 +20,17 @@ public interface RoleRepository extends JpaRepository<Role, Long>, SoftDeleteRep
      * @param code 角色编码
      * @return 角色对象
      */
-    Role findByCode(String code);
+    Optional<Role> findByCode(String code);
 
     Page<Role> findByIsDeleted(Integer isDeleted, Pageable pageable);
+
+    /**
+     * 角色名称模糊分页
+     */
+    Page<Role> findByNameAndIsDeleted(String name, Integer isDeleted, Pageable pageable);
+
+    /**
+     * 唯一校验
+     */
+    boolean existsByNameAndIsDeleted(String name, Integer isDeleted);
 }

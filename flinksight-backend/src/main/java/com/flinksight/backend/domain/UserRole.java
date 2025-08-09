@@ -29,7 +29,6 @@ import java.time.LocalDateTime;
 @Schema(description = "用户-角色关联表")
 @SQLRestriction("is_deleted=0")
 public class UserRole implements Serializable {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Schema(description = "主键")

@@ -3,6 +3,7 @@ package com.flinksight.backend.security;
 import com.flinksight.backend.security.jwt.JwtAuthFilter;
 import com.flinksight.backend.service.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -12,7 +13,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -33,14 +33,8 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final UserServiceImpl userServiceImpl;
     private final CorsConfigurationSource corsConfigurationSource;
-
-    /**
-     * BCrypt密码加密器
-     */
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     /**
      * Dao认证Provider，关联自定义UserDetailsService和密码加密
@@ -49,7 +43,7 @@ public class SecurityConfig {
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userServiceImpl); // 必须用实现了UserDetailsService的UserServiceImpl
-        provider.setPasswordEncoder(passwordEncoder());
+        provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }
 
@@ -64,15 +58,19 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(auth -> auth
-                        // 登录、注册、文档、静态资源、健康检查接口全部放行
+                        // ====== Swagger/OpenAPI/Knife4j文档全路径放行 ======
                         .requestMatchers(
-                                "/swagger-ui/**", "/v3/api-docs/**",
-                                "/api/auth/**", "/actuator/**", "/health", "/public/**",
+                                "/swagger-ui.html",      // Swagger UI 主入口
+                                "/swagger-ui/**",        // 新版 UI 静态资源
+                                "/v3/api-docs/**",       // OpenAPI 文档接口
+                                "/swagger-resources/**", // Swagger 静态资源
+                                "/webjars/**",           // js/css/fonts等
+                                "/doc.html",             // Knife4j 支持
+                                // ====== 其它公共接口 ======
+                                "/api/auth/**","/api/sso/**", "/actuator/**", "/health", "/public/**",
                                 "/static/**", "/favicon.ico", "/assets/**"
                         ).permitAll()
-                        // 管理端/监控接口可配置专属权限
-                        // .requestMatchers("/admin/**").hasRole("ADMIN")
-                        // 其余全部接口需JWT+权限
+                        // 其它接口需认证
                         .anyRequest().authenticated()
                 )
                 // 核心JWT过滤器，放在用户名密码认证过滤器之前

@@ -4,6 +4,7 @@ import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.DataSourceDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.DataSourceService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,19 +18,22 @@ public class DataSourceController {
 
     private final DataSourceService service;
 
+    @Operation(summary = "", description = "Get clusters by tenant",operationId = "createDataSource")
     @PostMapping
     public ApiResponse<DataSourceDTO> create(@RequestBody DataSourceDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
+    @Operation(summary = "", description = "Get clusters by tenant",operationId = "getDataSource")
     @GetMapping("/{id}")
-    public ApiResponse<DataSourceDTO> get(@PathVariable Long id) {
+    public ApiResponse<DataSourceDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
                 .orElse(ApiResponse.ok(null));
     }
 
+    @Operation(summary = "", description = "Get clusters by tenant",operationId = "getAllDataSources")
     @GetMapping
     public ApiResponse<PageResult<DataSourceDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -37,6 +41,7 @@ public class DataSourceController {
         return ApiResponse.ok(service.getAll(page,size));
     }
 
+    @Operation(summary = "", description = "Get clusters by tenant",operationId = "getDataSourcesByTenant")
     @GetMapping("/tenant/{tenantId}")
     public ApiResponse<PageResult<DataSourceDTO>> findByTenantId(
             @PathVariable Long tenantId,
@@ -45,12 +50,14 @@ public class DataSourceController {
         return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
     }
 
+    @Operation(summary = "", description = "Get clusters by tenant",operationId = "updateDataSource")
     @PutMapping
     public ApiResponse<DataSourceDTO> update(@RequestBody DataSourceDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
+    @Operation(summary = "", description = "Get clusters by tenant",operationId = "deleteDataSource")
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);

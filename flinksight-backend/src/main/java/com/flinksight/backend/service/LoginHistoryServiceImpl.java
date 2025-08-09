@@ -43,6 +43,18 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
     }
 
     @Override
+    public PageResult<LoginHistoryDTO> findByTenantId(Long tenantId, int page, int size) {
+        Page<LoginHistory> result = repository.findByUserIdAndIsDeletedOrderByLoginTimeDesc(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<LoginHistoryDTO> dtoPage = result.map(loginHistoryStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
+    }
+
+    @Override
+    public long countUserSuccessLogin(Long userId) {
+        return repository.countByUserIdAndSuccessFlagAndIsDeleted(userId, 1, 0);
+    }
+
+    @Override
     public boolean softDelete(Long id) {
         Optional<LoginHistoryDTO> opt = repository.findById(id).map(loginHistoryStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {

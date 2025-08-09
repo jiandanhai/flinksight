@@ -1,6 +1,6 @@
 package com.flinksight.backend.service;
 
-import com.flinksight.backend.security.tenant.TenantInterceptor;
+import com.flinksight.backend.security.tenant.TenantContext;
 import com.flinksight.common.dto.AuditLogDTO;
 import com.flinksight.common.service.AuditLogService;
 import com.flinksight.common.service.OpAudit;
@@ -57,7 +57,7 @@ public class AuditLogAspect {
 
                 // 从SecurityContext、TenantContext获取上下文
                 Long userId = getCurrentUserId();
-                Long tenantId = TenantInterceptor.getCurrentTenantId();
+                Long tenantId = TenantContext.getTenantId();
 
                 // 采集请求信息
                 String ip = httpServletRequest.getRemoteAddr();

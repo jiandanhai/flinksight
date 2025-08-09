@@ -14,7 +14,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * 角色业务实现
@@ -43,8 +45,8 @@ public class RoleServiceImpl implements RoleService  {
     }
 
     @Override
-    public RoleDTO getRoleByCode(String code) {
-        return roleStructMapper.toDTO(repository.findByCode(code));
+    public Optional<RoleDTO> getRoleByCode(String code) {
+        return repository.findByCode(code).map(roleStructMapper::toDTO);
     }
 
     @Override
@@ -52,6 +54,27 @@ public class RoleServiceImpl implements RoleService  {
         Page<Role> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
         Page<RoleDTO> dtoPage = result.map(roleStructMapper::toDTO);
         return new PageResult<>(dtoPage);
+    }
+
+    @Override
+    public RoleDTO update(RoleDTO dto) {
+        Role role = repository.findById(dto.getId())
+                .orElseThrow(() -> new IllegalArgumentException("角色不存在"));
+        role.setName(dto.getName());
+        role.setRemark(dto.getRemark());
+        role.setUpdatedAt(LocalDateTime.now());
+        return roleStructMapper.toDTO(repository.save(role));
+    }
+
+    @Override
+    public PageResult<RoleDTO> pageList(String name, int page, int size) {
+        Page<Role> pg = repository.findByNameAndIsDeleted(
+                name == null ? "" : name, 0, PageRequest.of(page, size)
+        );
+        return new PageResult<>(
+                pg.getContent().stream().map(roleStructMapper::toDTO).collect(Collectors.toList()),
+                pg.getTotalElements(), page, size
+        );
     }
 
     @Override

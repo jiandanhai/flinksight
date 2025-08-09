@@ -4,6 +4,7 @@ import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.TagDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.TagService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,19 +18,22 @@ public class TagController {
 
     private final TagService service;
 
+    @Operation(summary = "", description = "",operationId = "createTag")
     @PostMapping
     public ApiResponse<TagDTO> create(@RequestBody TagDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
+    @Operation(summary = "", description = "",operationId = "getTag")
     @GetMapping("/{id}")
-    public ApiResponse<TagDTO> get(@PathVariable Long id) {
+    public ApiResponse<TagDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
                 .orElse(ApiResponse.ok(null));
     }
 
+    @Operation(summary = "", description = "",operationId = "getAllTags")
     @GetMapping
     public ApiResponse<PageResult<TagDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -37,6 +41,7 @@ public class TagController {
         return ApiResponse.ok(service.getAll(page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "getTagsByTenant")
     @GetMapping("/tenant/{tenantId}")
     public ApiResponse<PageResult<TagDTO>> findByTenantId(@PathVariable Long tenantId,
                                        @RequestParam(defaultValue = "0") int page,
@@ -44,11 +49,13 @@ public class TagController {
         return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "updateTag")
     @PutMapping
     public ApiResponse<TagDTO> update(@RequestBody TagDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
+    @Operation(summary = "", description = "",operationId = "deleteTag")
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);

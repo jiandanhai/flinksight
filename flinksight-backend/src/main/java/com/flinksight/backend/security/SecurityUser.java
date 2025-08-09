@@ -10,9 +10,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Spring Security上下文用户对象，支持扩展更多字段
+ */
 public class SecurityUser implements UserDetails {
     private final User user;
-    private final List<String> permissionCodes; // 权限码列表
+    private final List<String> permissionCodes;
 
     public SecurityUser(User user, List<String> permissionCodes) {
         this.user = user;
@@ -24,24 +27,15 @@ public class SecurityUser implements UserDetails {
         return permissionCodes.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
 
-    @Override
-    public String getPassword() {
-        return user.getPassword();
-    }
+    @Override public String getPassword() { return user.getPassword(); }
+    @Override public String getUsername() { return user.getUsername(); }
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return true; }
+    @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override public boolean isEnabled() { return (UserStatusEnum.ENABLED.getCode() == user.getStatus()); }
 
-    @Override
-    public String getUsername() {
-        return user.getUsername();
-    }
-
-    @Override
-    public boolean isAccountNonExpired() { return true; }
-    @Override
-    public boolean isAccountNonLocked() { return true; }
-    @Override
-    public boolean isCredentialsNonExpired() { return true; }
-    @Override
-    public boolean isEnabled() { return (UserStatusEnum.ENABLED.getCode() == user.getStatus()); }
     public Long getTenantId() { return user.getTenantId(); }
     public Long getId() { return user.getId(); }
+    public User getUser() { return user; }
+    public List<String> getPermissionCodes() { return permissionCodes; }
 }

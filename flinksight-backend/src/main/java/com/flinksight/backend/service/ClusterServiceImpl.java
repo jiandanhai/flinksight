@@ -51,6 +51,13 @@ public class ClusterServiceImpl implements ClusterService{
     }
 
     @Override
+    public PageResult<ClusterDTO> getAll(int page, int size) {
+        Page<Cluster> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<ClusterDTO> dtoPage = result.map(clusterStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
+    }
+
+    @Override
     public boolean softDelete(Long id) {
         Optional<ClusterDTO> opt = repository.findById(id).map(clusterStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {

@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
+
 /**
  * 角色实体
  * Role Entity
@@ -28,7 +29,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "角色表")
-@SQLRestriction("is_deleted=0") // ⚡ 替代 Hibernate 6.3 的 @Where
+@SQLRestriction("is_deleted=0") // 软删除
 public class Role implements GrantedAuthority, Serializable {
 
     @Id
@@ -38,19 +39,19 @@ public class Role implements GrantedAuthority, Serializable {
 
     @Column(nullable = false, unique = true, length = 50)
     @Schema(description = "角色编码")
-    private String code;
+    private String code;  // 统一用code，原roleCode
 
     @Column(nullable = false, length = 50)
     @Schema(description = "角色名称")
-    private String name;
+    private String name;  // 原roleName
 
     @Column(name = "tenant_id", nullable = false)
-    @Schema(description = "租户ID，多租户隔离")
+    @Schema(description = "租户ID")
     private Long tenantId;
 
     @Column(length = 100)
     @Schema(description = "角色描述")
-    private String remark;
+    private String remark; // 原desc
 
     @Column(name = "created_at", updatable = false)
     @Schema(description = "创建时间")
@@ -68,13 +69,9 @@ public class Role implements GrantedAuthority, Serializable {
     @Schema(description = "软删除标记 0=正常 1=删除")
     private Integer isDeleted = 0;
 
-    /**
-     * 返回权限字符串（角色名/编码均可）
-     * Spring Security将自动识别
-     */
+    // Spring Security 权限接口
     @Override
     public String getAuthority() {
-        // 推荐返回 code，例如 "ADMIN"
         return code;
     }
 }

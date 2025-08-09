@@ -18,25 +18,33 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/job")
 @RequiredArgsConstructor
 @TenantRequired
-public class JobController {
+public class    JobController {
 
     private final JobService jobService;
 
-    @Operation(summary = "新建任务", description = "Create new job")
+    @Operation(summary = "新建任务", description = "Create new job",operationId = "createJob")
     @PostMapping("/create")
     public ApiResponse<JobDTO> createJob(@RequestBody JobDTO dto) {
         return ApiResponse.ok(jobService.createJob(dto));
     }
 
-    @Operation(summary = "根据ID查询任务", description = "Get job by ID")
+    @Operation(summary = "根据ID查询任务", description = "Get job by ID",operationId = "getJob")
     @GetMapping("/{id}")
-    public ApiResponse<JobDTO> getJobById(@PathVariable Long id) {
+    public ApiResponse<JobDTO> getById(@PathVariable Long id) {
         return jobService.getJobById(id)
                 .map(ApiResponse::ok)
                 .orElse(ApiResponse.ok(null));
     }
+    @Operation(summary = "", operationId = "getAllJobs")
+    @GetMapping
+    public ApiResponse<PageResult<JobDTO>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(jobService.getAll(page,size));
+    }
 
-    @Operation(summary = "查询租户下所有任务", description = "Get jobs by tenant")
+
+    @Operation(summary = "查询租户下所有任务", description = "Get jobs by tenant",operationId = "getJobsByTenant")
     @GetMapping("/list")
     public ApiResponse<PageResult<JobDTO>> getJobsByTenant(
             @RequestParam Long tenantId,
@@ -45,7 +53,7 @@ public class JobController {
         return ApiResponse.ok(jobService.getJobsByTenant(tenantId,page,size));
     }
 
-    @Operation(summary = "查询集群下所有任务", description = "Get jobs by tenant and cluster")
+    @Operation(summary = "查询集群下所有任务", description = "Get jobs by tenant and cluster",operationId = "getJobsByTenantAndCluster")
     @GetMapping("/listByCluster")
     public ApiResponse<PageResult<JobDTO>> getJobsByTenantAndCluster(
             @RequestParam Long tenantId,
@@ -55,13 +63,13 @@ public class JobController {
         return ApiResponse.ok(jobService.getJobsByTenantAndCluster(tenantId,clusterId,page,size));
     }
 
-    @Operation(summary = "更新任务信息", description = "Update job info")
+    @Operation(summary = "更新任务信息", description = "Update job info",operationId = "updateJob")
     @PutMapping("/update")
     public ApiResponse<JobDTO> updateJob(@RequestBody JobDTO dto) {
         return ApiResponse.ok(jobService.updateJob(dto));
     }
 
-    @Operation(summary = "删除任务（软删）", description = "Soft delete job")
+    @Operation(summary = "删除任务（软删）", description = "Soft delete job",operationId = "deleteJob")
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteJob(@PathVariable Long id) {
         jobService.softDelete(id);

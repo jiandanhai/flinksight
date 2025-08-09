@@ -1,5 +1,9 @@
 package com.flinksight.backend.security.jwt;
 
+import com.flinksight.backend.domain.User;
+import com.flinksight.backend.mapper.UserStructMapper;
+import com.flinksight.backend.security.SecurityUser;
+import com.flinksight.backend.security.tenant.TenantContext;
 import com.flinksight.common.dto.UserDTO;
 import com.flinksight.common.service.UserService;
 import jakarta.servlet.FilterChain;
@@ -14,7 +18,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -25,8 +31,9 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
-    private final JwtProvider jwtProvider;
+    private final JwtUtil jwtProvider;
     private final UserService userService;
+    private final UserStructMapper userStructMapper;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -36,30 +43,48 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         // 1. 解析Token
         String token = resolveToken(request);
+        // 先拿租户：JWT → Header → Query
+        String tenantStr = null;
+        if (StringUtils.hasText(token) && jwtProvider.validateToken(token)) {
+            tenantStr = String.valueOf(jwtProvider.getTenantIdFromToken(token)); // null 安全，返回 null 或 "123"
+            System.out.println("[JWT Filter] tenantId from token: " + tenantStr);
+        }
+        if (!StringUtils.hasText(tenantStr)) tenantStr = request.getHeader("X-Tenant-Id");
+        if (!StringUtils.hasText(tenantStr)) tenantStr = request.getParameter("tenantId");
 
-        // 2. 校验Token & 加载用户
+        Long tenantId = null;
+        if (StringUtils.hasText(tenantStr)) {
+            try { tenantId = Long.parseLong(tenantStr.trim()); } catch (NumberFormatException ignore) {}
+        }
+        if (tenantId != null) {
+            TenantContext.setTenantId(tenantId); // 👈 必须：在任何 Service 前
+        }
+        System.out.println("jwt tenant in filter(before service) = {"+tenantId+"}");
+        try {
         if (StringUtils.hasText(token) && jwtProvider.validateToken(token)) {
             String username = jwtProvider.getUsernameFromToken(token);
             Long userId = jwtProvider.getUserIdFromToken(token);
 
+            // 到这里 TenantContext 已经就绪，不会再被 TenantAspect 拦住
             Optional<UserDTO> userOpt = userService.getUserById(userId);
             if (userOpt.isPresent()) {
-                UserDTO user = userOpt.get();
-
-                // 3. 查询用户权限，转换为GrantedAuthority
-                List<String> perms = userService.getAuthorities(user.getId());
+                User user = userStructMapper.toEntity(userOpt.get());
+                List<String> perms = userService.getAuthorities(user.getId(),user.getTenantId());
                 List<GrantedAuthority> authorities = perms.stream()
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
-
-                // 4. 认证token写入SecurityContext
+                // 构造SecurityUser
+                SecurityUser securityUser = new SecurityUser(user, new ArrayList<>(perms));
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(user, null, authorities);
+                        new UsernamePasswordAuthenticationToken(securityUser, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
 
         filterChain.doFilter(request, response);
+        } finally {
+            TenantContext.clear(); // 👈 必须，线程复用会串租户
+        }
     }
 
     /**

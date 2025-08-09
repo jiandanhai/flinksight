@@ -4,6 +4,7 @@ import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.NodeHealthDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NodeHealthService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,13 +18,15 @@ public class NodeHealthController {
 
     private final NodeHealthService service;
 
+    @Operation(summary = "", description = "",operationId = "getNodeHealth")
     @GetMapping("/{id}")
-    public ApiResponse<NodeHealthDTO> get(@PathVariable Long id) {
+    public ApiResponse<NodeHealthDTO> getById(@PathVariable Long id) {
         return service.getLatestByNodeId(id)
                 .map(ApiResponse::ok)
                 .orElse(ApiResponse.ok(null));
     }
 
+    @Operation(summary = "", description = "",operationId = "getNodeHealthsByNode")
     @GetMapping("/node/{nodeId}")
     public ApiResponse<PageResult<NodeHealthDTO>> findByNodeId(
             @PathVariable Long nodeId,
@@ -32,6 +35,7 @@ public class NodeHealthController {
         return ApiResponse.ok(service.getByNodeId(nodeId,page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "deleteNodeHealth")
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);

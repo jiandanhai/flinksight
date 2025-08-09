@@ -25,6 +25,19 @@ public class UserRoleServiceImpl implements UserRoleService {
     private final UserRoleStructMapper userRoleStructMapper;
 
     @Override
+    public void assignRole(Long userId, Long roleId) {
+        if (!repository.existsByUserIdAndRoleIdAndIsDeleted(userId, roleId, 0)) {
+            UserRole userRole = UserRole.builder()
+                    .userId(userId)
+                    .roleId(roleId)
+                    .isDeleted(0)
+                    .assignTime(LocalDateTime.now())
+                    .build();
+            repository.save(userRole);
+        }
+    }
+
+    @Override
     public UserRoleDTO assignRoleToUser(Long userId, Long roleId, Long tenantId) {
         UserRole userRole = UserRole.builder()
             .userId(userId)

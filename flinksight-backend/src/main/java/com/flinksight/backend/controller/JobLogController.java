@@ -24,21 +24,21 @@ public class JobLogController {
 
     private final JobLogService jobLogService;
 
-    @Operation(summary = "新建任务日志", description = "Create job log")
+    @Operation(summary = "新建任务日志", description = "Create job log",operationId = "createJobLog")
     @PostMapping("/create")
     public ApiResponse<JobLogDTO> createJobLog(@RequestBody JobLogDTO dto) {
         return ApiResponse.ok(jobLogService.createJobLog(dto));
     }
 
-    @Operation(summary = "根据ID查询日志", description = "Get log by ID")
+    @Operation(summary = "根据ID查询日志", description = "Get log by ID",operationId = "getJobLog")
     @GetMapping("/{id}")
-    public ApiResponse<JobLogDTO> getJobLogById(@PathVariable Long id) {
+    public ApiResponse<JobLogDTO> getById(@PathVariable Long id) {
         return jobLogService.getJobLogById(id)
                 .map(ApiResponse::ok)
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "查询任务日志", description = "Get logs by job")
+    @Operation(summary = "查询任务日志", description = "Get logs by job",operationId = "getJobLogsByJob")
     @GetMapping("/listByJob")
     public ApiResponse<PageResult<JobLogDTO>> getLogsByJob(
             @RequestParam Long jobId,
@@ -49,7 +49,7 @@ public class JobLogController {
         return ApiResponse.ok(jobLogService.getLogsByJob(jobId,LocalDateTime.parse(start),LocalDateTime.parse(end),page,size));
     }
 
-    @Operation(summary = "按级别查询租户日志", description = "Get logs by tenant and level")
+    @Operation(summary = "按级别查询租户日志", description = "Get logs by tenant and level",operationId = "getJobLogsByTenantAndLevel")
     @GetMapping("/listByTenantLevel")
     public ApiResponse<PageResult<JobLogDTO>> getLogsByTenantAndLevel(
             @RequestParam Long tenantId,
@@ -61,7 +61,7 @@ public class JobLogController {
         return ApiResponse.ok(jobLogService.getLogsByTenantAndLevel(tenantId,level,LocalDateTime.parse(start),LocalDateTime.parse(end),page,size));
     }
 
-    @Operation(summary = "删除日志（软删）", description = "Soft delete job log")
+    @Operation(summary = "删除日志（软删）", description = "Soft delete job log",operationId = "deleteJobLog")
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteJobLog(@PathVariable Long id) {
         jobLogService.softDelete(id);

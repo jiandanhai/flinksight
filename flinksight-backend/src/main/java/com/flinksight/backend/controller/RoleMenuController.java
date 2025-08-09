@@ -4,6 +4,7 @@ import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.RoleMenuDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.RoleMenuService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,16 +18,19 @@ public class RoleMenuController {
 
     private final RoleMenuService service;
 
+    @Operation(summary = "", description = "",operationId = "assignRoleMenu")
     @PostMapping("/assign")
     public ApiResponse<RoleMenuDTO> assign(@RequestParam Long roleId, @RequestParam Long menuId) {
         return ApiResponse.ok(service.assignMenuToRole(roleId, menuId));
     }
 
+    @Operation(summary = "", description = "",operationId = "removeRoleMenu")
     @PostMapping("/remove")
     public boolean remove(@RequestParam Long roleId, @RequestParam Long menuId) {
         return service.removeMenuFromRole(roleId, menuId);
     }
 
+    @Operation(summary = "", description = "",operationId = "getRoleMenusByRole")
     @GetMapping("/role/{roleId}")
     public ApiResponse<PageResult<RoleMenuDTO>> findByRole(@PathVariable Long roleId,
                                                           @RequestParam(defaultValue = "0") int page,
@@ -34,6 +38,7 @@ public class RoleMenuController {
         return ApiResponse.ok(service.findByRoleId(roleId,page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "getRoleMenusByMenu")
     @GetMapping("/menu/{menuId}")
     public ApiResponse<PageResult<RoleMenuDTO>> findByMenu(@PathVariable Long menuId,
                                         @RequestParam(defaultValue = "0") int page,
@@ -42,6 +47,7 @@ public class RoleMenuController {
         return ApiResponse.ok(service.findByMenuId(menuId,page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "getRoleMenu")
     @GetMapping("/{id}")
     public ApiResponse<RoleMenuDTO> getById(@PathVariable Long id) {
         return service.getById(id)
@@ -49,6 +55,7 @@ public class RoleMenuController {
                 .orElse(ApiResponse.ok(null));
     }
 
+    @Operation(summary = "", description = "",operationId = "deleteRoleMenu")
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);

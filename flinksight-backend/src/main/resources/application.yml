@@ -14,6 +14,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  profiles:
+    active: dev
+  config:
+    import: optional:file:.env[.properties]
 
 jwt:
   secret: ChangeMeToYourSecretKey-ChangeMeToYourSecretKey
@@ -22,5 +26,26 @@ jwt:
 logging:
   level:
     root: INFO
+business:
+  default-user-role: USER
 
+
+front:
+  url: ${FRONT_URL}
+
+sso:
+  oauth2:
+    authorize-url: ${SSO_OAUTH2_AUTHORIZE_URL}
+    token-url: ${SSO_OAUTH2_TOKEN_URL}
+    userinfo-url: ${SSO_OAUTH2_USERINFO_URL}
+    client-id: ${SSO_OAUTH2_CLIENT_ID}
+    client-secret: ${SSO_OAUTH2_CLIENT_SECRET}
+    callback-url: ${SSO_OAUTH2_CALLBACK_URL}
+
+cors:
+  allowed-origins: "http://localhost:5173"
+  allowed-methods: "GET,POST,PUT,DELETE"
+  allowed-headers: "Authorization, Content-Type"
+  allow-credentials: true
+  max-age: 3600
 # 多租户/审计可加自定义配置

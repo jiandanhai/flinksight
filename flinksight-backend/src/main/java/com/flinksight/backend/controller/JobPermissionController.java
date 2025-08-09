@@ -4,6 +4,7 @@ import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.JobPermissionDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.JobPermissionService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +22,7 @@ public class JobPermissionController {
     /**
      * 查询某作业的所有权限分配记录
      */
+    @Operation(summary = "", description = "",operationId = "getJobPermissionsByJob")
     @GetMapping("/list")
     public ApiResponse<PageResult<JobPermissionDTO>> listJobPermissions(
             @RequestParam Long jobId,
@@ -32,6 +34,7 @@ public class JobPermissionController {
     /**
      * 分配权限给用户（Owner/Admin/Viewer等）
      */
+    @Operation(summary = "", description = "",operationId = "grantJobPermissionByJobAndUserAndPermissionAndTenant")
     @PostMapping("/grant")
     public ApiResponse<Void> grantPermission(
             @RequestParam Long jobId,
@@ -46,6 +49,7 @@ public class JobPermissionController {
     /**
      * 回收用户权限
      */
+    @Operation(summary = "", description = "",operationId = "revokePermission")
     @PostMapping("/revoke")
     public ApiResponse<Void> revokePermission(
             @RequestParam Long jobId,
@@ -59,6 +63,7 @@ public class JobPermissionController {
     /**
      * 查询某用户对某作业的权限（Owner/Admin/Viewer等）
      */
+    @Operation(summary = "", description = "",operationId = "getJobPermissionsByJobAndUser")
     @GetMapping("/user")
     public ApiResponse<PageResult<JobPermissionDTO>> getUserPermissions(
             @RequestParam Long jobId,

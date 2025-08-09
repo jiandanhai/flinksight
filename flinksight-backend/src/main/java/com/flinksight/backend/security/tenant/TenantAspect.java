@@ -25,7 +25,8 @@ public class TenantAspect {
 
     @Around("@within(com.flinksight.backend.security.tenant.TenantRequired) || @annotation(com.flinksight.backend.security.tenant.TenantRequired)")
     public Object validateTenantIsolation(ProceedingJoinPoint joinPoint) throws Throwable {
-        Long contextTenantId = TenantInterceptor.getCurrentTenantId();
+        Long contextTenantId = TenantContext.getTenantId();
+        System.out.println("TenantAspect context  currentTenantId:{" + contextTenantId + "}");  // 调试用
         if (contextTenantId == null) {
             throw new BusinessException(ErrorCode.TENANT_ISOLATION, "请求未包含合法租户ID，拒绝访问");
         }

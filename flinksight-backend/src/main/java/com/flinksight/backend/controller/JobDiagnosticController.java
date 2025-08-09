@@ -4,6 +4,7 @@ import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.JobDiagnosticLogDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.JobDiagnosticService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,14 +18,16 @@ public class JobDiagnosticController {
 
     private final JobDiagnosticService service;
 
+    @Operation(summary = "", description = "",operationId = "getJobDiagnosticLogsByJob")
     @GetMapping("/logs/{jobId}")
-    public ApiResponse<PageResult<JobDiagnosticLogDTO>> getLogsByJob(
+    public ApiResponse<PageResult<JobDiagnosticLogDTO>> getByJob(
             @PathVariable Long jobId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return ApiResponse.ok(service.getLogsByJob(jobId,page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "getJobDiagnosticLogsByLevel")
     @GetMapping("/logs-level/{level}")
     public ApiResponse<PageResult<JobDiagnosticLogDTO>> getLogsByLevel(
             @PathVariable String level,

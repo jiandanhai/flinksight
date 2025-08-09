@@ -17,4 +17,9 @@ public interface TenantRepository extends JpaRepository<Tenant, Long>, SoftDelet
     Optional<Tenant> findByCode(String code);
     Page<Tenant> findByIsDeleted(Integer isDeleted, Pageable pageable);
 
+
+    Optional<Tenant> findByCodeAndIsDeleted(String code, Integer isDeleted);
+    Page<Tenant> findAllByIsDeleted(Integer isDeleted, Pageable pageable);
+    boolean existsByCodeAndIsDeleted(String code, Integer isDeleted);
+
 }

@@ -4,6 +4,7 @@ import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.UserPostDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.UserPostService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,16 +18,19 @@ public class UserPostController {
 
     private final UserPostService service;
 
+    @Operation(summary = "", description = "",operationId = "assignUserPost")
     @PostMapping("/assign")
     public ApiResponse<UserPostDTO> assign(@RequestParam Long userId, @RequestParam Long postId) {
         return ApiResponse.ok(service.assignPostToUser(userId, postId));
     }
 
+    @Operation(summary = "", description = "",operationId = "removeUserPost")
     @PostMapping("/remove")
     public boolean remove(@RequestParam Long userId, @RequestParam Long postId) {
         return service.removePostFromUser(userId, postId);
     }
 
+    @Operation(summary = "", description = "",operationId = "getUserPostsByUser")
     @GetMapping("/user/{userId}")
     public ApiResponse<PageResult<UserPostDTO>> findByUser(@PathVariable Long userId,
                                                           @RequestParam(defaultValue = "0") int page,
@@ -35,6 +39,7 @@ public class UserPostController {
         return ApiResponse.ok(service.findByUserId(userId,page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "getUserPostsByPost")
     @GetMapping("/post/{postId}")
     public ApiResponse<PageResult<UserPostDTO>> findByPost(@PathVariable Long postId,
                                         @RequestParam(defaultValue = "0") int page,
@@ -43,6 +48,7 @@ public class UserPostController {
         return ApiResponse.ok(service.findByPostId(postId,page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "getUserPost")
     @GetMapping("/{id}")
     public ApiResponse<UserPostDTO> getById(@PathVariable Long id) {
         return service.getById(id)
@@ -50,6 +56,7 @@ public class UserPostController {
                 .orElse(ApiResponse.ok(null));
     }
 
+    @Operation(summary = "", description = "",operationId = "deleteUserPost")
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);

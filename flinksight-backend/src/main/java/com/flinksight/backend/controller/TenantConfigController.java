@@ -4,6 +4,7 @@ import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.TenantConfigDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.TenantConfigService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,17 +20,20 @@ public class TenantConfigController {
 
     private final TenantConfigService service;
 
+    @Operation(summary = "", description = "",operationId = "createTenantConfig")
     @PostMapping
     public ApiResponse<TenantConfigDTO> create(@RequestBody TenantConfigDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
+    @Operation(summary = "", description = "",operationId = "getTenantConfig")
     @GetMapping("/{id}")
-    public Optional<TenantConfigDTO> get(@PathVariable Long id) {
+    public Optional<TenantConfigDTO> getById(@PathVariable Long id) {
         return service.getById(id);
     }
 
+    @Operation(summary = "", description = "",operationId = "getTenantConfigsByTenant")
     @GetMapping("/tenant/{tenantId}")
     public ApiResponse<PageResult<TenantConfigDTO>> findByTenantId(@PathVariable Long tenantId,
                                                                   @RequestParam(defaultValue = "0") int page,
@@ -37,12 +41,14 @@ public class TenantConfigController {
         return ApiResponse.ok(service.listByTenantId(tenantId,page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "updateTenantConfig")
     @PutMapping
     public ApiResponse<TenantConfigDTO> update(@RequestBody TenantConfigDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
+    @Operation(summary = "", description = "",operationId = "deleteTenantConfig")
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);

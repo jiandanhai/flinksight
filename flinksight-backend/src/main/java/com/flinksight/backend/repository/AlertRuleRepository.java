@@ -14,4 +14,8 @@ import org.springframework.stereotype.Repository;
 public interface AlertRuleRepository extends JpaRepository<AlertRule, Long>, SoftDeleteRepository<AlertRule, Long>  {
 
     Page<AlertRule> findByTenantIdAndEnableAndIsDeleted(Long tenantId, Integer enable, Integer isDeleted, Pageable pageable);
+
+    // 可根据业务补充：如按clusterId等多条件查询
+    Page<AlertRule> findByTenantIdAndClusterIdAndIsDeleted(Long tenantId, Long clusterId, Integer isDeleted, Pageable pageable);
+
 }

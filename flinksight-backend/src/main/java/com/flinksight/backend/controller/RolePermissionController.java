@@ -4,6 +4,7 @@ import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.RolePermissionDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.RolePermissionService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,16 +18,19 @@ public class RolePermissionController {
 
     private final RolePermissionService service;
 
+    @Operation(summary = "", description = "",operationId = "assignRolePermission")
     @PostMapping("/assign")
     public ApiResponse<RolePermissionDTO> assign(@RequestParam Long roleId, @RequestParam Long permissionId) {
         return ApiResponse.ok(service.assignPermissionToRole(roleId, permissionId));
     }
 
+    @Operation(summary = "", description = "",operationId = "removeRolePermission")
     @PostMapping("/remove")
     public boolean remove(@RequestParam Long roleId, @RequestParam Long permissionId) {
         return service.removePermissionFromRole(roleId, permissionId);
     }
 
+    @Operation(summary = "", description = "",operationId = "getRolePermissionsByRole")
     @GetMapping("/role/{roleId}")
     public ApiResponse<PageResult<RolePermissionDTO>> findByRoleId(@PathVariable Long roleId,
                                                                   @RequestParam(defaultValue = "0") int page,
@@ -35,6 +39,7 @@ public class RolePermissionController {
         return ApiResponse.ok(service.findByRoleId(roleId,page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "getRolePermissionsByPermission")
     @GetMapping("/permission/{permissionId}")
     public ApiResponse<PageResult<RolePermissionDTO>> findByPermissionId(@PathVariable Long permissionId,
                                                       @RequestParam(defaultValue = "0") int page,
@@ -42,6 +47,7 @@ public class RolePermissionController {
         return ApiResponse.ok(service.findByPermissionId(permissionId,page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "getRolePermission")
     @GetMapping("/{id}")
     public ApiResponse<RolePermissionDTO> getById(@PathVariable Long id) {
         return service.getById(id)
@@ -49,6 +55,7 @@ public class RolePermissionController {
                 .orElse(ApiResponse.ok(null));
     }
 
+    @Operation(summary = "", description = "",operationId = "deleteRolePermission")
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);

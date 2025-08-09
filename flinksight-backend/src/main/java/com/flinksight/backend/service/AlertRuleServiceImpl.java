@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -31,7 +32,7 @@ public class AlertRuleServiceImpl implements AlertRuleService{
     private final AlertRuleStructMapper alertRuleStructMapper;
 
     @Override
-    public AlertRuleDTO createRule(AlertRuleDTO alertRuleDTO) {
+    public AlertRuleDTO createAlertRule(AlertRuleDTO alertRuleDTO) {
         AlertRule entity = alertRuleStructMapper.toEntity(alertRuleDTO);
         AlertRule saved = repository.save(entity);
         entity.setIsDeleted(0);
@@ -39,19 +40,26 @@ public class AlertRuleServiceImpl implements AlertRuleService{
     }
 
     @Override
-    public Optional<AlertRuleDTO> getRuleById(Long id) {
+    public Optional<AlertRuleDTO> getAlertRuleById(Long id) {
         return repository.findById(id).map(alertRuleStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
-    public PageResult<AlertRuleDTO> getRulesByTenant(Long tenantId,int page, int size) {
+    public PageResult<AlertRuleDTO> getAlertRulesByTenant(Long tenantId, int page, int size) {
         Page<AlertRule> result = repository.findByTenantIdAndEnableAndIsDeleted(tenantId, 1,0, PageRequest.of(page, size));
         Page<AlertRuleDTO> dtoPage = result.map(alertRuleStructMapper::toDTO);
         return new PageResult<>(dtoPage);
     }
 
     @Override
-    public AlertRuleDTO updateRule(AlertRuleDTO rule) {
+    public PageResult<AlertRuleDTO> listByTenantAndCluster(Long tenantId, Long clusterId, int page, int size) {
+        Page<AlertRule> result = repository.findByTenantIdAndClusterIdAndIsDeleted(tenantId, clusterId,0, PageRequest.of(page, size));
+        Page<AlertRuleDTO> dtoPage = result.map(alertRuleStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
+    }
+
+    @Override
+    public AlertRuleDTO updateAlertRule(AlertRuleDTO rule) {
         Optional<AlertRuleDTO> opt = repository.findById(rule.getId()).map(alertRuleStructMapper::toDTO);
 
         if(opt.isPresent()) {

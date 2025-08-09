@@ -22,21 +22,29 @@ public class ClusterController {
 
     private final ClusterService clusterService;
 
-    @Operation(summary = "新建集群", description = "Create new cluster")
+    @Operation(summary = "新建集群", description = "Create new cluster",operationId = "createCluster")
     @PostMapping("/create")
     public ApiResponse<ClusterDTO> createCluster(@RequestBody ClusterDTO dto) {
         return ApiResponse.ok(clusterService.createOrUpdate(dto));
     }
 
-    @Operation(summary = "根据ID查询集群", description = "Get cluster by ID")
+    @Operation(summary = "根据ID查询集群", description = "Get cluster by ID",operationId = "getCluster")
     @GetMapping("/{id}")
-    public ApiResponse<ClusterDTO> getClusterById(@PathVariable Long id) {
+    public ApiResponse<ClusterDTO> getById(@PathVariable Long id) {
         return clusterService.getClusterById(id)
                 .map(ApiResponse::ok)
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "查询租户下所有集群", description = "Get clusters by tenant")
+    @Operation(summary = "", operationId = "getAllClusters")
+    @GetMapping
+    public ApiResponse<PageResult<ClusterDTO>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(clusterService.getAll(page,size));
+    }
+
+    @Operation(summary = "查询租户下所有集群", description = "Get clusters by tenant",operationId = "getClustersByTenant")
     @GetMapping("/list")
     public ApiResponse<PageResult<ClusterDTO>> getClustersByTenant(
             @RequestParam Long tenantId,
@@ -45,13 +53,13 @@ public class ClusterController {
         return ApiResponse.ok(clusterService.getClustersByTenant(tenantId,page,size));
     }
 
-    @Operation(summary = "更新集群信息", description = "Update cluster info")
+    @Operation(summary = "更新集群信息", description = "Update cluster info",operationId = "updateCluster")
     @PutMapping("/update")
     public ApiResponse<ClusterDTO> updateCluster(@RequestBody ClusterDTO dto) {
         return ApiResponse.ok(clusterService.createOrUpdate(dto));
     }
 
-    @Operation(summary = "删除集群（软删）", description = "Soft delete cluster")
+    @Operation(summary = "删除集群（软删）", description = "Soft delete cluster",operationId = "deleteCluster")
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteCluster(@PathVariable Long id) {
         clusterService.softDelete(id);

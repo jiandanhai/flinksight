@@ -4,6 +4,7 @@ import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.UserApiDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.UserApiService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,16 +18,19 @@ public class UserApiController {
 
     private final UserApiService service;
 
+    @Operation(summary = "", description = "",operationId = "assignUserApi")
     @PostMapping("/assign")
     public ApiResponse<UserApiDTO> assign(@RequestParam Long userId, @RequestParam Long apiId) {
         return ApiResponse.ok(service.assignApiToUser(userId, apiId));
     }
 
+    @Operation(summary = "", description = "",operationId = "removeUserApi")
     @PostMapping("/remove")
     public boolean remove(@RequestParam Long userId, @RequestParam Long apiId) {
         return service.removeApiFromUser(userId, apiId);
     }
 
+    @Operation(summary = "", description = "",operationId = "getUserApisByUser")
     @GetMapping("/user/{userId}")
     public ApiResponse<PageResult<UserApiDTO>> findByUser(@PathVariable Long userId,
                                                          @RequestParam(defaultValue = "0") int page,
@@ -35,6 +39,7 @@ public class UserApiController {
         return ApiResponse.ok(service.findByUserId(userId,page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "getUserApisByApi")
     @GetMapping("/api/{apiId}")
     public ApiResponse<PageResult<UserApiDTO>> findByApi(@PathVariable Long apiId,
                                       @RequestParam(defaultValue = "0") int page,
@@ -42,6 +47,7 @@ public class UserApiController {
         return ApiResponse.ok(service.findByApiId(apiId,page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "getUserApi")
     @GetMapping("/{id}")
     public ApiResponse<UserApiDTO> getById(@PathVariable Long id) {
         return service.getById(id)
@@ -49,6 +55,7 @@ public class UserApiController {
                 .orElse(ApiResponse.ok(null));
     }
 
+    @Operation(summary = "", description = "",operationId = "deleteUserApi")
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);

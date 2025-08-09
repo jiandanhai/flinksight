@@ -28,21 +28,21 @@ public class JobMetricController {
     private final JobMetricService jobMetricService;
     private final JobInstanceService jobInstanceService;
 
-    @Operation(summary = "新建任务指标", description = "Create job metric")
+    @Operation(summary = "新建任务指标", description = "Create job metric",operationId = "createMetric")
     @PostMapping("/create")
     public ApiResponse<JobMetricDTO> createMetric(@RequestBody JobMetricDTO dto) {
         return ApiResponse.ok(jobMetricService.createMetric(dto));
     }
 
-    @Operation(summary = "根据ID查询指标", description = "Get metric by ID")
+    @Operation(summary = "根据ID查询指标", description = "Get metric by ID",operationId = "getMetric")
     @GetMapping("/{id}")
-    public ApiResponse<JobMetricDTO> getMetricById(@PathVariable Long id) {
+    public ApiResponse<JobMetricDTO> getById(@PathVariable Long id) {
         return jobMetricService.getMetricById(id)
                 .map(ApiResponse::ok)
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "查询任务的指标", description = "Get metrics by job")
+    @Operation(summary = "查询任务的指标", description = "Get metrics by job",operationId = "getMetricsByJob")
     @GetMapping("/listByJob")
     public ApiResponse<PageResult<JobMetricDTO>> getMetricsByJob(
             @RequestParam Long jobId,
@@ -53,7 +53,7 @@ public class JobMetricController {
         return ApiResponse.ok(jobMetricService.getMetricsByJob(jobId,LocalDateTime.parse(start),LocalDateTime.parse(end),page,size));
     }
 
-    @Operation(summary = "查询租户的某类型指标", description = "Get metrics by tenant and metricKey")
+    @Operation(summary = "查询租户的某类型指标", description = "Get metrics by tenant and metricKey",operationId = "getMetricsByTenantAndMetricKey")
     @GetMapping("/listByTenant")
     public ApiResponse<PageResult<JobMetricDTO>> getMetricsByTenantAndMetric(
             @RequestParam Long tenantId,
@@ -65,7 +65,7 @@ public class JobMetricController {
         return ApiResponse.ok(jobMetricService.getMetricsByTenantAndMetric(tenantId,metricKey,LocalDateTime.parse(start),LocalDateTime.parse(end),page,size));
     }
 
-    @Operation(summary = "删除指标（软删）", description = "Soft delete metric")
+    @Operation(summary = "", description = "",operationId = "deleteMetric")
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteMetric(@PathVariable Long id) {
         jobMetricService.softDelete(id);
@@ -75,6 +75,7 @@ public class JobMetricController {
     /**
      * 获取租户下各作业状态计数（RUNNING/FAILED/SUCCESS等）
      */
+    @Operation(summary = "", description = "",operationId = "getJobInstanceStatusCountByTenant")
     @GetMapping("/status-count/{tenantId}")
     public Map<Integer, Long> statusCount(@PathVariable Long tenantId) {
         return jobInstanceService.countStatusByTenantId(tenantId);
@@ -83,6 +84,7 @@ public class JobMetricController {
     /**
      * 获取最近N个成功/失败作业
      */
+    @Operation(summary = "", description = "",operationId = "getJobInstanceLastJobsByTenant")
     @GetMapping("/last-jobs/{tenantId}")
     public ApiResponse<PageResult<JobInstanceDTO>> lastJobs(
             @PathVariable Long tenantId,

@@ -1,4 +1,4 @@
-package com.flinksight.common.tenant;
+package com.flinksight.backend.security.tenant;
 
 /**
  * 多租户上下文工具

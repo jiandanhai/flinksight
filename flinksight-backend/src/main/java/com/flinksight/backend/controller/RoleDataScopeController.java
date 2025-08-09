@@ -4,6 +4,7 @@ import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.RoleDataScopeDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.RoleDataScopeService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,16 +18,19 @@ public class RoleDataScopeController {
 
     private final RoleDataScopeService service;
 
+    @Operation(summary = "", description = "",operationId = "assignRoleDataScope")
     @PostMapping("/assign")
     public ApiResponse<RoleDataScopeDTO> assign(@RequestParam Long roleId, @RequestParam Long dataScopeId) {
         return ApiResponse.ok(service.assignDataScopeToRole(roleId, dataScopeId));
     }
 
+    @Operation(summary = "", description = "",operationId = "removeRoleDataScope")
     @PostMapping("/remove")
     public boolean remove(@RequestParam Long roleId, @RequestParam Long dataScopeId) {
         return service.removeDataScopeFromRole(roleId, dataScopeId);
     }
 
+    @Operation(summary = "", description = "",operationId = "getRoleDataScopesByRole")
     @GetMapping("/role/{roleId}")
     public ApiResponse<PageResult<RoleDataScopeDTO>> findByRole(
             @PathVariable Long roleId,
@@ -35,6 +39,7 @@ public class RoleDataScopeController {
         return ApiResponse.ok(service.findByRoleId(roleId,page,size));
     }
 
+    @Operation(summary = "", description = "",operationId = "getRoleDataScopesByDataScope")
     @GetMapping("/data-scope/{dataScopeId}")
     public ApiResponse<PageResult<RoleDataScopeDTO>> findByDataScope(@PathVariable Long dataScopeId,
                                                                     @RequestParam(defaultValue = "0") int page,
@@ -42,6 +47,7 @@ public class RoleDataScopeController {
         return ApiResponse.ok(service.findByDataScopeId(dataScopeId,page,size));
     }
 
+    @Operation(summary = "删除角色", description = "Delete role by ID",operationId = "getRoleDataScope")
     @GetMapping("/{id}")
     public ApiResponse<RoleDataScopeDTO> getById(@PathVariable Long id) {
         return service.getById(id)
@@ -49,6 +55,7 @@ public class RoleDataScopeController {
                 .orElse(ApiResponse.ok(null));
     }
 
+    @Operation(summary = "删除角色", description = "Delete role by ID",operationId = "deleteRoleDataScope")
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);

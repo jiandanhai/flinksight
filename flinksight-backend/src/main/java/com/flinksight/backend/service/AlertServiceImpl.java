@@ -59,6 +59,13 @@ public class AlertServiceImpl implements AlertService{
     }
 
     @Override
+    public PageResult<AlertDTO> getAlertsByLevelAndStatus(String level, Integer status, int page, int size) {
+        Page<Alert> result = repository.findByLevelAndStatusAndIsDeleted(level, status,0, PageRequest.of(page, size, Sort.by("id").descending()));
+        Page<AlertDTO> dtoPage = result.map(alertStructMapper::toDTO);
+        return new PageResult<>(dtoPage);
+    }
+
+    @Override
     public AlertDTO updateAlert(AlertDTO alertDTO) {
         Optional<AlertDTO> opt = repository.findById(alertDTO.getId()).map(alertStructMapper::toDTO);
         if(opt.isPresent()) {

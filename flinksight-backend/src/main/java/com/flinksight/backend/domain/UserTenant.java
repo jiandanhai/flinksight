@@ -6,6 +6,7 @@ import lombok.*;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * 用户-租户关联表
@@ -25,7 +26,7 @@ import java.io.Serializable;
         }
 )
 @Schema(description = "用户-租户关联表")
-@SQLRestriction("is_deleted=0") // Hibernate 6.3 推荐软删注解
+@SQLRestriction("is_deleted=0") // 软删除
 public class UserTenant implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,7 +41,23 @@ public class UserTenant implements Serializable {
     @Schema(description = "租户ID")
     private Long tenantId;
 
+    @Column(name = "role", length = 32)
+    @Schema(description = "授权角色，如OWNER/ADMIN/USER")
+    private String role;
+
+    @Column(name = "is_default", nullable = false)
+    @Schema(description = "是否默认租户（1=默认，0=非默认）")
+    private Integer isDefault = 0;
+
     @Column(name = "is_deleted", nullable = false)
     @Schema(description = "是否删除 0正常 1删除")
     private Integer isDeleted = 0;
+
+    @Column(name = "create_time", nullable = false)
+    @Schema(description = "创建时间")
+    private LocalDateTime createTime;
+
+    @Column(name = "update_time")
+    @Schema(description = "更新时间")
+    private LocalDateTime updateTime;
 }

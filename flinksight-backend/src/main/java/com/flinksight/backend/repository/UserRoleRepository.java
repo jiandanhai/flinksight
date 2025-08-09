@@ -4,12 +4,13 @@ import com.flinksight.backend.domain.UserRole;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
 
 @Repository
 public interface UserRoleRepository extends JpaRepository<UserRole, Long> {
@@ -17,7 +18,8 @@ public interface UserRoleRepository extends JpaRepository<UserRole, Long> {
     Page<UserRole> findByRoleIdAndIsDeleted(Long roleId, Integer isDeleted, Pageable pageable);
     Page<UserRole> findByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted, Pageable pageable);
 
-    Set<Long> findRoleIdsByUserIdAndIsDeleted(Long userId, Integer isDeleted);
+    @Query("SELECT ur.roleId FROM UserRole ur WHERE ur.userId = :userId AND ur.tenantId = :tenantId AND ur.isDeleted = :isDeleted")
+    List<Long> findRoleIdsByUserIdAndTenantIdAndIsDeletedAndIsDeleted(@Param("userId") Long userId, @Param("tenantId") Long tenantId,  @Param("isDeleted") Integer isDeleted);
     void deleteByUserIdAndRoleId(Long userId, Long roleId);
 
     /**
@@ -37,5 +39,17 @@ public interface UserRoleRepository extends JpaRepository<UserRole, Long> {
 
     @Query("SELECT ur.roleId FROM UserRole ur WHERE ur.userId = :userId AND ur.isDeleted = 0")
     List<Long> findRoleIdsByUserId(@Param("userId") Long userId);
+
+    boolean existsByUserIdAndRoleIdAndIsDeleted(Long userId, Long roleId, Integer isDeleted);
+
+    /**
+     * 软删除用户的某个角色
+     */
+    @Modifying
+    @Transactional
+    @Query("UPDATE UserRole ur SET ur.isDeleted = 1, ur.assignTime = CURRENT_TIMESTAMP " +
+            "WHERE ur.userId = :userId AND ur.roleId = :roleId AND ur.isDeleted = 0")
+    int softDeleteByUserIdAndRoleId(Long userId, Long roleId);
+
 
 }
