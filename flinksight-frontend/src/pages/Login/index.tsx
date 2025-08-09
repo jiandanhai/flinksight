@@ -1,8 +1,3 @@
-/**
- * 登录页：账号密码 + SSO 入口
- * - 默认走后端代理 /api/sso/sso-login（避免跨域、方便维护）
- * - 支持直连授权端点（VITE_SSO_LOGIN_URL 配成完整 URL 时）
- */
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../../store/user';
@@ -18,7 +13,7 @@ const LoginPage: React.FC = () => {
 
   const redirectAfter = new URLSearchParams(location.search).get('redirect') || '/dashboard';
 
-  // 账号密码
+  // 账号密码登录处理
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -30,17 +25,24 @@ const LoginPage: React.FC = () => {
       });
       const data = await resp.json();
       if (!resp.ok || !data?.token) throw new Error(data?.message || '用户名或密码错误');
+      
+      // 登录成功，存储 token
       await login(data.token);
+
+      // 将 Token 存储在 sessionStorage 和 localStorage 中
+      sessionStorage.setItem('authToken', data.token);
+      localStorage.setItem('authToken', data.token);
+
+      // 在成功登录后，重定向
       navigate(redirectAfter, { replace: true });
     } catch (e: any) {
       setError(e?.message || '登录失败');
     }
   };
 
-  // SSO 入口（默认后端代理模式）
+  // SSO 登录入口（默认后端代理模式）
   const goSSO = () => {
     const loginUrl = (import.meta.env.VITE_SSO_LOGIN_URL as string | undefined) || '/api/sso/sso-login';
-    // 后端代理：/api/sso/sso-login?redirect=/dashboard
     window.location.href = `${loginUrl}?redirect=${encodeURIComponent(redirectAfter)}`;
   };
 
