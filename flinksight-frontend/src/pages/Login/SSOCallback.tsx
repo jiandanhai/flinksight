@@ -26,14 +26,13 @@ function getSafeRedirect(input?: string | null): string {
     if (u.origin !== window.location.origin) return DEFAULT_REDIRECT;
     const pathWithQueryHash = u.pathname + u.search + u.hash;
     if (REDIRECT_WHITELIST_PREFIXES.some((p) => pathWithQueryHash.startsWith(p))) {
-      console.log("[SSO Callback] Redirect path allowed:", pathWithQueryHash); // Debug log
       return pathWithQueryHash || DEFAULT_REDIRECT;
     }
-  } catch (error) {
-    console.log("[SSO Callback] Invalid redirect URL:", error); // Debug log
-    return DEFAULT_REDIRECT;
+  } catch {
+    if (raw.startsWith("/") && REDIRECT_WHITELIST_PREFIXES.some((p) => raw.startsWith(p))) {
+      return raw;
+    }
   }
-
   return DEFAULT_REDIRECT;
 }
 
@@ -71,22 +70,24 @@ const SSOCallbackPage: React.FC = () => {
 
     (async () => {
       try {
-        // Step 1: Debug log
         console.log("[SSO Callback] Starting processing...");
         console.log(`[SSO Callback] Extracted Params: { token: ${token}, code: ${code}, redirect: ${redirect} }`);
 
         const storedToken = sessionStorage.getItem("authToken");
 
-        // Step 2: If token is in sessionStorage, set it to API token and navigate
         if (storedToken) {
           console.log("[SSO Callback] Token found in sessionStorage:", storedToken);  // Debug log
           setApiToken(storedToken);  // 同步到 API 请求头
           setStatus("success");
-          navigate(redirect || "/dashboard", { replace: true });
+
+          console.log(`[SSO Callback] Redirecting to: ${redirect || "/dashboard"}`);
+          setTimeout(() => {
+            console.log(`[SSO Callback] Navigating to: ${redirect || "/dashboard"}`);  // Debug log
+            navigate(redirect || "/dashboard", { replace: true });  // 使用 navigate 跳转
+          }, 2000);  // 延时跳转，确保日志能输出
           return;
         }
 
-        // Step 3: If token is available from URL, proceed with login
         if (token) {
           console.log("[SSO Callback] Token received from URL:", token);  // Debug log
           setMessage("已获取 Token，正在登录...");
@@ -96,11 +97,15 @@ const SSOCallbackPage: React.FC = () => {
           setApiToken(token); // 同步到 API 请求头
           console.log("[SSO Callback] Token stored in localStorage and sessionStorage:", token);  // Debug log
           setStatus("success");
-          navigate(redirect || "/dashboard", { replace: true });
+
+          console.log(`[SSO Callback] Redirecting to: ${redirect || "/dashboard"}`);
+          setTimeout(() => {
+            console.log(`[SSO Callback] Navigating to: ${redirect || "/dashboard"}`);  // Debug log
+            navigate(redirect || "/dashboard", { replace: true });  // 使用 navigate 跳转
+          }, 2000);  // 延时跳转，确保日志能输出
           return;
         }
 
-        // Step 4: If code is available, request token from backend
         if (code) {
           if (!SSO_CLIENT_ID || !SSO_CLIENT_SECRET) {
             console.warn("[SSO] 缺少 CLIENT_ID/CLIENT_SECRET，仍尝试后端代换…");
@@ -136,7 +141,12 @@ const SSOCallbackPage: React.FC = () => {
           setApiToken(t); // 同步到 API 请求头
           console.log("[SSO Callback] Token stored in localStorage and sessionStorage:", t);  // Debug log
           setStatus("success");
-          navigate(redirect || "/dashboard", { replace: true });
+
+          console.log(`[SSO Callback] Redirecting to: ${redirect || "/dashboard"}`);
+          setTimeout(() => {
+            console.log(`[SSO Callback] Navigating to: ${redirect || "/dashboard"}`);  // Debug log
+            navigate(redirect || "/dashboard", { replace: true });  // 使用 navigate 跳转
+          }, 2000);  // 延时跳转，确保日志能输出
           return;
         }
 
