@@ -93,6 +93,7 @@ const SSOCallbackPage: React.FC = () => {
           setApiToken(token); // 同步 token 到 API 请求头
           console.log("[SSO Callback] Token stored in localStorage and sessionStorage:", token);  // 调试日志
           setStatus("success");
+          console.log("[SSO Callback] Navigating to:", redirect || "/dashboard");
           navigate(redirect || "/dashboard", { replace: true });
           return;
         }
@@ -133,6 +134,7 @@ const SSOCallbackPage: React.FC = () => {
           setApiToken(t); // 同步 token 到 API 请求头
           console.log("[SSO Callback] Token stored in localStorage and sessionStorage:", t);  // 调试日志
           setStatus("success");
+          console.log("[SSO Callback] Navigating to:", redirect || "/dashboard");
           navigate(redirect || "/dashboard", { replace: true });
           return;
         }
