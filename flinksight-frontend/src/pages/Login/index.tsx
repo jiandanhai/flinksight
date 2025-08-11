@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../../store/user';
+import { setApiToken } from '../../api/gen/client';  // 引入 setApiToken
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -28,6 +29,9 @@ const LoginPage: React.FC = () => {
       
       // 登录成功，存储 token
       await login(data.token);
+      
+      // 设置 token 到 Api 客户端
+      setApiToken(data.token); // 确保 token 在所有后续请求中生效
 
       // 将 Token 存储在 sessionStorage 和 localStorage 中
       sessionStorage.setItem('authToken', data.token);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useUser } from "../../store/user"; // Assuming useUser is your context
+import { useUser } from "../../store/user";
+import { setApiToken } from "../../api/gen/client";  // 正确路径
 
 const SSO_TOKEN_URL = import.meta.env.VITE_SSO_TOKEN_URL || "/api/sso/token";
 const SSO_CLIENT_ID = import.meta.env.VITE_SSO_CLIENT_ID;
@@ -15,7 +16,6 @@ const REDIRECT_WHITELIST_PREFIXES = [
   "/clusters",
 ];
 
-// Prevent open redirects
 function getSafeRedirect(input?: string | null): string {
   const raw = (input || "").trim();
   if (!raw) return DEFAULT_REDIRECT;
@@ -35,7 +35,6 @@ function getSafeRedirect(input?: string | null): string {
   return DEFAULT_REDIRECT;
 }
 
-// Extract token and redirect params from URL
 function extractParams(search: string, hash: string) {
   const sp = new URLSearchParams(search || "");
   const hp = new URLSearchParams((hash || "").replace(/^#/, ""));
@@ -43,13 +42,14 @@ function extractParams(search: string, hash: string) {
   const code = (sp.get("code") || hp.get("code") || "").trim();
   const redirectRaw = sp.get("redirect") || hp.get("redirect") || "";
   const redirect = getSafeRedirect(decodeURIComponent(redirectRaw || ""));
+  console.log("[SSO Callback] Extracted Params:", { token, code, redirect }); // 调试日志
   return { token, code, redirect };
 }
 
 const SSOCallbackPage: React.FC = () => {
   const navigate = useNavigate();
   const { search, hash } = useLocation();
-  const { login } = useUser(); // Assuming you have a context or state management system
+  const { login } = useUser();
 
   const [status, setStatus] = useState<"working" | "success" | "error">("working");
   const [message, setMessage] = useState<string>("SSO 登录处理中…");
@@ -68,31 +68,39 @@ const SSOCallbackPage: React.FC = () => {
 
     (async () => {
       try {
+        console.log("[SSO Callback] Starting processing...");  // 调试日志
+        console.log("[SSO Callback] token:", token);  // 调试日志
+        console.log("[SSO Callback] code:", code);  // 调试日志
+        console.log("[SSO Callback] redirect:", redirect);  // 调试日志
+
         const storedToken = sessionStorage.getItem("authToken");
-        console.log('Checking sessionStorage for token:', storedToken);
 
         if (storedToken) {
+          console.log("[SSO Callback] Token found in sessionStorage:", storedToken);  // 调试日志
+          setApiToken(storedToken);  // 同步 token 到 API 请求头
           setStatus("success");
-          console.log("Token found in sessionStorage, skipping login and navigating to:", redirect);
+          console.log("[SSO Callback] Navigating to:", redirect || "/dashboard");
           navigate(redirect || "/dashboard", { replace: true });
           return;
         }
 
         if (token) {
+          console.log("[SSO Callback] Token received from URL:", token);  // 调试日志
           setMessage("已获取 Token，正在登录...");
-          await login(token); // Store token in sessionStorage and update user state
-          console.log('Token stored in sessionStorage:', sessionStorage.getItem('authToken'));
-          localStorage.setItem('authToken', token); // Also store it in localStorage
-          console.log('Token stored in localStorage:', localStorage.getItem('authToken'));
+          await login(token);
+          localStorage.setItem("authToken", token); // 存储 token
+          sessionStorage.setItem("authToken", token); // 存储 token
+          setApiToken(token); // 同步 token 到 API 请求头
+          console.log("[SSO Callback] Token stored in localStorage and sessionStorage:", token);  // 调试日志
           setStatus("success");
-          console.log("Token received, navigating to:", redirect);
           navigate(redirect || "/dashboard", { replace: true });
           return;
         }
 
         if (code) {
+          console.log("[SSO Callback] Authorization code received:", code);  // 调试日志
           if (!SSO_CLIENT_ID || !SSO_CLIENT_SECRET) {
-            console.warn("[SSO] 缺少 CLIENT_ID/CLIENT_SECRET，仍尝试后端代换…");
+            console.warn("[SSO] Missing CLIENT_ID/CLIENT_SECRET, trying server-side token exchange...");
           }
           setMessage("已获取授权码，正在换取 Token...");
 
@@ -107,30 +115,31 @@ const SSOCallbackPage: React.FC = () => {
               redirect_uri: `${window.location.origin}/login/sso-callback`,
             }),
             signal: controller.signal,
-            credentials: "include",
+            credentials: "include", // 确保跨域时携带凭证
           });
 
           const data = await resp.json();
           const t = data?.access_token || data?.token;
 
           if (!resp.ok || !t) {
-            throw new Error(data?.message || `换取 Token 失败（HTTP ${resp.status}）`);
+            throw new Error(data?.message || `Failed to exchange token (HTTP ${resp.status})`);
           }
 
+          console.log("[SSO Callback] Token received from backend:", t);  // 调试日志
           setMessage("登录中...");
           await login(t);
-          console.log('Token stored in sessionStorage:', sessionStorage.getItem('authToken'));
-          localStorage.setItem('authToken', t);
-          console.log('Token stored in localStorage:', localStorage.getItem('authToken'));
+          localStorage.setItem("authToken", t);
+          sessionStorage.setItem("authToken", t);
+          setApiToken(t); // 同步 token 到 API 请求头
+          console.log("[SSO Callback] Token stored in localStorage and sessionStorage:", t);  // 调试日志
           setStatus("success");
-          console.log("Navigating to:", redirect);
           navigate(redirect || "/dashboard", { replace: true });
           return;
         }
 
-        throw new Error("缺少 token 或 code 参数");
+        throw new Error("Missing token or code parameter");
       } catch (err: any) {
-        console.error("[SSO] 回调处理失败：", err);
+        console.error("[SSO Callback] Error occurred during callback processing:", err);  // 调试日志
         setStatus("error");
         setMessage(err?.message || "SSO 回调处理失败");
         const timer = setTimeout(() => navigate("/login", { replace: true }), 2000);
