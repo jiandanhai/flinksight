@@ -1,4 +1,5 @@
-import React, {Suspense, useEffect, useState} from "react"; 
+import React, { Suspense, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import KPIStats from './KPIStats';
 import ClusterStatus from './ClusterStatus';
 import JobFunnel from './JobFunnel';
@@ -16,9 +17,15 @@ const MetricDashboard = React.lazy(() => import('./MetricDashboard'));
 const DashboardPage: React.FC = () => {
   // Tab: overview = 运营总览，metric = 指标大屏，可继续扩展其它Tab
   const [tab, setTab] = useState<'overview' | 'metric'>('overview');
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.title = (tab === 'overview' ? '运营总览' : '指标可视化大屏') + ' - Flinksight';
+  }, [tab]);
+
+  // 增加调试日志输出
+  useEffect(() => {
+    console.log("DashboardPage loaded with tab:", tab);
   }, [tab]);
 
   return (
@@ -30,19 +37,21 @@ const DashboardPage: React.FC = () => {
         {/* Tab导航，可继续添加其它Tab */}
         <div className="flex space-x-4">
           <button
-            className={px-4 py-1 rounded-t-md ${tab === 'overview' ? 'bg-white shadow font-bold' : 'bg-gray-100 text-gray-500'}}
+            className={`px-4 py-1 rounded-t-md ${tab === 'overview' ? 'bg-white shadow font-bold' : 'bg-gray-100 text-gray-500'}`}
             onClick={() => setTab('overview')}
           >
             运营总览
           </button>
           <button
-            className={px-4 py-1 rounded-t-md ${tab === 'metric' ? 'bg-white shadow font-bold' : 'bg-gray-100 text-gray-500'}}
+            className={`px-4 py-1 rounded-t-md ${tab === 'metric' ? 'bg-white shadow font-bold' : 'bg-gray-100 text-gray-500'}`}
             onClick={() => setTab('metric')}
           >
             指标可视化大屏
           </button>
         </div>
       </div>
+
+      {/* 运营总览内容 */}
       {tab === 'overview' && (
         <>
           <KPIStats />
@@ -56,6 +65,8 @@ const DashboardPage: React.FC = () => {
           </div>
         </>
       )}
+
+      {/* 指标大屏内容 */}
       {tab === 'metric' && (
         <Suspense fallback={<div className="text-center py-32">指标大屏加载中...</div>}>
           <MetricDashboard />
