@@ -5,6 +5,7 @@ import com.flinksight.common.dto.NotificationDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
  * 消息通知管理
  */
 @RestController
+@Tag(name = "api", description = "消息通知管理API")
 @RequestMapping("/api/notification")
 @RequiredArgsConstructor
 public class NotificationController {

@@ -1,9 +1,12 @@
 package com.flinksight.common.service;
 
-import com.flinksight.common.dto.DashboardSummaryDTO;
-import com.flinksight.common.dto.HealthDistributionDTO;
-import com.flinksight.common.dto.JobFunnelDTO;
+import com.flinksight.common.dto.*;
 import com.flinksight.common.model.PageResult;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 统计聚合业务接口
@@ -16,7 +19,7 @@ public interface DashboardService {
      * @param tenantId 租户ID
      * @return 大盘统计DTO
      */
-    DashboardSummaryDTO getDashboardSummary(Long tenantId);
+    KPIStatusSummaryDTO getDashboardSummary(Long tenantId);
 
     /**
      * 查询集群健康分布
@@ -25,10 +28,40 @@ public interface DashboardService {
      */
     HealthDistributionDTO getHealthDistribution(Long tenantId);
 
+
+    AlertTrendDTO getAlertTrend(Long tenantId, LocalDate from, LocalDate to);
+
     /**
      * 查询业务转化漏斗数据
      * @param tenantId 租户ID
      * @return 漏斗统计DTO列表
      */
     PageResult<JobFunnelDTO> getJobFunnel(Long tenantId, int page, int size);
+
+    // 监控卡片四格
+    MonitorMetricsDTO getMonitorMetrics(Long tenantId);
+
+    // 指标曲线
+    MetricSeriesDTO getMetricSeries(Long tenantId, String metric, LocalDateTime from, LocalDateTime to);
+
+    List<Map<String, Object>> getAlertCountBySeverity(Long tenantId, LocalDateTime start, LocalDateTime end);
+
+
+    List<Map<String, Object>> getAlertCountByStatus(Long tenantId, LocalDateTime start, LocalDateTime end);
+
+    Double getAverageResponseSeconds(Long tenantId);
+
+    List<Map<String, Object>> getFailedJobAlertTrend(Long tenantId, LocalDateTime start, LocalDateTime end);
+
+
+    /**
+     * 获取集群健康统计信息
+     *
+     * @param tenantId 租户ID
+     * @return 集群健康指标
+     */
+    ClusterHealthMetricsDTO getClusterHealthMetrics(Long tenantId);
+
+
+    ClusterTrendDTO getClusterTrend(Long tenantId, LocalDateTime from, LocalDateTime to);
 }

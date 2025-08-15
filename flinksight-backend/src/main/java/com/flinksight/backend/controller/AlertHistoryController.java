@@ -5,6 +5,7 @@ import com.flinksight.common.dto.AlertHistoryDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.AlertHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
  * 报警历史管理
  */
 @RestController
+@Tag(name = "api", description = "告警历史事件")
 @RequestMapping("/api/alert-history")
 @RequiredArgsConstructor
 public class AlertHistoryController {

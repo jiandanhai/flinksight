@@ -4,7 +4,7 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Card, Descriptions, Spin, Table, Tag} from 'antd';
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 import type {AlertDTO, AlertOpLogDTO, AlertRuleDTO} from '../../api/gen/data-contracts.ts';
 import {useUser} from '../../store/user';

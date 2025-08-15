@@ -13,6 +13,6 @@ public enum ClusterHealthStatusEnum {
     WARNING(2, "警告"),
     ERROR(3, "异常");
 
-    private final int code;
+    private final Integer code;
     private final String desc;
 }

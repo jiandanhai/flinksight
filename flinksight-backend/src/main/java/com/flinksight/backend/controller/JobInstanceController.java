@@ -5,6 +5,7 @@ import com.flinksight.common.dto.JobInstanceDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.JobInstanceService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
  * 作业实例管理API
  */
 @RestController
+@Tag(name = "api", description = "作业实例管理API")
 @RequestMapping("/api/job-instance")
 @RequiredArgsConstructor
 public class JobInstanceController {

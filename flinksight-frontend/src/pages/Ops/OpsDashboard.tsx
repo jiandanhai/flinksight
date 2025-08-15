@@ -5,7 +5,7 @@
 import React, { useEffect, useRef } from "react";
 import { Card, Col, Progress, Row, Statistic } from "antd";
 import * as echarts from "echarts";
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 const OpsDashboard: React.FC = () => {
   const kpiRef = useRef<HTMLDivElement>(null);

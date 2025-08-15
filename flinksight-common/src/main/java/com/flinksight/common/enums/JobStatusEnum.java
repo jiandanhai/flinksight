@@ -13,6 +13,6 @@ public enum JobStatusEnum {
     RESTARTING(4, "重试中"),
     UNKNOWN(5, "未知");
 
-    private final int code;
+    private final Integer code;
     private final String label;
 }

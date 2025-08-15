@@ -1,7 +1,7 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.HealthDistributionDTO;
-import com.flinksight.common.dto.DashboardSummaryDTO;
+import com.flinksight.common.dto.KPIStatusSummaryDTO;
 
 public interface ClusterStatisticsService {
 
@@ -13,5 +13,5 @@ public interface ClusterStatisticsService {
     /**
      * 获取大盘核心数据
      */
-    DashboardSummaryDTO getDashboardSummary(Long tenantId);
+    KPIStatusSummaryDTO getDashboardSummary(Long tenantId);
 }

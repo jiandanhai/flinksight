@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  * 集群管理接口
  */
-@Tag(name = "集群管理", description = "Cluster Management API")
+@Tag(name = "api", description = "集群管理")
 @RestController
 @RequestMapping("/api/cluster")
 @RequiredArgsConstructor

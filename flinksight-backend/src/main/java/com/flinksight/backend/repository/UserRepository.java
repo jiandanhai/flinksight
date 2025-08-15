@@ -57,4 +57,6 @@ public interface UserRepository extends JpaRepository<User, Long>, SoftDeleteRep
     User findByEmailAndIsDeleted(String email, Integer isDeleted);
 
     User findByIdAndIsDeleted(Long id, Integer isDeleted);
+
+    long countByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted);
 }

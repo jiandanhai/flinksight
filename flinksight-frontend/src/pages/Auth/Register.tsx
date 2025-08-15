@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 import {useNavigate} from 'react-router-dom';
 import type {UserDTO} from '../../api/gen/data-contracts.ts';

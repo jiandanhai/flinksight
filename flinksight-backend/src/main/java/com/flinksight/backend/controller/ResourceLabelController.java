@@ -5,12 +5,14 @@ import com.flinksight.common.dto.ResourceLabelDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ResourceLabelService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * 资源-标签关联管理
  */
+@Tag(name = "api",description = "资源-标签关联管理API")
 @RestController
 @RequestMapping("/api/resource-label")
 @RequiredArgsConstructor

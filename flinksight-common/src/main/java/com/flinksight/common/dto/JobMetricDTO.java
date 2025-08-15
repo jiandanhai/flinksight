@@ -18,6 +18,6 @@ public class JobMetricDTO implements Serializable {
     private Long jobId;
     private String metricKey;
     private Double value;
-    private LocalDateTime metricTime;
+    private LocalDateTime ts;
     private Integer isDeleted;
 }

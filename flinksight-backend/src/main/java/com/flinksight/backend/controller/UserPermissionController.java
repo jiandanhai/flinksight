@@ -5,12 +5,14 @@ import com.flinksight.common.dto.UserPermissionDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.UserPermissionService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * 用户-权限分配管理
  */
+@Tag(name = "api", description = "用户-权限分配管理API")
 @RestController
 @RequestMapping("/api/user-permission")
 @RequiredArgsConstructor

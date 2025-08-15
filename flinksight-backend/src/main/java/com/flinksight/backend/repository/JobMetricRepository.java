@@ -1,12 +1,16 @@
 package com.flinksight.backend.repository;
 
 import com.flinksight.backend.domain.JobMetric;
+import com.flinksight.common.dto.JobMetricDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 任务指标表数据访问接口
@@ -21,5 +25,26 @@ public interface JobMetricRepository extends JpaRepository<JobMetric, Long>, Sof
 
     Page<JobMetric> findByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted, Pageable pageable);
 
+    @Query(value = """
+        SELECT 
+          tenant_id      AS tenantId,
+          metric_key     AS metricKey,
+          -- 统一到分钟：把 DATETIME 转成 ISO 字符串再由驱动映射为 Instant
+          DATE_FORMAT(metric_time, '%Y-%m-%d %H:%i:00') AS ts,
+          AVG(metric_value) AS value
+        FROM job_metric
+        WHERE tenant_id = :tenantId
+          AND metric_key = :metricKey
+          AND metric_time BETWEEN :from AND :to
+          AND is_deleted = 0
+        GROUP BY tenant_id, metric_key, ts
+        ORDER BY ts
+        """, nativeQuery = true)
+    List<JobMetricDTO> findSeries(
+            @Param("tenantId") Long tenantId,
+            @Param("metricKey") String metricKey,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
+    );
 
 }

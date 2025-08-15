@@ -5,6 +5,7 @@ import com.flinksight.common.dto.NotifyChannelDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NotifyChannelService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
  * 通知渠道管理控制器
  */
 @RestController
+@Tag(name = "api", description = "通知渠道管理控制器API")
 @RequestMapping("/api/notify-channel")
 @RequiredArgsConstructor
 public class NotifyChannelController {

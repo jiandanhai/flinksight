@@ -5,14 +5,16 @@ import com.flinksight.common.dto.UserTenantDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.UserTenantService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * 用户-租户关联管理
  */
+@Tag(name = "api", description = "用户-租户关联管理API")
 @RestController
-@RequestMapping("/api/sso/user-tenant")
+@RequestMapping("/api/user-tenant")
 @RequiredArgsConstructor
 public class UserTenantController {
 

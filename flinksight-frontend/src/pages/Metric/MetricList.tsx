@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 import type {MetricDashboardDTO} from '../../api/gen/data-contracts.ts';
 import EditMetricModal from './EditMetricModal';

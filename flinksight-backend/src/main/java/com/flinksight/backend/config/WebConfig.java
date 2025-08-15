@@ -32,7 +32,11 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(allowedOrigins)
                 .allowedMethods(allowedMethods.split(","))
                 .allowedHeaders(allowedHeaders.split(","))
+                .exposedHeaders("Authorization")  // 关键：暴露给前端
                 .allowCredentials(allowCredentials)
                 .maxAge(maxAge);
+
+        // 打印调试信息
+        System.out.println("CORS mapping applied to /**");
     }
 }

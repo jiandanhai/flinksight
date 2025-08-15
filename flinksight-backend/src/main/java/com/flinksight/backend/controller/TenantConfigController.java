@@ -5,6 +5,7 @@ import com.flinksight.common.dto.TenantConfigDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.TenantConfigService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +14,7 @@ import java.util.Optional;
 /**
  * 租户配置管理
  */
+@Tag(name = "api", description = "租户配置管理API")
 @RestController
 @RequestMapping("/api/tenant-config")
 @RequiredArgsConstructor

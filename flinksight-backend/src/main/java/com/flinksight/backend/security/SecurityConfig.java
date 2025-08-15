@@ -1,14 +1,16 @@
 package com.flinksight.backend.security;
 
 import com.flinksight.backend.security.jwt.JwtAuthFilter;
+import com.flinksight.backend.security.token.TokenGuardFilter;
 import com.flinksight.backend.service.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
+// 移除 Keycloak 相关 import（保留其它不变）
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -16,21 +18,19 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import javax.servlet.http.HttpServletResponse;
 
-/**
- * Spring Security 企业级安全配置
- * - 支持JWT、RBAC、多租户上下文、CORS、异常处理、注解权限
- */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity  // 支持@PreAuthorize、@Secured
 @RequiredArgsConstructor
 public class SecurityConfig {
-
     private final JwtAuthFilter jwtAuthFilter;
+    private final TokenGuardFilter tokenGuardFilter;
     private final UserServiceImpl userServiceImpl;
     private final CorsConfigurationSource corsConfigurationSource;
     @Autowired
@@ -47,12 +47,16 @@ public class SecurityConfig {
         return provider;
     }
 
-    /**
-     * API主入口安全配置（全部接口无Session，仅JWT，最小权限原则）
-     */
     @Bean
-    @Order(1)
-    public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain apiFilterChain(HttpSecurity http,
+                                              HandlerMappingIntrospector introspector) throws Exception {
+
+        // MVC 感知的路径匹配器（对齐 Spring MVC 的 PathPattern/ServletPath 规则）
+        MvcRequestMatcher.Builder mvc = new MvcRequestMatcher.Builder(introspector);
+
+        // 关键：限定自定义过滤器的触发路径（保留原有 JWT/TokenGuard 逻辑）
+        jwtAuthFilter.setRequestMatcher(mvc.pattern("/api/**"));
+
         http
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(csrf -> csrf.disable())
@@ -60,20 +64,29 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // ====== Swagger/OpenAPI/Knife4j文档全路径放行 ======
                         .requestMatchers(
-                                "/swagger-ui.html",      // Swagger UI 主入口
-                                "/swagger-ui/**",        // 新版 UI 静态资源
-                                "/v3/api-docs/**",       // OpenAPI 文档接口
-                                "/swagger-resources/**", // Swagger 静态资源
-                                "/webjars/**",           // js/css/fonts等
-                                "/doc.html",             // Knife4j 支持
-                                // ====== 其它公共接口 ======
-                                "/api/auth/**","/api/sso/**", "/actuator/**", "/health", "/public/**",
-                                "/static/**", "/favicon.ico", "/assets/**"
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/webjars/**",
+                                "/doc.html",
+                                "/static/**", "/favicon.ico", "/assets/**",
+                                "/actuator/**", "/health", "/public/**"
                         ).permitAll()
-                        // 其它接口需认证
-                        .anyRequest().authenticated()
+
+                        // SSO 桥接端点保留（不再挂 Keycloak 过滤器）
+                        .requestMatchers("/sso/sso-login", "/sso/callback", "/sso/login", "/sso/register").permitAll()
+                        // 若只做 IdP 退出跳转，可将下一行改为 permitAll()
+                        .requestMatchers("/sso/logout").permitAll()
+
+                        // 业务 API 保护（JWT）
+                        .requestMatchers("/api/**").authenticated()
+
+                        // 其他拒绝（按需调整）
+                        .anyRequest().denyAll()
                 )
-                // 核心JWT过滤器，放在用户名密码认证过滤器之前
+                // 在 JwtAuthFilter 前挂 TokenGuardFilter
+                .addFilterBefore(tokenGuardFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req, resp, ex1) -> {
@@ -87,20 +100,14 @@ public class SecurityConfig {
                             resp.getWriter().write("{\"error\": \"无权限访问该资源\"}");
                         })
                 )
-                .httpBasic(Customizer.withDefaults()) // 兼容Swagger文档Basic认证
+                .httpBasic(Customizer.withDefaults())
                 .authenticationProvider(authenticationProvider());
 
         return http.build();
     }
 
-    /*
-     * 如需多租户/多前端场景，可配置额外SecurityFilterChain（可选）
-     * 如后台管理独立端口、开放接口可做隔离
-     */
-    // @Bean
-    // @Order(2)
-    // public SecurityFilterChain adminFilterChain(HttpSecurity http) throws Exception {
-    //     // 自定义实现
-    //     return http.build();
-    // }
+    @Bean
+    public org.springframework.security.authentication.AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
 }

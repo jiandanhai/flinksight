@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Tag, message } from 'antd';
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 // 类型建议后端 openapi 自动生成，若有可以直接 import DataPerm
 interface DataPerm {

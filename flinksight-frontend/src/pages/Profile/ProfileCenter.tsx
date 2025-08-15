@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Form, Input, message, Modal, Upload } from 'antd';
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 const ProfileCenter: React.FC = () => {
   const [info, setInfo] = useState<any>({});

@@ -1,47 +1,82 @@
-import React, {useEffect, useState} from 'react';
-import { api } from 'src/api/gen/client';
+import React, { useEffect, useState } from "react";
+import { Card, Col, Row, Statistic, Spin } from "antd";
+import { AlertOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
+import api from "@/api/gen/client"; // 自动生成的API Client
+import { getTenantId } from "@/utils/tenant";
 
-import type {DashboardSummaryDTO} from '../../api/gen/data-contracts.ts';
-import Loading from '../../components/Loading';
+interface KPIData {
+  todayAlerts: number;
+  successJobs: number;
+  failedJobs: number;
+  avgLatency: number;
+}
 
-/**
-   * KPI统计组件
-   * - 展示核心数据：集群数、任务数、报警数、活跃任务、健康度等
- */
 const KPIStats: React.FC = () => {
-  const [summary, setSummary] = useState<DashboardSummaryDTO | null>(null);
+  const [data, setData] = useState<KPIData | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function fetchSummary() {
-    setLoading(true);
+  // 加载 KPI 数据
+  const fetchKPI = async () => {
     try {
-      const data = await api.getDashboardStatisticsSummaryByTenant();
-      setSummary(data);
+      setLoading(true);
+      const res = await api.dashboardKpiStatisticsSummary({ tenantId: getTenantId() }); // 对应后端接口 /api/dashboard/kpi
+      if (res?.data) {
+        setData(res.data);
+      }
     } finally {
       setLoading(false);
     }
-  }
-  useEffect(() => { fetchSummary(); }, []);
+  };
 
-  if (loading || !summary) return <Loading />;
+  useEffect(() => {
+    fetchKPI();
+  }, []);
+
   return (
-    <div className="grid grid-cols-5 gap-6">
-      <KPIItem label="集群数" value={summary.totalClusters} />
-      <KPIItem label="任务数" value={summary.totalJobs} />
-      <KPIItem label="报警数" value={summary.totalAlerts} />
-      <KPIItem label="今日活跃" value={summary.activeJobs} />
-      <KPIItem label="健康度" value={`${summary.healthyRate}%`} />
-    </div>
+    <Spin spinning={loading}>
+      <Row gutter={16}>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic
+              title="今日告警数"
+              value={data?.todayAlerts ?? 0}
+              prefix={<AlertOutlined />}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic
+              title="成功作业数"
+              value={data?.successJobs ?? 0}
+              valueStyle={{ color: "#3f8600" }}
+              prefix={<CheckCircleOutlined />}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic
+              title="失败作业数"
+              value={data?.failedJobs ?? 0}
+              valueStyle={{ color: "#cf1322" }}
+              prefix={<CloseCircleOutlined />}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic
+              title="平均响应耗时 (ms)"
+              value={data?.avgLatency ?? 0}
+              precision={1}
+              prefix={<ClockCircleOutlined />}
+            />
+          </Card>
+        </Col>
+      </Row>
+    </Spin>
   );
 };
 
-// 单个KPI项
-function KPIItem({ label, value }: { label: string, value: any }) {
-  return (
-    <div className="bg-white rounded-xl shadow p-6 flex flex-col items-center">
-      <span className="text-2xl font-bold text-blue-600">{value}</span>
-      <span className="text-gray-500 mt-2">{label}</span>
-    </div>
-  );
-}
 export default KPIStats;

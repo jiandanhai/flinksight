@@ -5,12 +5,14 @@ import com.flinksight.common.dto.OperationTemplateDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.OperationTemplateService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * 操作模板管理
  */
+@Tag(name = "api",description = "操作模板管理API")
 @RestController
 @RequestMapping("/api/operation-template")
 @RequiredArgsConstructor

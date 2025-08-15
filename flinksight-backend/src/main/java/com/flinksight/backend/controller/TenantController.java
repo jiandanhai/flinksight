@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  * 租户管理接口
  */
-@Tag(name = "租户管理", description = "Tenant Management API")
+@Tag(name = "api", description = "租户管理接口API")
 @RestController
 @RequestMapping("/api/tenant")
 @RequiredArgsConstructor

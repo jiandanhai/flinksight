@@ -4,7 +4,7 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Card, Descriptions, Spin, Table} from 'antd';
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 import type {TenantDTO, TenantOpLogDTO, TenantUserDTO} from '../../api/gen/data-contracts.ts';
 

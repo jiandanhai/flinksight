@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Tag, Select, message } from 'antd';
-import { Api } from '../../api/gen/api.ts';
+import  api  from 'src/api/gen/client';
 
 // 自动生成的DTO建议用 NotificationDTO
 // interface NotificationDTO { ... }

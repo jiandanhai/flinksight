@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Badge, Button, message, Modal, Table } from 'antd';
-import { Api } from '../../api/gen/api.ts';
+import  api  from 'src/api/gen/client';
 
 // 建议用后端 openapi 自动生成的 NotificationDTO 类型
 interface Notification {
@@ -15,8 +15,6 @@ interface Notification {
   status: 0 | 1; // 0-未读 1-已读
   createTime: string;
 }
-
-const api = new Api();
 
 const NotificationCenter: React.FC = () => {
   const [list, setList] = useState<Notification[]>([]);

@@ -5,12 +5,14 @@ import com.flinksight.common.dto.SysParamDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.SysParamService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * 系统参数管理
  */
+@Tag(name = "api", description = "系统参数管理API")
 @RestController
 @RequestMapping("/api/sys-param")
 @RequiredArgsConstructor

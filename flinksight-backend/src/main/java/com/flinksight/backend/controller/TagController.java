@@ -5,12 +5,14 @@ import com.flinksight.common.dto.TagDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.TagService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * 标签管理
  */
+@Tag(name = "api", description = "标签管理API")
 @RestController
 @RequestMapping("/api/tag")
 @RequiredArgsConstructor

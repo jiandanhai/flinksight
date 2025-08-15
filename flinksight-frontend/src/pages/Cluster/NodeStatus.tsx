@@ -4,7 +4,7 @@
  */
 import React, {useEffect, useState} from "react";
 import {Card, Table, Tag} from "antd";
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 const NodeStatus: React.FC = () => {
   const [data, setData] = useState<any[]>([]);

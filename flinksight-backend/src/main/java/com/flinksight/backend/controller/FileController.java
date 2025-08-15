@@ -5,6 +5,7 @@ import com.flinksight.common.dto.FileDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.FileService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
  * 文件管理
  */
 @RestController
+@Tag(name = "api", description = "文件管理")
 @RequestMapping("/api/file")
 @RequiredArgsConstructor
 public class FileController {

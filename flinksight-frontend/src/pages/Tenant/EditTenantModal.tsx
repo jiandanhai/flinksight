@@ -4,7 +4,7 @@
  */
 import React, {useEffect} from 'react';
 import {Form, Input, message, Modal, Switch} from 'antd';
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 import type {TenantDTO} from '../../api/gen/data-contracts.ts';
 

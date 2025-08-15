@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.*;
 /**
  * 角色管理接口
  */
-@Tag(name = "角色管理", description = "Role Management API")
+@Tag(name = "api", description = "角色管理接口API")
 @RestController
-@RequestMapping("/api/sso/role")
+@RequestMapping("/api/role")
 @RequiredArgsConstructor
 @TenantRequired
 public class RoleController {
@@ -29,7 +29,7 @@ public class RoleController {
     }
 
     @Operation(summary = "根据ID查询角色", description = "Get role by ID",operationId = "getRole")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<RoleDTO> getRoleById(@PathVariable Long id) {
         return roleService.getRoleById(id)
                 .map(ApiResponse::ok)
@@ -60,7 +60,7 @@ public class RoleController {
     }
 
     @Operation(summary = "删除角色", description = "Delete role by ID",operationId = "deleteRole")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/id/{id}")
     public ApiResponse<Void> deleteRole(@PathVariable Long id) {
         roleService.softDelete(id);
         return ApiResponse.ok(null);

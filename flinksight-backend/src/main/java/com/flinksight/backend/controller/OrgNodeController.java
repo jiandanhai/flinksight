@@ -5,11 +5,13 @@ import com.flinksight.common.dto.OrgNodeDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.OrgNodeService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+@Tag(name = "api",description = "组织节点管理API")
 @RestController
 @RequestMapping("/api/org-node")
 @RequiredArgsConstructor

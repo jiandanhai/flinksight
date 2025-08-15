@@ -6,14 +6,16 @@ import com.flinksight.common.enums.ErrorCode;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.OauthAccountService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * 第三方账号授权管理接口
  */
+@Tag(name = "api",description = "第三方账号授权管理接口API")   // 统一 tag，所有接口都归到同一个模块
 @RestController
-@RequestMapping("/api/sso/oauth-account")
+@RequestMapping("/sso/oauth-account")
 @RequiredArgsConstructor
 public class OauthAccountController {
 

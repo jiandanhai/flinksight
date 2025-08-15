@@ -1,19 +1,17 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import App from './App';
-import 'antd/dist/reset.css'; // Ant Design v5.x 新样式入口
-import './assets/global.css'; // 可自定义全局样式
-import './theme'; // 引入全局样式/主题
-import './i18n'; // 国际化初始化
+// 📁 src/main.tsx
 
-/**
- * 项目主入口，注入全局状态管理与路由
- */
-ReactDOM.createRoot(document.getElementById('root')!).render(
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import App from "./App";
+import { UserProvider } from "./context/UserContext"; // ✅ 确保引入了 Provider
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <UserProvider>
+        <App />
+      </UserProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

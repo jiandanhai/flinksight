@@ -5,6 +5,7 @@ import com.flinksight.backend.mapper.JobMetricStructMapper;
 import com.flinksight.backend.repository.JobMetricRepository;
 import com.flinksight.backend.security.tenant.TenantRequired;
 import com.flinksight.common.dto.JobMetricDTO;
+import com.flinksight.common.dto.MetricSeriesDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.JobMetricService;
 import jakarta.transaction.Transactional;
@@ -55,6 +56,14 @@ public class JobMetricServiceImpl implements JobMetricService {
         Page<JobMetric> result = repository.findByTenantIdAndMetricKeyAndMetricTimeBetweenAndIsDeleted(tenantId, metricKey, start, end,0, PageRequest.of(page, size, Sort.by("id").descending()));
         Page<JobMetricDTO> dtoPage = result.map(jobMetricStructMapper::toDTO);
         return new PageResult<>(dtoPage);
+    }
+
+    @Override
+    public MetricSeriesDTO getSeries(Long tenantId, String metricKey, LocalDateTime from, LocalDateTime to) {
+        var list = repository.findSeries(tenantId, metricKey, from, to);
+        var times  = list.stream().map(v -> v.getTs().toString()).toList();
+        var values = list.stream().map(JobMetricDTO::getValue).toList();
+        return new MetricSeriesDTO(times, values);
     }
 
     @Override

@@ -4,7 +4,7 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Input, message, Modal, Space, Table, Tag, Tooltip} from 'antd';
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 import type {NodeDTO} from '../../api/gen/data-contracts.ts';
 import NodeDetailModal from './NodeDetailModal';

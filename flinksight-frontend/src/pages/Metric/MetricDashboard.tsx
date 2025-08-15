@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Button, Card, Col, DatePicker, Row, Select } from "antd";
 import * as echarts from "echarts";
-import { Api } from "../../api/gen/api.ts";
+import  api  from "src/api/gen/client";
 import dayjs, { Dayjs } from "dayjs";
 
 const { RangePicker } = DatePicker;
@@ -16,8 +16,6 @@ const metricsList = [
   { key: "throughput", name: "吞吐量" },
   { key: "delay", name: "延迟(ms)" },
 ];
-
-const api = new Api();
 
 const MetricDashboard: React.FC = () => {
   const [metric, setMetric] = useState<string>("cpu");

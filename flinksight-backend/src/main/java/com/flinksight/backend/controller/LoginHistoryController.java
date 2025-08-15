@@ -5,12 +5,14 @@ import com.flinksight.common.dto.LoginHistoryDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.LoginHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * 登录历史管理
  */
+@Tag(name = "api", description = "登录历史管理API")
 @RestController
 @RequestMapping("/api/login-history")
 @RequiredArgsConstructor

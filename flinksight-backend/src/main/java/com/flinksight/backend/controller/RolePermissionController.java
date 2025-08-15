@@ -5,12 +5,14 @@ import com.flinksight.common.dto.RolePermissionDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.RolePermissionService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * 角色权限分配管理
  */
+@Tag(name = "api", description = "角色权限分配管理API")
 @RestController
 @RequestMapping("/api/role-permission")
 @RequiredArgsConstructor

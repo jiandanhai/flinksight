@@ -1,6 +1,6 @@
 import React from 'react';
 import {Button, Form, Input, message} from 'antd';
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 
 /**

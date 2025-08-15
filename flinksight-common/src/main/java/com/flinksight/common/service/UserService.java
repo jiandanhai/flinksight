@@ -1,6 +1,7 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.UserDTO;
+import com.flinksight.common.dto.UserTokenStateDTO;
 import com.flinksight.common.model.PageResult;
 
 import java.util.List;
@@ -70,4 +71,13 @@ public interface UserService extends SoftDeleteService<UserDTO, Long>  {
      * @return 权限码集合
      */
     List<String> getAuthorities(Long userId,Long tenantId);
+
+
+    // in com.flinksight.common.service.UserService
+    void bumpTokenVersion(Long userId);
+
+    int getTokenVersion(Long userId);
+    /** 查询用户Token版本状态（用于接口/调试/审计） */
+    UserTokenStateDTO getUserTokenState(Long userId);
+
 }

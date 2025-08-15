@@ -5,6 +5,7 @@ import com.flinksight.common.dto.JobInfoDTO;
 import com.flinksight.common.dto.JobRegisterRequestDTO;
 import com.flinksight.common.service.JobRegisterService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 作业自动注册API
  * 路径：POST /api/job/register
  */
+@Tag(name = "api", description = "Job作业自动注册API")
 @RestController
 @RequestMapping("/api/job")
 @RequiredArgsConstructor

@@ -9,6 +9,6 @@ public enum UserStatusEnum {
     ENABLED(1, "启用"),
     DISABLED(0, "禁用");
 
-    private final int code;
+    private final Integer code;
     private final String desc;
 }

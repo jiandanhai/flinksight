@@ -20,11 +20,11 @@ public interface SsoAuthService {
      boolean validateToken(String token);
 
 
-    public SsoAuthResponseDTO getUserFromToken(String token);
+    SsoAuthResponseDTO getUserFromToken(String token);
 
     /**
      * 用SSO回调code换取用户信息，生成本地token
      */
-    public SsoAuthResponseDTO handleSsoCallback(String code);
+    SsoAuthResponseDTO handleSsoCallback(String code, String codeVerifier);
 
 }

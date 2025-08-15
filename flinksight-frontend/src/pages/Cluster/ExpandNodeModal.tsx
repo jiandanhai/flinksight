@@ -5,7 +5,7 @@
 import React, { useState } from "react";
 import { Button, Form, Input, message, Modal, Switch, Upload, Tooltip } from "antd";
 import { UploadOutlined, InfoCircleOutlined } from "@ant-design/icons";
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 import type { NodeDTO } from '../../api/gen/data-contracts.ts';
 import { useUser } from "../../store/user";

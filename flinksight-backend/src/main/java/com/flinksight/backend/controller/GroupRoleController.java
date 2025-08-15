@@ -5,6 +5,7 @@ import com.flinksight.common.dto.GroupRoleDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.GroupRoleService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
  * 组织-角色分配管理
  */
 @RestController
+@Tag(name = "api", description = "组织-角色管理")
 @RequestMapping("/api/group-role")
 @RequiredArgsConstructor
 public class GroupRoleController {

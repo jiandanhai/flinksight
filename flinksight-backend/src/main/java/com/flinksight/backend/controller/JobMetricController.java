@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * 任务指标接口
  */
-@Tag(name = "任务指标", description = "JobMetric API")
+@Tag(name = "api", description = "Job任务指标API")
 @RestController
 @RequestMapping("/api/metric")
 @RequiredArgsConstructor

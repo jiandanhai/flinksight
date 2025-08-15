@@ -18,6 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,6 +35,25 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtUtil jwtProvider;
     private final UserService userService;
     private final UserStructMapper userStructMapper;
+
+    // ==== 新增：可选的路径匹配器，用于只在命中时才执行 ====
+    private RequestMatcher requestMatcher;
+
+    /**
+     * 由SecurityConfig注入：限定此过滤器只在某些路径上生效（如 /api/**）
+     */
+    public void setRequestMatcher(RequestMatcher requestMatcher) {
+        this.requestMatcher = requestMatcher;
+    }
+
+    /**
+     * 未命中匹配器则不执行过滤逻辑（留给后续链条）
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        // 未配置匹配器：默认不过滤，避免误拦所有请求
+        return requestMatcher == null || !requestMatcher.matches(request);
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -61,27 +81,27 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
         System.out.println("jwt tenant in filter(before service) = {"+tenantId+"}");
         try {
-        if (StringUtils.hasText(token) && jwtProvider.validateToken(token)) {
-            String username = jwtProvider.getUsernameFromToken(token);
-            Long userId = jwtProvider.getUserIdFromToken(token);
+            if (StringUtils.hasText(token) && jwtProvider.validateToken(token)) {
+                String username = jwtProvider.getUsernameFromToken(token);
+                Long userId = jwtProvider.getUserIdFromToken(token);
 
-            // 到这里 TenantContext 已经就绪，不会再被 TenantAspect 拦住
-            Optional<UserDTO> userOpt = userService.getUserById(userId);
-            if (userOpt.isPresent()) {
-                User user = userStructMapper.toEntity(userOpt.get());
-                List<String> perms = userService.getAuthorities(user.getId(),user.getTenantId());
-                List<GrantedAuthority> authorities = perms.stream()
-                        .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
-                // 构造SecurityUser
-                SecurityUser securityUser = new SecurityUser(user, new ArrayList<>(perms));
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(securityUser, null, authorities);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                // 到这里 TenantContext 已经就绪，不会再被 TenantAspect 拦住
+                Optional<UserDTO> userOpt = userService.getUserById(userId);
+                if (userOpt.isPresent()) {
+                    User user = userStructMapper.toEntity(userOpt.get());
+                    List<String> perms = userService.getAuthorities(user.getId(),user.getTenantId());
+                    List<GrantedAuthority> authorities = perms.stream()
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList());
+                    // 构造SecurityUser
+                    SecurityUser securityUser = new SecurityUser(user, new ArrayList<>(perms));
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(securityUser, null, authorities);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
-        }
 
-        filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response);
         } finally {
             TenantContext.clear(); // 👈 必须，线程复用会串租户
         }

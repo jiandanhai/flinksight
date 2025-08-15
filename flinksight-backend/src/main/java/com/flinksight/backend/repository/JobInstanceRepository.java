@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -20,5 +21,11 @@ public interface JobInstanceRepository extends JpaRepository<JobInstance, Long> 
 
     @Query("SELECT j.status, COUNT(j.id) FROM JobInstance j WHERE j.tenantId = :tenantId AND j.isDeleted = 0 GROUP BY j.status")
     List<Object[]> countStatusByTenantId(@Param("tenantId") Long tenantId);
+
+    List<JobInstance> findByTenantIdAndCreatedAtBetween(Long tenantId, LocalDateTime start, LocalDateTime end);
+
+    long countByTenantIdAndStatusAndCreatedAtBetween(Long tenantId, Integer status, LocalDateTime start, LocalDateTime end);
+
+    long countByTenantIdAndStatus(Long tenantId, Integer status);
 
 }

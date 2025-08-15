@@ -4,7 +4,7 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, message, Modal, Space, Table, Tag, Upload} from 'antd';
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 import type {FileDTO} from '../../api/gen/data-contracts.ts';
 

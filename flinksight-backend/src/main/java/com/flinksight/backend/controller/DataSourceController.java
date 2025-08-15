@@ -5,6 +5,7 @@ import com.flinksight.common.dto.DataSourceDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.DataSourceService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
  * 数据源管理
  */
 @RestController
+@Tag(name = "api", description = "数据资源管理")
 @RequestMapping("/api/data-source")
 @RequiredArgsConstructor
 public class DataSourceController {

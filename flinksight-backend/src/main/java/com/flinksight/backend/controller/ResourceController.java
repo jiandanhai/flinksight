@@ -5,12 +5,14 @@ import com.flinksight.common.dto.ResourceDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ResourceService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * 资源管理
  */
+@Tag(name = "api",description = "资源管理API")
 @RestController
 @RequestMapping("/api/resource")
 @RequiredArgsConstructor

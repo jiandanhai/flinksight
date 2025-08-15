@@ -5,6 +5,7 @@ import com.flinksight.common.dto.JobPermissionDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.JobPermissionService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
  * 作业权限分配与查询API
  * 主要用于B端运维/平台租户管理员
  */
+@Tag(name = "api", description = "Job作业权限分配与查询API")
 @RestController
 @RequestMapping("/api/job-permission")
 @RequiredArgsConstructor

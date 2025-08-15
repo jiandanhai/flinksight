@@ -5,6 +5,7 @@ import com.flinksight.common.dto.ApiKeyDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ApiKeyService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
  * API密钥管理
  */
 @RestController
+@Tag(name = "api", description = "秘钥管理管理")
 @RequestMapping("/api/api-key")
 @RequiredArgsConstructor
 public class ApiKeyController {

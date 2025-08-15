@@ -2,6 +2,9 @@ server:
   port: 8080
 
 spring:
+  # （可选）JSON / 时区等基础配置
+  jackson:
+    time-zone: Asia/Shanghai
   datasource:
     url: jdbc:mysql://localhost:3306/flinksight_test?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: root
@@ -26,6 +29,8 @@ jwt:
 logging:
   level:
     root: INFO
+    org.springframework.security: info
+    org.springframework.web: info
 business:
   default-user-role: USER
 
@@ -35,12 +40,21 @@ front:
 
 sso:
   oauth2:
+    # 你的 Keycloak 实例（本地示例：http://localhost:8081）
+    realm: flinksight
+    issuer: http://localhost:9090/realms/flinksight
+    # —— OIDC 标准端点（按 issuer 拼接，与你的 Controller/Service 属性名保持一致）
     authorize-url: ${SSO_OAUTH2_AUTHORIZE_URL}
-    token-url: ${SSO_OAUTH2_TOKEN_URL}
-    userinfo-url: ${SSO_OAUTH2_USERINFO_URL}
-    client-id: ${SSO_OAUTH2_CLIENT_ID}
-    client-secret: ${SSO_OAUTH2_CLIENT_SECRET}
-    callback-url: ${SSO_OAUTH2_CALLBACK_URL}
+    token-url:     ${SSO_OAUTH2_TOKEN_URL}
+    end-session-url: ${SSO_OAUTH2_END_SESSION_URL}
+    userinfo-url:  ${SSO_OAUTH2_USERINFO_URL}
+    # —— OAuth2 客户端信息（与 Keycloak Client 一致）
+    #   Public + PKCE（推荐）：client-secret 留空或移除
+    #   Confidential：请在 Keycloak 上启用 Client authentication，并在此填入 secret
+    client-id:     ${SSO_OAUTH2_CLIENT_ID}
+    client-secret: ${SSO_OAUTH2_CLIENT_SECRET} # Public+PKCE 留空；Confidential 则填实际密钥
+    # —— 回调地址（需同时在 Keycloak Client 的 Valid redirect URIs 中登记）
+    callback-url:  ${SSO_OAUTH2_CALLBACK_URL}
 
 cors:
   allowed-origins: "http://localhost:5173"
@@ -48,4 +62,15 @@ cors:
   allowed-headers: "Authorization, Content-Type"
   allow-credentials: true
   max-age: 3600
+
+
+security:
+  jwt:
+    secret: "a_very_long_random_secret_at_least_32_bytes___________________________"
+    access-ttl-ms: 86400000        # 1天
+    clock-skew-seconds: 60
+    issuer: "flinksight"
+    audience: "api"
+
+
 # 多租户/审计可加自定义配置

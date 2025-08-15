@@ -5,6 +5,7 @@ import com.flinksight.common.dto.DeptRoleDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.DeptRoleService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
  * 部门-角色分配管理
  */
 @RestController
+@Tag(name = "api", description = "部门-角色分配管理")
 @RequestMapping("/api/dept-role")
 @RequiredArgsConstructor
 public class DeptRoleController {

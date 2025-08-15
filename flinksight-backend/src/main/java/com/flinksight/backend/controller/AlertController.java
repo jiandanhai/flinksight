@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  * 报警事件接口
  */
-@Tag(name = "报警事件", description = "Alert API")
+@Tag(name = "api", description = "告警事件")
 @RestController
 @RequestMapping("/api/alert")
 @RequiredArgsConstructor

@@ -10,6 +10,6 @@ public enum AlertStatusEnum {
     PROCESSING(1, "处理中"),
     CLOSED(2, "已关闭");
 
-    private final int code;
+    private final Integer code;
     private final String desc;
 }

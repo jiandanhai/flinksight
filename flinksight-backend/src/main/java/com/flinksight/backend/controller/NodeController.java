@@ -5,12 +5,14 @@ import com.flinksight.common.dto.NodeDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NodeService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * 节点管理
  */
+@Tag(name = "api", description = "节点管理API")
 @RestController
 @RequestMapping("/api/node")
 @RequiredArgsConstructor

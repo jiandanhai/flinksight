@@ -4,7 +4,7 @@
  */
 import React, {useEffect, useMemo, useState} from 'react';
 import {Button, Checkbox, Dropdown, Input, Menu, message, Modal, Select, Space, Table, Tag} from 'antd';
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 import type {AlertDTO} from '../../api/gen/data-contracts.ts';
 import EditAlertModal from './EditAlertModal';

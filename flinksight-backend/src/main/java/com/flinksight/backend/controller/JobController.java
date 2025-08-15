@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  * 任务管理接口
  */
-@Tag(name = "任务管理", description = "Job Management API")
+@Tag(name = "api", description = "Job任务管理")
 @RestController
 @RequestMapping("/api/job")
 @RequiredArgsConstructor

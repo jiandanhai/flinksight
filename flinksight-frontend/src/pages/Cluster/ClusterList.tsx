@@ -4,7 +4,7 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Input, message, Modal, Space, Table, Tag} from 'antd';
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 import type {ClusterDTO} from '../../api/gen/data-contracts.ts';
 import EditClusterModal from './EditClusterModal';

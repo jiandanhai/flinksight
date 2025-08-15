@@ -4,7 +4,7 @@
  */
 import React from "react";
 import { Button, Card, Form, Input, message, Upload } from "antd";
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 const Branding: React.FC = () => {
   const [form] = Form.useForm();

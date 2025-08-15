@@ -2,6 +2,7 @@ package com.flinksight.common.service;
 
 
 import com.flinksight.common.dto.JobMetricDTO;
+import com.flinksight.common.dto.MetricSeriesDTO;
 import com.flinksight.common.model.PageResult;
 
 import java.time.LocalDateTime;
@@ -16,4 +17,6 @@ public interface JobMetricService extends SoftDeleteService<JobMetricDTO, Long> 
     Optional<JobMetricDTO> getMetricById(Long id);
     PageResult<JobMetricDTO> getMetricsByJob(Long jobId, LocalDateTime start, LocalDateTime end,int page, int size);
     PageResult<JobMetricDTO> getMetricsByTenantAndMetric(Long tenantId, String metricKey, LocalDateTime start, LocalDateTime end,int page, int size);
+
+    MetricSeriesDTO getSeries(Long tenantId, String metricKey, LocalDateTime from, LocalDateTime to);
 }

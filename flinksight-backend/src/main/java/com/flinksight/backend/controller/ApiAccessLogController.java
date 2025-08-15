@@ -5,6 +5,7 @@ import com.flinksight.common.dto.ApiAccessLogDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ApiAccessLogService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
  * API访问日志管理
  */
 @RestController
+@Tag(name = "api", description = "访问日志管理")
 @RequestMapping("/api/api-access-log")
 @RequiredArgsConstructor
 public class ApiAccessLogController {

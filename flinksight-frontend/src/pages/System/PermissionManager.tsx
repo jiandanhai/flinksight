@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, message, Table, Tree, Spin } from 'antd';
 // 推荐用openapi自动生成api
-import { api } from 'src/api/gen/client';
+import  api  from 'src/api/gen/client';
 
 const PermissionManager: React.FC = () => {
   const [permissions, setPermissions] = useState<any[]>([]);

@@ -20,5 +20,9 @@ public interface ClusterRepository extends JpaRepository<Cluster, Long>, SoftDel
 
     int countByTenantIdAndIsDeleted(Long tenantId, int isDeleted);
     int countByTenantIdAndStatusAndIsDeleted(Long tenantId, int status, int isDeleted);
+
+    List<Cluster> findByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted);
+
+    long countByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted);
     // STATUS_HEALTHY/WARNING/ERROR请在Cluster常量定义
 }

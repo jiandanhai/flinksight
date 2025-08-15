@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 /**
  * 任务日志接口
  */
-@Tag(name = "任务日志", description = "JobLog API")
+@Tag(name = "api", description = "Job任务日志API")
 @RestController
 @RequestMapping("/api/joblog")
 @RequiredArgsConstructor

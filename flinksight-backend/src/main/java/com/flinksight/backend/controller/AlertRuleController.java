@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/alert-rule")
-@Tag(name = "报警规则", description = "报警规则配置管理")
+@Tag(name = "api", description = "报警规则配置管理")
 @RequiredArgsConstructor
 public class AlertRuleController {
 

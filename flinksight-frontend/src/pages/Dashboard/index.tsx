@@ -1,31 +1,29 @@
+// src/pages/dashboard/index.tsx
 import React, { Suspense, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import KPIStats from './KPIStats';
 import ClusterStatus from './ClusterStatus';
 import JobFunnel from './JobFunnel';
 import AlertTrend from './AlertTrend';
 import HealthDist from './HealthDist';
 
-// 懒加载指标可视化大屏（仅切换到时加载，首屏更快）
+// 使用 React.lazy 异步加载指标大屏
 const MetricDashboard = React.lazy(() => import('./MetricDashboard'));
 
 /**
- * 运营总览与指标大屏聚合页面
- * - Tab切换运营总览/指标趋势大屏
- * - 保证所有主卡片原样保留，支持扩展其它Tab
+ * Flinksight SaaS 仪表盘主页面
+ * - 支持运营概览与指标大屏两大视图切换
+ * - 确保布局完整、Tab 状态可记忆、页面加载流畅
  */
 const DashboardPage: React.FC = () => {
-  // Tab: overview = 运营总览，metric = 指标大屏，可继续扩展其它Tab
+  // 默认 Tab 视图
   const [tab, setTab] = useState<'overview' | 'metric'>('overview');
-  const navigate = useNavigate();
 
   useEffect(() => {
     document.title = (tab === 'overview' ? '运营总览' : '指标可视化大屏') + ' - Flinksight';
   }, [tab]);
 
-  // 增加调试日志输出
   useEffect(() => {
-    console.log("DashboardPage loaded with tab:", tab);
+    console.debug("[DashboardPage] 页面已加载，当前tab:", tab);
   }, [tab]);
 
   return (
@@ -34,7 +32,7 @@ const DashboardPage: React.FC = () => {
         <h1 className="font-bold text-2xl mr-8">
           {tab === 'overview' ? '运营总览' : '指标可视化大屏'}
         </h1>
-        {/* Tab导航，可继续添加其它Tab */}
+        {/* Tab 标签切换按钮 */}
         <div className="flex space-x-4">
           <button
             className={`px-4 py-1 rounded-t-md ${tab === 'overview' ? 'bg-white shadow font-bold' : 'bg-gray-100 text-gray-500'}`}
@@ -51,8 +49,8 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 运营总览内容 */}
-      {tab === 'overview' && (
+      {/* Tab 视图内容切换 */}
+      {tab === 'overview' ? (
         <>
           <KPIStats />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
@@ -64,10 +62,7 @@ const DashboardPage: React.FC = () => {
             <AlertTrend />
           </div>
         </>
-      )}
-
-      {/* 指标大屏内容 */}
-      {tab === 'metric' && (
+      ) : (
         <Suspense fallback={<div className="text-center py-32">指标大屏加载中...</div>}>
           <MetricDashboard />
         </Suspense>

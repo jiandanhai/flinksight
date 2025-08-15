@@ -1,102 +1,118 @@
 package com.flinksight.backend.security.jwt;
 
 import com.flinksight.common.dto.UserDTO;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
-/**
- * JWT工具类
- */
 @Component
 public class JwtUtil {
-    // 建议配置到 application.yaml，勿写死生产环境
-    private static final String SECRET = "ChangeMeToYourSecretKey-ChangeMeToYourSecretKey";
-    private static final long EXPIRE_MS = 86400000L; // 1天
 
-    private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
+    private final Key secretKey;
+    private final long accessTtlMs;
+    private final long clockSkewSeconds;
+    private final String issuer;
+    private final String audience;
 
-    /** 登录/SSO签发 JWT：把 tenantId 一并写进去 */
+    public JwtUtil(
+            @Value("${security.jwt.secret:ChangeMeToYourSecretKey-ChangeMeToYourSecretKey}") String secret,
+            @Value("${security.jwt.access-ttl-ms:86400000}") long accessTtlMs,            // 1天
+            @Value("${security.jwt.clock-skew-seconds:60}") long clockSkewSeconds,        // 容忍时钟偏差
+            @Value("${security.jwt.issuer:flinksight}") String issuer,
+            @Value("${security.jwt.audience:api}") String audience
+    ) {
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.accessTtlMs = accessTtlMs;
+        this.clockSkewSeconds = clockSkewSeconds;
+        this.issuer = issuer;
+        this.audience = audience;
+    }
+
+    /* ===== 兼容你原有三个重载 ===== */
     public String generateToken(UserDTO user) {
-        return Jwts.builder()
-                .setSubject(user.getUsername())
-                .claim("userId", user.getId())
-                .claim("roles", user.getRoles())           // List<String> 或 逗号串都OK
-                .claim("tenantId", user.getTenantId())     // 👈 关键：写入租户ID
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRE_MS))
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
+        return generateAccessToken(
+                user.getId(), user.getUsername(), user.getTenantId(), null,
+                Map.of("roles", user.getRoles())
+        );
+    }
+    public String generateToken(Long userId, String username, Long tenantId) {
+        return generateAccessToken(userId, username, tenantId, null, null);
+    }
+    public String generateToken(Long userId, String username, Long tenantId, Set<String> roles) {
+        return generateAccessToken(userId, username, tenantId, null,
+                roles == null ? null : Map.of("roles", roles));
     }
 
-    public String generateToken(Long userId, String username,Long tenantId) {
-        return Jwts.builder()
+    /* ===== 新的核心签发（写入 tokenVersion，可选） ===== */
+    public String generateAccessToken(Long userId,
+                                      String username,
+                                      Long tenantId,
+                                      Integer tokenVersion,
+                                      Map<String, ?> extraClaims) {
+        long now = System.currentTimeMillis();
+        JwtBuilder b = Jwts.builder()
+                .setIssuer(issuer)
+                .setAudience(audience)
                 .setSubject(username)
+                .setIssuedAt(new Date(now))
+                .setExpiration(new Date(now + accessTtlMs))
                 .claim("userId", userId)
-                .claim("tenantId", tenantId) // 👈 关键：在 token 里写入租户 ID
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRE_MS))
-                .signWith(key)
-                .compact();
+                .claim("tenantId", tenantId);
+        if (tokenVersion != null) b.claim("tokenVersion", tokenVersion);
+        if (extraClaims != null && !extraClaims.isEmpty()) extraClaims.forEach(b::claim);
+
+        // 0.11.x 写法
+        return b.signWith(secretKey, SignatureAlgorithm.HS256).compact();
     }
 
-    public String generateToken(Long userId, String username,Long tenantId, Set<String> roles) {
-        return Jwts.builder()
-                .setSubject(username)
-                .claim("userId", userId)
-                .claim("tenantId", tenantId) // 👈 关键：在 token 里写入租户 ID
-                .claim("roles", roles)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRE_MS))
-                .signWith(key)
-                .compact();
-    }
-
-
+    /* ===== 校验 & 解析（0.11.x） ===== */
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .setAllowedClockSkewSeconds(clockSkewSeconds)
+                    .build()
+                    .parseClaimsJws(token);
             return true;
-        } catch (JwtException e) {
+        } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
 
     public String getUsernameFromToken(String token) {
-        Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
-        return claims.getSubject();
+        return getClaim(token, Claims::getSubject);
     }
 
     public Long getUserIdFromToken(String token) {
-        Object val = getAllClaims(token).get("userId");
-        if (val == null) return null;
-        try {
-            return (val instanceof Number) ? ((Number) val).longValue()
-                    : Long.parseLong(val.toString().trim());
-        } catch (NumberFormatException e) {
-            return null; // 容错：不抛错，交给后续兜底通道
-        }
+        Number n = getClaim(token, c -> (Number) c.get("userId"));
+        return n == null ? null : n.longValue();
     }
 
     public Long getTenantIdFromToken(String token) {
-        Object val = getAllClaims(token).get("tenantId");
-        if (val == null) return null;
-        try {
-            return (val instanceof Number) ? ((Number) val).longValue()
-                    : Long.parseLong(val.toString().trim());
-        } catch (NumberFormatException e) {
-            return null; // 容错：不抛错，交给后续兜底通道
-        }
+        Number n = getClaim(token, c -> (Number) c.get("tenantId"));
+        return n == null ? null : n.longValue();
     }
 
-    private Claims getAllClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+    public Integer getTokenVersionFromToken(String token) {
+        Number n = getClaim(token, c -> (Number) c.get("tokenVersion"));
+        return n == null ? null : n.intValue();
+    }
+
+    public <T> T getClaim(String token, Function<Claims, T> resolver) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .setAllowedClockSkewSeconds(clockSkewSeconds)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return resolver.apply(claims);
     }
 }

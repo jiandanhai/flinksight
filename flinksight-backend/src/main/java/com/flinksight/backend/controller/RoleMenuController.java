@@ -5,12 +5,14 @@ import com.flinksight.common.dto.RoleMenuDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.RoleMenuService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * 角色-菜单分配管理
  */
+@Tag(name = "api", description = "角色-菜单分配管理API")
 @RestController
 @RequestMapping("/api/role-menu")
 @RequiredArgsConstructor

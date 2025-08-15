@@ -17,10 +17,10 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "大盘核心指标统计DTO")
-public class DashboardSummaryDTO implements Serializable {
+public class KPIStatusSummaryDTO implements Serializable {
 
     @Schema(description = "集群总数")
-    private Integer clusterCount;
+        private Integer clusterCount;
 
     @Schema(description = "任务总数")
     private Integer jobCount;
@@ -33,6 +33,12 @@ public class DashboardSummaryDTO implements Serializable {
 
     @Schema(description = "整体健康得分（0-100）")
     private Integer healthScore;
+
+    @Schema(description = "失败作业数量")
+    private long failedJobs;
+
+    @Schema(description = "用户数量")
+    private long userCount;
 
     @Schema(description = "统计时间（yyyy-MM-dd HH:mm:ss）")
     private String statTime;

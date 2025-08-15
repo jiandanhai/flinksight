@@ -5,12 +5,14 @@ import com.flinksight.common.dto.TenantResourceDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.TenantResourceService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * 租户-资源分配管理
  */
+@Tag(name = "api", description = "租户-资源分配管理API")
 @RestController
 @RequestMapping("/api/tenant-resource")
 @RequiredArgsConstructor

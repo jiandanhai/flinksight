@@ -8,7 +8,6 @@ import com.flinksight.backend.repository.RoleRepository;
 import com.flinksight.backend.repository.UserRepository;
 import com.flinksight.backend.security.jwt.JwtUtil;
 import com.flinksight.common.dto.*;
-import com.flinksight.common.enums.UserStatusEnum;
 import com.flinksight.common.service.SsoAuthService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -16,11 +15,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -41,7 +46,7 @@ public class SsoAuthServiceImpl implements SsoAuthService {
 
     @Value("${sso.oauth2.token-url}")
     private String tokenUrl;
-    @Value("${sso.oauth2.userinfo-url}")
+    @Value("${SSO_OAUTH2_USERINFO_URL}")
     private String userInfoUrl;
     @Value("${sso.oauth2.client-id}")
     private String clientId;
@@ -118,44 +123,85 @@ public class SsoAuthServiceImpl implements SsoAuthService {
      * SSO认证回调处理：用code换access_token和用户信息，查建本地用户，生成token，返回给前端
      */
     @Override
-    public SsoAuthResponseDTO handleSsoCallback(String code) {
-        // 1. 用 code 换 SSO access_token
-        Map<String, String> tokenReq = new HashMap<>();
-        tokenReq.put("grant_type", "authorization_code");
-        tokenReq.put("code", code);
-        tokenReq.put("client_id", clientId);
-        tokenReq.put("client_secret", clientSecret);
-        tokenReq.put("redirect_uri", callbackUrl);
-        Map tokenResp = restTemplate.postForObject(tokenUrl, tokenReq, Map.class);
+    public SsoAuthResponseDTO handleSsoCallback(String code, String codeVerifier) {
+        // —— 1) 用 code 换 access_token / id_token
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("grant_type", "authorization_code");
+        form.add("code", code);
+        form.add("client_id", clientId);
+        if (StringUtils.hasText(clientSecret)) {
+            form.add("client_secret", clientSecret);
+        }
+        form.add("redirect_uri", callbackUrl);
+
+        // 如果提供了 code_verifier，则加入验证
+        if (StringUtils.hasText(codeVerifier)) {
+            form.add("code_verifier", codeVerifier);  // PKCE 流程
+        }
+
+        HttpHeaders tokenHeaders = new HttpHeaders();
+        tokenHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        Map<String, Object> tokenResp = restTemplate.postForObject(StringUtils.trimWhitespace(tokenUrl), new HttpEntity<>(form, tokenHeaders), Map.class);
+        if (tokenResp == null || !tokenResp.containsKey("access_token")) {
+            throw new IllegalStateException("SSO token exchange failed: no access_token");
+        }
         String accessToken = (String) tokenResp.get("access_token");
+        String idToken     = (String) tokenResp.getOrDefault("id_token", null);
 
-        // 2. 用 access_token 拉取 SSO 用户信息
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + accessToken);
-        HttpEntity<?> httpEntity = new HttpEntity<>(headers);
-        Map userInfoResp = restTemplate.exchange(userInfoUrl, HttpMethod.GET, httpEntity, Map.class).getBody();
+        // —— 2) 拉取 /userinfo（如果你有 userInfoUrl），并解析关键字段
+        Map<String, Object> userInfoResp = Collections.emptyMap();
+        if (StringUtils.hasText(StringUtils.trimWhitespace(userInfoUrl))) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(accessToken);
+            userInfoResp = restTemplate.exchange(
+                    StringUtils.trimWhitespace(userInfoUrl), HttpMethod.GET, new HttpEntity<>(headers), Map.class
+            ).getBody();
+            if (userInfoResp == null) userInfoResp = Collections.emptyMap();
+        }
 
-        String ssoId = (String) userInfoResp.get("sub"); // 唯一ID，或openid
-        String username = (String) userInfoResp.get("preferred_username");
-        String nickname = (String) userInfoResp.get("name");
-        String avatar = (String) userInfoResp.get("avatar");
+        // ---------- 解析 ssoId / username / nickname / avatar ----------
+        String ssoId = asStr(userInfoResp.get("sub")); // 首选 userinfo.sub
+
+        // 候选的用户名字段（有些 IdP 不返回 preferred_username）
+        String preferredUsername = firstNonBlank(
+                asStr(userInfoResp.get("preferred_username")),
+                asStr(userInfoResp.get("email")),
+                asStr(userInfoResp.get("login")),
+                asStr(userInfoResp.get("name"))
+        );
+        String username = firstNonBlank(preferredUsername, "sso_user");
+        String nickname = firstNonBlank(asStr(userInfoResp.get("name")), username);
+        String avatar   = firstNonBlank(asStr(userInfoResp.get("avatar")), asStr(userInfoResp.get("picture")));
+
+        // 2nd：从 id_token 解析 sub（推荐；Keycloak 一般都会给 id_token）
+        if (!hasText(ssoId) && hasText(idToken)) {
+            ssoId = getJwtClaim(idToken, "sub");
+            // 如果 userinfo 没有用户名字段，也可以从 id_token 兜底
+            if (!hasText(username))  username  = firstNonBlank(getJwtClaim(idToken, "preferred_username"),
+                    getJwtClaim(idToken, "email"),
+                    "sso_user");
+            if (!hasText(nickname))  nickname  = firstNonBlank(getJwtClaim(idToken, "name"), username);
+            if (!hasText(avatar))    avatar    = firstNonBlank(getJwtClaim(idToken, "picture"), getJwtClaim(idToken, "avatar"));
+        }
+
+        // 3rd：若 access_token 也是 JWT（大多是），再尝试从里面取 sub
+        if (!hasText(ssoId) && hasText(accessToken) && isJwtLike(accessToken)) {
+            ssoId = getJwtClaim(accessToken, "sub");
+        }
+
+        // 最终兜底：仍拿不到稳定 ID，建议直接报错（不要用 username 代替！）
+        if (!hasText(ssoId)) {
+            throw new IllegalStateException("无法解析稳定的 SSO subject(sub)，拒绝创建/绑定本地用户。");
+        }
+
+        final String finalSsoId    = ssoId;
+        final String finalUsername = username;
+        final String finalNickname = nickname;
+        final String finalAvatar   = avatar;
 
         // 3. 查找或自动创建本地用户
         User ssoUser = userRepository.findBySsoId(ssoId)
-                .orElseGet(() -> {
-                    // 查找“普通用户”默认角色（建议角色表预置）
-                    Role defaultRole = roleRepository.findByCode(defaultUserRoleCode)
-                            .orElseThrow(() -> new IllegalStateException("系统未配置默认角色USER"));
-                    User newUser = User.builder()
-                            .ssoId(ssoId)
-                            .username(username)
-                            .nickname(nickname)
-                            .avatar(avatar)
-                            .status(UserStatusEnum.ENABLED.getCode())
-                            .build();
-                    newUser.getRoles().add(defaultRole); // 自动分配角色
-                    return userRepository.save(newUser);
-                });
+                .orElseThrow(() -> new IllegalStateException("用户未注册，请先进行注册"));
 
         // 4. 生成JWT token
         String token = jwtUtil.generateToken(ssoUser.getId(), ssoUser.getUsername(),ssoUser.getTenantId(),ssoUser.getRoles().stream().map(Role::getCode)
@@ -171,5 +217,36 @@ public class SsoAuthServiceImpl implements SsoAuthService {
                 .map(r -> new RoleDTO(r.getId(), r.getCode(), r.getName()))
                 .collect(Collectors.toList()));
         return new SsoAuthResponseDTO(token, ssoUserDTO);
+    }
+
+
+    private static boolean hasText(String s) { return s != null && !s.isBlank(); }
+    private static String asStr(Object v) { return v == null ? null : String.valueOf(v); }
+    private static String firstNonBlank(String... arr) {
+        for (String s : arr) if (hasText(s)) return s;
+        return null;
+    }
+    private static boolean isJwtLike(String token) {
+        // 简单判断：三段 & 头部是 Base64Url
+        return token != null && token.chars().filter(ch -> ch == '.').count() == 2;
+    }
+
+    /** 仅用于提取 claim（不做签名校验）。千万不要据此做鉴权！ */
+    private static String getJwtClaim(String jwt, String claim) {
+        try {
+            String[] parts = jwt.split("\\.");
+            if (parts.length != 3) return null;
+            byte[] payload = Base64.getUrlDecoder().decode(parts[1]);
+            // 用最轻量的方式取字段，避免引入大依赖；你也可替换成 Jackson 解析
+            String json = new String(payload, StandardCharsets.UTF_8);
+            // 极简解析：建议换成 Jackson ObjectMapper 更稳
+            // 这里提供 Jackson 版本（推荐）：
+            com.fasterxml.jackson.databind.JsonNode node =
+                    new com.fasterxml.jackson.databind.ObjectMapper().readTree(json);
+            var n = node.get(claim);
+            return n == null ? null : n.isTextual() ? n.asText() : n.asText(null);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
