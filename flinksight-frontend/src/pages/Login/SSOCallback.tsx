@@ -1,15 +1,16 @@
+// src/pages/logn/SSOCallback.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useUser } from "../../context/UserContext"; // ✅ 优化：全局状态管理
-import { setApiToken } from "../../api/gen/client";
+import { useUser } from "../../context/UserContext";
+// 直接使用你已有的 API 方法（截图里那份）
+import { userGetCurrentUser } from "../../api/modules";
 
-/** ===== 常量（保留你的命名） ===== */
 const SSO_TOKEN_URL = import.meta.env.VITE_SSO_TOKEN_URL || "/api/sso/token";
 const SSO_CLIENT_ID = import.meta.env.VITE_SSO_CLIENT_ID;
 const SSO_CLIENT_SECRET = import.meta.env.VITE_SSO_CLIENT_SECRET;
 const DEFAULT_REDIRECT = "/dashboard";
 
-/** ===== URL 参数处理工具函数 ===== */
+// ---- helpers ----
 function getSafeRedirect(input?: string | null): string {
   const raw = (input || "").trim();
   if (!raw) return DEFAULT_REDIRECT;
@@ -26,7 +27,6 @@ function getSafeRedirect(input?: string | null): string {
 function extractParams(search: string, hash: string) {
   const sp = new URLSearchParams(search || "");
   const hp = new URLSearchParams((hash || "").replace(/^#/, ""));
-
   const token = (sp.get("token") || hp.get("token") || "").trim();
   const code = (sp.get("code") || hp.get("code") || "").trim();
   const redirect = getSafeRedirect(sp.get("redirect") || hp.get("redirect") || "");
@@ -41,11 +41,31 @@ function stripCallbackParams() {
   window.history.replaceState(null, "", url.toString());
 }
 
-/** ===== 页面组件主体 ===== */
+function decodeJwtClaims(jwt: string) {
+  try {
+    const parts = jwt.split(".");
+    if (parts.length !== 3) return null;
+    const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const json = JSON.parse(
+      decodeURIComponent(
+        atob(payload)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join(""),
+      ),
+    );
+    return json;
+  } catch {
+    return null;
+  }
+}
+
+// ---- page ----
 const SSOCallbackPage: React.FC = () => {
   const navigate = useNavigate();
   const { search, hash } = useLocation();
-  const { login, setUser } = useUser(); // ✅ 优化：使用全局 login 与 setUser
+  const { login, setUser } = useUser();
+
   const [status, setStatus] = useState<"working" | "success" | "error">("working");
   const [message, setMessage] = useState("SSO 登录处理中…");
 
@@ -54,14 +74,12 @@ const SSOCallbackPage: React.FC = () => {
 
   useEffect(() => {
     if (handledRef.current || sessionStorage.getItem("ssoCallbackHandled") === "1") return;
-
     handledRef.current = true;
     sessionStorage.setItem("ssoCallbackHandled", "1");
 
     const controller = new AbortController();
 
     const setTokenEverywhere = (t: string) => {
-      setApiToken(t);
       sessionStorage.setItem("authToken", t);
     };
 
@@ -70,32 +88,60 @@ const SSOCallbackPage: React.FC = () => {
       navigate(path || DEFAULT_REDIRECT, { replace: true });
     };
 
+    const fetchCurrentUser = async () => {
+      console.info("[SSO/me:snapshot]", {
+        tokenLen: (sessionStorage.getItem("authToken") || "").length,
+      });
+      // ✅ 这里调用你统一封装的接口方法，而不是硬编码 URL
+      const user = await userGetCurrentUser();
+      if (!user?.id) throw new Error("用户信息不完整");
+      return user;
+    };
+
     (async () => {
       try {
-        console.log("[SSO Callback] Starting...");
-        console.log(`[SSO Callback] Params -> token:${!!token}, code:${!!code}, redirect:${redirect}, tenantId:${tenantId}`);
+        console.info("[SSO] Starting...");
+        console.info("[SSO] Params", { token: !!token, code: !!code, redirect, tenantId });
 
-        if (tenantId) {
-          sessionStorage.setItem("tenantId", tenantId);
+        if (tenantId) sessionStorage.setItem("tenantId", String(tenantId));
+
+        if (token) {
+          const claims = decodeJwtClaims(token);
+          if (claims) {
+            console.info("[SSO] token claims", {
+              iss: claims.iss,
+              aud: claims.aud,
+              sub: claims.sub,
+              exp: claims.exp,
+              iat: claims.iat,
+            });
+            if (claims?.exp) {
+              console.info("[SSO] token exp(human)", new Date(claims.exp * 1000).toISOString());
+            }
+          }
         }
 
         const cached = sessionStorage.getItem("authToken");
         if (cached) {
-          console.log("[SSO Callback] token from sessionStorage");
+          console.info("[SSO] use cached token");
           setTokenEverywhere(cached);
+          login(cached);
+          await Promise.resolve();
+          const user = await fetchCurrentUser();
+          setUser(user);
           setStatus("success");
           return goto(redirect);
         }
 
         if (token) {
-          console.log("[SSO Callback] token from URL");
+          console.info("[SSO] use token from URL");
           setMessage("已获取 Token，正在登录...");
           setTokenEverywhere(token);
-          login(token); // ✅ 调用 login 写入 token
+          login(token);
+          await Promise.resolve();
+          const user = await fetchCurrentUser();
+          setUser(user);
           setStatus("success");
-
-          // ✅ 模拟用户信息，正式环境应从后端 /me 或登录响应中获取
-          setUser({ id: 1, tenantId: Number(tenantId) || 1 }); // 可替换为真实返回数据
           return goto(redirect);
         }
 
@@ -115,28 +161,30 @@ const SSOCallbackPage: React.FC = () => {
             credentials: "include",
           });
 
-          let data: any = {};
-          try {
-            data = await resp.json();
-          } catch {}
-
+          const data = await resp.json();
           const t = data?.access_token || data?.token;
-          if (!resp.ok || !t) {
-            throw new Error(data?.message || `换取 Token 失败（HTTP ${resp.status}）`);
-          }
+          if (!resp.ok || !t) throw new Error(data?.message || `换取 Token 失败（HTTP ${resp.status}）`);
 
-          console.log("[SSO Callback] token from backend exchange");
+          console.info("[SSO] token from backend exchange");
           setMessage("登录中...");
           setTokenEverywhere(t);
-          login(t); // ✅ 保存 Token
-          setUser({ id: 1, tenantId: Number(tenantId) || 1 }); // ✅ 写入全局用户信息
+          login(t);
+          await Promise.resolve();
+          const user = await fetchCurrentUser();
+          setUser(user);
           setStatus("success");
           return goto(redirect);
         }
 
         throw new Error("缺少 token 或 code 参数");
       } catch (err: any) {
-        console.warn("[SSO Callback] error:", err);
+        const r = err?.response;
+        console.warn("[SSO] error", {
+          name: err?.name,
+          message: err?.message,
+          status: r?.status,
+          url: r?.config?.url,
+        });
         setStatus("error");
         setMessage(err?.message || "SSO 回调处理失败");
         sessionStorage.removeItem("ssoCallbackHandled");

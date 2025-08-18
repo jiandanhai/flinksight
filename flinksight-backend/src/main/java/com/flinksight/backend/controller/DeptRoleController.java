@@ -7,6 +7,7 @@ import com.flinksight.common.service.DeptRoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "api", description = "部门-角色分配管理")
 @RequestMapping("/api/dept-role")
 @RequiredArgsConstructor
+@Validated
 public class DeptRoleController {
 
     private final DeptRoleService service;

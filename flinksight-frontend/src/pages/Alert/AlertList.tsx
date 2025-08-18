@@ -4,9 +4,9 @@
  */
 import React, {useEffect, useMemo, useState} from 'react';
 import {Button, Checkbox, Dropdown, Input, Menu, message, Modal, Select, Space, Table, Tag} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {AlertDTO} from '../../api/gen/data-contracts.ts';
+import type {AlertDTO} from '@/api/dto';
 import EditAlertModal from './EditAlertModal';
 import AlertDetail from './AlertDetail';
 import Loading from '../../components/Loading';
@@ -35,7 +35,7 @@ const AlertList: React.FC = () => {
   const [size, setSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState<AlertDTO>({});
+  const [query, setQuery] = useState<DTO.AlertDTO>({});
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);

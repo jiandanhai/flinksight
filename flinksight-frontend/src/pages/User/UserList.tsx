@@ -4,9 +4,9 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Input, message, Modal, Select, Space, Table, Tag} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {UserDTO, UserRoleDTO} from '../../api/gen/data-contracts.ts';
+import type {UserDTO, UserRoleDTO} from '@/api/dto';
 import EditUserModal from './EditUserModal';
 import UserDetail from './UserDetail';
 import {useUser} from '../../store/user';
@@ -14,7 +14,7 @@ import {useUser} from '../../store/user';
 const { Search } = Input;
 const { Option } = Select;
 
-const ROLE_LABELS: Record<UserDTO, string> = {
+const ROLE_LABELS: Record<DTO.UserDTO, string> = {
   admin: '管理员',
   ops: '运维',
   user: '普通用户'
@@ -26,7 +26,7 @@ const UserList: React.FC = () => {
   const [size, setSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState<UserDTO>({});
+  const [query, setQuery] = useState<DTO.UserDTO>({});
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -86,7 +86,7 @@ const UserList: React.FC = () => {
   }
 
   // 批量分配角色
-  async function handleBatchRole(newRole: UserRoleDTO) {
+  async function handleBatchRole(newRole: DTO.UserRoleDTO) {
     await api.batchUpdateUserRole(selectedRowKeys, newRole);
     message.success('角色分配完成');
     setSelectedRowKeys([]);
@@ -138,7 +138,7 @@ const UserList: React.FC = () => {
           },
           { title: '昵称', dataIndex: 'nickname' },
           { title: '邮箱', dataIndex: 'email' },
-          { title: '角色', dataIndex: 'role', render: (r: UserRoleDTO) => <Tag>{ROLE_LABELS[r]}</Tag> },
+          { title: '角色', dataIndex: 'role', render: (r: DTO.UserRoleDTO) => <Tag>{ROLE_LABELS[r]}</Tag> },
           { title: '状态', dataIndex: 'enabled', render: (v: boolean) => v ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag> },
           { title: '创建时间', dataIndex: 'createTime', render: (v: string) => new Date(v).toLocaleString() },
           {

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {OpsTaskDTO} from '../../api/gen/data-contracts.ts';
+import type {OpsTaskDTO} from '@/api/dto';
 import PageTable from '../../components/PageTable';
 import Loading from '../../components/Loading';
 
@@ -48,7 +48,7 @@ const OpsTaskPage: React.FC = () => {
   return (
     <div>
       <h3 className="font-bold text-lg mb-6">运维自动化任务</h3>
-      <PageTable<OpsTaskDTO>
+      <PageTable<DTO.OpsTaskDTO>
         columns={[
           { key: 'name', title: '任务名' },
           { key: 'script', title: '脚本' },

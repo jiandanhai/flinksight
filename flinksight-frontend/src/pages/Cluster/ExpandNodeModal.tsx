@@ -5,9 +5,9 @@
 import React, { useState } from "react";
 import { Button, Form, Input, message, Modal, Switch, Upload, Tooltip } from "antd";
 import { UploadOutlined, InfoCircleOutlined } from "@ant-design/icons";
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type { NodeDTO } from '../../api/gen/data-contracts.ts';
+import type { NodeDTO } from '@/api/dto';
 import { useUser } from "../../store/user";
 
 /**
@@ -72,9 +72,9 @@ const ExpandNodeModal: React.FC<Props> = ({ open, onOk, onClose, clusterId }) =>
           return;
         }
         // 解析每个节点
-        const nodes: NodeDTO[] = lines.slice(1).map(line => {
+        const nodes: DTO.NodeDTO[] = lines.slice(1).map(line => {
           const arr = line.split(",");
-          const node: NodeDTO = {
+          const node: DTO.NodeDTO = {
             name: arr[idx('name')],
             ip: arr[idx('ip')],
             role: arr[idx('role')],

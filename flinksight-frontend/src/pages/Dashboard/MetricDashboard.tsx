@@ -3,8 +3,8 @@ import React, { useEffect, useState } from "react";
 import { Card, Col, DatePicker, Empty, Row, Spin, message } from "antd";
 import { Line } from "@ant-design/plots";
 import dayjs, { Dayjs } from "dayjs";
-import api from "@/api/gen/client";
 import { getTenantId } from "@/utils/tenant";
+import { dashboardStatisticsMetricSeries } from "../../api/modules";
 
 const { RangePicker } = DatePicker;
 
@@ -38,7 +38,7 @@ const MetricDashboard: React.FC = () => {
 
       await Promise.all(
         METRICS.map(async ({ key }) => {
-          const res = await api.dashboardStatisticsMetricSeries({
+          const res = await dashboardStatisticsMetricSeries({
             tenantId,
             metric: key,
             from: from.toISOString(),

@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Badge, Button, message, Modal, Table } from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
 // 建议用后端 openapi 自动生成的 NotificationDTO 类型
 interface Notification {

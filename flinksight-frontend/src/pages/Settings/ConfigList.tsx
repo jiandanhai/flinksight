@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Input, message, Modal, Switch, Table } from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
 // 建议后端openapi生成ConfigItemDTO类型
 // interface ConfigItem { ... }

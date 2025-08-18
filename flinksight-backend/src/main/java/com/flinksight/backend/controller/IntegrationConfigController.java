@@ -7,6 +7,7 @@ import com.flinksight.common.service.IntegrationConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "api", description = "第三方集成配置管理")
 @RequestMapping("/api/integration-config")
 @RequiredArgsConstructor
+@Validated
 public class IntegrationConfigController {
 
     private final IntegrationConfigService service;

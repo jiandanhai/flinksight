@@ -4,9 +4,9 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, message, Modal, Space, Table, Tag} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {TenantDTO} from '../../api/gen/data-contracts.ts';
+import type {TenantDTO} from '@/api/dto';
 import EditTenantModal from './EditTenantModal';
 import {useUser} from '../../store/user';
 
@@ -31,7 +31,7 @@ const TenantList: React.FC = () => {
   useEffect(() => { fetch(); }, []);
 
   // 启停
-  async function handleEnable(t: TenantDTO) {
+  async function handleEnable(t: DTO.TenantDTO) {
     await api.updateTenant(t.id, { enabled: !t.enabled });
     message.success(t.enabled ? '已禁用' : '已启用');
     fetch();
@@ -67,7 +67,7 @@ const TenantList: React.FC = () => {
           { title: '状态', dataIndex: 'enabled', render: (v: boolean) => v ? <Tag color="green">启用</Tag> : <Tag>禁用</Tag> },
           {
             title: '操作',
-            render: (_: any, t: TenantDTO) => (
+            render: (_: any, t: DTO.TenantDTO) => (
               <Space>
                 <Button type="link" size="small" onClick={() => { setEditId(t.id); setModalVisible(true); }} disabled={!canEdit}>编辑</Button>
                 <Button type="link" size="small" onClick={() => handleEnable(t)} disabled={!canEdit}>

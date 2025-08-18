@@ -1,6 +1,6 @@
 import React from 'react';
 import {useUser} from '../../../store/user';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
 import {useNavigate} from 'react-router-dom';
 

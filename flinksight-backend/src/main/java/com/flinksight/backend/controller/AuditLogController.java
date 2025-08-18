@@ -7,6 +7,7 @@ import com.flinksight.common.service.AuditLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "api", description = "审计日志管理")
 @RequestMapping("/api/audit-log")
 @RequiredArgsConstructor
+@Validated
 public class AuditLogController {
 
     private final AuditLogService service;

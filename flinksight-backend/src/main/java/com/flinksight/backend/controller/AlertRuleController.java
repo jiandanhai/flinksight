@@ -7,6 +7,7 @@ import com.flinksight.common.service.AlertRuleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/alert-rule")
 @Tag(name = "api", description = "报警规则配置管理")
 @RequiredArgsConstructor
+@Validated
 public class AlertRuleController {
 
     private final AlertRuleService alertRuleService;

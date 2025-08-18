@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {MetricDashboardDTO} from '../../api/gen/data-contracts.ts';
+import type {MetricDashboardDTO} from '@/api/dto';
 import EditMetricModal from './EditMetricModal';
 import PageTable from '../../components/PageTable';
 import Loading from '../../components/Loading';
@@ -35,7 +35,7 @@ const MetricList: React.FC<Props> = ({ onSelect }) => {
     setModalVisible(true);
   }
 
-  async function handleDelete(m: MetricDashboardDTO) {
+  async function handleDelete(m: DTO.MetricDashboardDTO) {
     if (!window.confirm(`确认删除指标：${m.name}？`)) return;
     setLoading(true);
     try {
@@ -52,7 +52,7 @@ const MetricList: React.FC<Props> = ({ onSelect }) => {
         <button className="btn-primary" onClick={() => openModal()}>新建指标</button>
         <span>共{metrics.length}个指标</span>
       </div>
-      <PageTable<MetricDashboardDTO>
+      <PageTable<DTO.MetricDashboardDTO>
         columns={[
           { key: 'name', title: '名称', render: m => (
             <span className="text-blue-600 cursor-pointer" onClick={() => onSelect(m.id)}>{m.name}</span>

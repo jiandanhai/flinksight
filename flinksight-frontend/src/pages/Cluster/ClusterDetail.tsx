@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import {Button, Card, Col, message, Row} from 'antd';
 import {PlusOutlined} from '@ant-design/icons';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {ClusterDTO, NodeDTO} from '../../api/gen/data-contracts.ts';
+import type {ClusterDTO, NodeDTO} from '@/api/dto';
 import Loading from '../../components/Loading';
 import ExpandNodeModal from './ExpandNodeModal';
 import NodeHealthCard from './NodeHealthCard';

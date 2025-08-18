@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {JobDTO} from '../../api/gen/data-contracts.ts';
+import type {JobDTO} from '@/api/dto';
 
 interface Props {
   id: number | null;          // null为新建，否则为编辑

@@ -7,6 +7,7 @@ import com.flinksight.common.service.JobDiagnosticService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "api", description = "任务链路与日志API")
 @RequestMapping("/api/job-diagnostic")
 @RequiredArgsConstructor
+@Validated
 public class JobDiagnosticController {
 
     private final JobDiagnosticService service;

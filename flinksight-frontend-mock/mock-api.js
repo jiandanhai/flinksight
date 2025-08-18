@@ -1,9 +1,7 @@
 /**
- * （Express+MockJS REST API全量样例）
- * Flinksight Mock API 服务
- * 支持主表全量CRUD、分页、搜索，前端可直接对接，支持多租户Header
+ * Flinksight Mock API 服务（Express+MockJS）
+ * 适合本地开发/前后端联调，包含 SSO、主表 CRUD、分页、搜索等。
  */
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const { mock, Random } = require('mockjs');
@@ -11,9 +9,35 @@ const { mock, Random } = require('mockjs');
 const app = express();
 app.use(bodyParser.json());
 
-const PORT = 3001;
 
-// 工具：生成主表mock数据
+// --- SSO OAuth2 Mock ---
+app.get('/oauth2/authorize', (req, res) => {
+    const { redirect_uri, state } = req.query;
+    // 模拟 SSO 登录页，这里直接302带code跳转
+    const code = 'mock-auth-code-123'; // 模拟返回的授权码
+    let url = `${redirect_uri}?code=${code}`;
+    if (state) url += `&state=${encodeURIComponent(state)}`;
+    res.redirect(url);
+});
+
+app.post('/oauth2/token', (req, res) => {
+    res.json({
+        access_token: 'mock-access-token',
+        token_type: 'Bearer',
+        expires_in: 3600,
+        refresh_token: 'mock-refresh-token'
+    });
+});
+app.get('/oauth2/userinfo', (req, res) => {
+    res.json({
+        sub: 'mock-sso-id-001',
+        preferred_username: 'mockuser',
+        name: '测试用户',
+        avatar: 'http://localhost:4000/avatar.png'
+    });
+});
+
+// --- 通用主表数据 ---
 function generateList(type, count) {
     const data = [];
     for (let i = 1; i <= count; i++) {
@@ -29,70 +53,43 @@ function generateList(type, count) {
     }
     return data;
 }
-
-// Mock主表数据
 const users = generateList('user', 10);
 const roles = generateList('role', 5);
-const tenants = generateList('tenant', 3);
-const clusters = generateList('cluster', 2);
-const jobs = generateList('job', 10);
-const metrics = generateList('metric', 20);
-const joblogs = generateList('joblog', 30);
-const alerts = generateList('alert', 6);
-const alertrules = generateList('alertrule', 6);
-const tickets = generateList('ticket', 6);
-const auditlogs = generateList('auditlog', 10);
-const permissions = generateList('perm', 10);
+// ...其余主表同上...
 
-// 通用列表API
+// --- 通用 CRUD API ---
 app.get('/api/:type/list', (req, res) => {
     const { type } = req.params;
-    let data;
+    let data = [];
     switch (type) {
         case 'user': data = users; break;
         case 'role': data = roles; break;
-        case 'tenant': data = tenants; break;
-        case 'cluster': data = clusters; break;
-        case 'job': data = jobs; break;
-        case 'metric': data = metrics; break;
-        case 'joblog': data = joblogs; break;
-        case 'alert': data = alerts; break;
-        case 'alertrule': data = alertrules; break;
-        case 'ticket': data = tickets; break;
-        case 'auditlog': data = auditlogs; break;
-        case 'permission': data = permissions; break;
-        default: data = [];
+        // ...同理其它表
     }
     res.json({ success: true, data });
 });
-
-// 通用单条详情API
 app.get('/api/:type/:id', (req, res) => {
     const { type, id } = req.params;
-    let data;
+    let data = null;
     switch (type) {
         case 'user': data = users.find(x => x.id == id); break;
         case 'role': data = roles.find(x => x.id == id); break;
-        // ...同理其余表
-        default: data = null;
+        // ...其它同理
     }
     res.json({ success: !!data, data });
 });
-
-// 通用新增/更新API
 app.post('/api/:type/create', (req, res) => {
     res.json({ success: true, data: req.body });
 });
 app.put('/api/:type/update', (req, res) => {
     res.json({ success: true, data: req.body });
 });
-
-// 通用删除API
 app.delete('/api/:type/:id', (req, res) => {
     res.json({ success: true });
 });
 
-// 启动Mock服务
+// --- 启动 Mock 服务，只保留一次 listen ---
+const PORT = 4000;
 app.listen(PORT, () => {
-    console.log(`Flinksight Mock API running at http://localhost:${PORT}`);
+    console.log(`Flinksight Mock API (含SSO) running at http://localhost:${PORT}`);
 });

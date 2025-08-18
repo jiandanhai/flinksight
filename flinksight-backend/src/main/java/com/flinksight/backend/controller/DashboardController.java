@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,6 +30,7 @@ import java.util.Map;
 @Tag(name = "api", description = "大盘统计聚合接口控制器")
 @RequestMapping("/api/dashboard")
 @RequiredArgsConstructor
+@Validated
 public class DashboardController {
 
     private final DashboardService dashboardService;
@@ -62,7 +64,6 @@ public class DashboardController {
     public ApiResponse<PageResult<JobFunnelDTO>> getFunnel(@RequestParam(required = false) Long tenantId,
                                                @RequestParam(defaultValue = "0") int page,
                                                @RequestParam(defaultValue = "20") int size) {
-        log.info("#[dashboard funnel] tenantId => {}", tenantId);
         return ApiResponse.ok(dashboardService.getJobFunnel(resolveTenantId(tenantId),page,size));
     }
 

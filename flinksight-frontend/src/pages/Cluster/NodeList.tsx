@@ -4,9 +4,9 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Input, message, Modal, Space, Table, Tag, Tooltip} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {NodeDTO} from '../../api/gen/data-contracts.ts';
+import type {NodeDTO} from '@/api/dto';
 import NodeDetailModal from './NodeDetailModal';
 import {useUser} from '../../store/user';
 
@@ -18,7 +18,7 @@ const NodeList: React.FC = () => {
   const [size, setSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState<NodeDTO>({});
+  const [query, setQuery] = useState<DTO.NodeDTO>({});
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [detailId, setDetailId] = useState<number | null>(null);
   const { role } = useUser();

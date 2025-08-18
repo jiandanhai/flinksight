@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {TenantDTO} from '../../api/gen/data-contracts.ts';
+import type {TenantDTO} from '@/api/dto';
 import EditTenantModal from './EditTenantModal';
 import PageTable from '../../components/PageTable';
 import Loading from '../../components/Loading';
@@ -33,7 +33,7 @@ const TenantConfig: React.FC = () => {
     setModalVisible(true);
   }
 
-  async function handleDelete(t: TenantDTO) {
+  async function handleDelete(t: DTO.TenantDTO) {
     if (!window.confirm(`确认删除租户：${t.name}？`)) return;
     setLoading(true);
     try {

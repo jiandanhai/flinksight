@@ -26,26 +26,6 @@
     └── README.md
 
 
-    flinksight-frontend/
-    ├── public/
-    ├── src/
-    │   ├── api/          # 统一所有接口
-    │   ├── assets/       # 图片/样式
-    │   ├── components/   # 通用组件（可按功能域二次分级）
-    │   ├── constants/    # 枚举常量
-    │   ├── layouts/      # 布局相关
-    │   ├── pages/        # 业务页面，每个一级菜单一个文件夹
-    │   │   ├── Alerts/             # 业务一级页面，含多子页/弹窗
-    │   │   ├── Alert/              # 单条报警详情
-    │   │   ├── Jobs/               # 作业明细
-    │   │   ├── Dashboard/          # 指标可视化
-    │   │   ├── Cluster/            # 集群状态
-    │   │   └── SaaSBoard/          # SaaS运营大屏
-    │   ├── types/        # TypeScript类型定义
-    │   ├── utils/        # 工具函数
-    │   └── App.tsx
-    ├── package.json
-    └── tsconfig.json
 
 # 一级代码功能列表与开发顺序
     我们将逐个给出以下一级模块的商业代码（每一块都含目录、包名、注释、说明，并有可直接用的业务代码）：
@@ -65,3 +45,20 @@
     全局状态（store/）
     国际化、主题、暗色模式（可选，按需补充）
     package.json & 工程启动说明
+
+# 封装所有 API 方法为 axios 格式（替代原来自动生成的 SDK 调用 import api from ‘@api/gen/client’ 使用 例如api.getUser）
+    安装依赖：npm install axios prettier @apidevtools/swagger-parser
+    执行脚本：
+    npx tsx ./scripts/swagger-openApi-to-axios.ts --emitStatic=auto --swagger=../flinksight-backend/src/main/resources/static/openapi.json --outdir=../api --baseURL="import.meta.env.VITE_API_BASE_URL || '/api'"
+    --emitStatic=auto|always|never（默认 auto）
+        auto：静态文件仅在不存在时生成（你要的默认）
+        always：每次都覆盖静态文件
+        never：完全不动静态文件
+    --returnWrapper=true|false（默认 false）
+        false：函数返回直接是 data 的 DTO（更符合前端使用）
+        true：返回整个 { code/msg/data } 包装
+
+    npx tsx ./scripts/swagger-openapi-to-axios.ts --swagger=../flinksight-backend/src/main/resources/static/openapi.json --outdir=../api --baseURL="import.meta.env.VITE_API_BASE_URL || '/api'" --emitStatic=auto --verbose=true
+
+
+npx tsx ./scripts/swagger-openapi-to-axios-cli.ts --swagger=../flinksight-backend/src/main/resources/static/openapi.json --outdir=../api --baseURL="import.meta.env.VITE_API_BASE_URL || '/api'" --emitStatic=auto --verbose=true

@@ -4,9 +4,9 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Input, Table, Tag} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {AuditLogDTO} from '../../api/gen/data-contracts.ts';
+import type {AuditLogDTO} from '@/api/dto';
 
 const { Search } = Input;
 
@@ -15,7 +15,7 @@ const AuditLogPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(20);
   const [total, setTotal] = useState(0);
-  const [query, setQuery] = useState<AuditLogDTO>({});
+  const [query, setQuery] = useState<DTO.AuditLogDTO>({});
   const [loading, setLoading] = useState(false);
 
   const fetch = async () => {

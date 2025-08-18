@@ -8,6 +8,7 @@ import com.flinksight.common.service.RoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/role")
 @RequiredArgsConstructor
 @TenantRequired
+@Validated
 public class RoleController {
 
     private final RoleService roleService;

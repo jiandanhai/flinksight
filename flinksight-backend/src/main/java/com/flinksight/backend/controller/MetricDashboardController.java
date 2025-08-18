@@ -7,6 +7,7 @@ import com.flinksight.common.service.MetricDashboardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -18,6 +19,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/metric-dashboard")
 @RequiredArgsConstructor
+@Validated
 public class MetricDashboardController {
 
     private final MetricDashboardService service;

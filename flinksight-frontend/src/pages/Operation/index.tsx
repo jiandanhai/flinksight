@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {OperationLogDTO} from '../../api/gen/data-contracts.ts';
+import type {OperationLogDTO} from '@/api/dto';
 import PageTable from '../../components/PageTable';
 import Loading from '../../components/Loading';
 
@@ -23,7 +23,7 @@ const OperationLogPage: React.FC = () => {
     }
   }
 
-  async function handleDelete(log: OperationLogDTO) {
+  async function handleDelete(log: DTO.OperationLogDTO) {
     if (!window.confirm(`确定删除该操作日志？`)) return;
     setLoading(true);
     try {

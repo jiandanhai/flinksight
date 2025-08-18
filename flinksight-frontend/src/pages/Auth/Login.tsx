@@ -1,8 +1,8 @@
 import React, {useState} from 'react';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
 import {useNavigate} from 'react-router-dom';
-import type {LoginDTO} from '../../api/gen/data-contracts.ts';
+import type {LoginDTO} from '@/api/dto';
 
 /**
  * 登录页面
@@ -10,7 +10,7 @@ import type {LoginDTO} from '../../api/gen/data-contracts.ts';
  * - 登录后自动跳转首页
  */
 const LoginPage: React.FC = () => {
-  const [form, setForm] = useState<LoginDTO>({ username: '', password: '' });
+  const [form, setForm] = useState<DTO.LoginDTO>({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [errMsg, setErrMsg] = useState('');
   const navigate = useNavigate();

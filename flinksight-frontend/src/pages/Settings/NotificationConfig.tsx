@@ -4,9 +4,9 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Input, message, Modal, Space, Table, Tag} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {NotifyChannelDTO} from '../../api/gen/data-contracts.ts';
+import type {NotifyChannelDTO} from '@/api/dto';
 import EditNotifyModal from './EditNotifyModal';
 import {useUser} from '../../store/user';
 
@@ -55,14 +55,14 @@ const NotificationConfig: React.FC = () => {
   }
 
   // 启用/禁用
-  async function handleToggle(channel: NotifyChannelDTO) {
+  async function handleToggle(channel: DTO.NotifyChannelDTO) {
     await api.updateNotifyChannel(channel.id, { enabled: !channel.enabled } as NotifyChannelDTO);
     message.success(channel.enabled ? '已禁用' : '已启用');
     fetch();
   }
 
   // 测试通知
-  async function handleTest(channel: NotifyChannelDTO) {
+  async function handleTest(channel: DTO.NotifyChannelDTO) {
     await api.testNotifyChannel(channel.id);
     message.success('通知测试已发送');
   }
@@ -84,7 +84,7 @@ const NotificationConfig: React.FC = () => {
           { title: '状态', dataIndex: 'enabled', render: (v: boolean) => v ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag> },
           {
             title: '操作',
-            render: (_: any, r: NotifyChannelDTO) => (
+            render: (_: any, r: DTO.NotifyChannelDTO) => (
               <Space>
                 <Button size="small" type="link" onClick={() => openModal(r.id)} disabled={!canEdit}>编辑</Button>
                 <Button size="small" type="link" onClick={() => handleToggle(r)} disabled={!canEdit}>{r.enabled ? '禁用' : '启用'}</Button>

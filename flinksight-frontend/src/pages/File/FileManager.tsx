@@ -4,9 +4,9 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, message, Modal, Space, Table, Tag, Upload} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {FileDTO} from '../../api/gen/data-contracts.ts';
+import type {FileDTO} from '@/api/dto';
 
 const FileManager: React.FC = () => {
   const [list, setList] = useState<FileDTO[]>([]);

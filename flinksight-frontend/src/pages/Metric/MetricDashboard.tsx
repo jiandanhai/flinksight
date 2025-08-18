@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Button, Card, Col, DatePicker, Row, Select } from "antd";
 import * as echarts from "echarts";
-import  api  from "src/api/gen/client";
+import api from '@/api/api-compat';
 import dayjs, { Dayjs } from "dayjs";
 
 const { RangePicker } = DatePicker;

@@ -1,49 +1,66 @@
-import React, { useEffect, useState } from "react";
+// src/layouts/MainLayout.tsx
+import React, { useMemo, useState } from "react";
 import { Layout, Menu, Spin } from "antd";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { MenuUnfoldOutlined, MenuFoldOutlined } from "@ant-design/icons";
 
-import { getMenusByPermission } from "../utils/menu";
-import api from "../api/gen/client";
-import { useUser } from "../context/UserContext"; // ✅ 新增：引入 useUser
+import { useUser } from "@/context/UserContext";
+import type { MenuProps } from "antd";
+import type { MenuNodeDTO } from "@/api/dto";
+import { useUserMenus } from "@/hooks/useUserMenus";
 
 const { Header, Sider, Content } = Layout;
+type ItemType = Required<MenuProps>["items"][number];
 
 const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const [menuItems, setMenuItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { user } = useUser(); // ✅ 全局 user 状态
+  const toggle = () => setCollapsed((v) => !v);
 
-  const toggle = () => setCollapsed(!collapsed);
+  console.log("🎯 MainLayout 挂载");
+  console.log("👤 当前 user：", user);
 
-  const fetchUserPermissions = async (userId: number, tenantId: number) => {
-    try {
-      const res = await api.userPermissions({ userId, tenantId });
-      const permissions = res.data?.permissions || [];
-      const menus = getMenusByPermission(permissions);
-      setMenuItems(menus);
-    } catch (e) {
-      console.error("❌ 获取用户权限失败:", e);
-    } finally {
-      setLoading(false);
-    }
+  // ⭐ 最优：用 Hook 统一处理 StrictMode 双执行、缓存、loading、异常
+  const { data: menuTree, loading, error } = useUserMenus(user?.id, user?.tenantId);
+
+  const toAntdItems = (nodes?: MenuNodeDTO[] | null): ItemType[] => {
+    if (!nodes || nodes.length === 0) return [];
+    return nodes.map((n) => {
+      const key = n.path || n.key || String(n.id); // path 优先，其次 key，兜底 id
+      return {
+        key,
+        label: n.title,
+        // 需要 icon 时，可在这里把后端 icon 名 -> 组件 做映射
+        children: n.children && n.children.length ? toAntdItems(n.children) : undefined,
+      };
+    });
   };
 
-  useEffect(() => {
-    // ✅ 用 useUser() 替代 localStorage.getItem("user")
-    if (user?.id && user?.tenantId) {
-      fetchUserPermissions(user.id, user.tenantId);
-    } else {
-      console.warn("⚠️ 未找到用户信息，跳过权限加载");
-      setLoading(false);
+  const menuItems = useMemo(() => {
+    const items = toAntdItems(menuTree);
+    console.log("🧩 转换为 antd items：", items);
+    if (!items.length && !loading && !error) {
+      console.warn("⚠️ 菜单为空，请检查后端 required_code 与用户权限是否匹配。");
     }
-  }, [user]);
+    return items;
+  }, [menuTree, loading, error]);
 
-  if (loading) return <Spin fullscreen />;
+  const selectedKeys = useMemo(() => [location.pathname], [location.pathname]);
+
+  // 没有 user 信息时不去拉接口；Hook 已处理 loading=false，不会卡死
+  const shouldShowSpinner = (!user || !user.id || !user.tenantId) || loading;
+
+  if (shouldShowSpinner) {
+    console.log("⏳ loading 中…");
+    return <Spin fullscreen tip="正在加载主界面…" />;
+  }
+
+  if (error) {
+    console.error("❌ 获取菜单失败：", error);
+  }
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -54,14 +71,15 @@ const MainLayout: React.FC = () => {
         <Menu
           theme="dark"
           mode="inline"
-          selectedKeys={[location.pathname]}
-          onClick={({ key }) => navigate(key)}
+          selectedKeys={selectedKeys}
+          onClick={({ key }) => navigate(String(key))}
           items={menuItems}
         />
       </Sider>
+
       <Layout>
         <Header style={{ background: "#fff", padding: 0 }}>
-          <span onClick={toggle} style={{ marginLeft: 16 }}>
+          <span onClick={toggle} style={{ marginLeft: 16, cursor: "pointer" }}>
             {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           </span>
         </Header>

@@ -7,6 +7,7 @@ import com.flinksight.common.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "api", description = "消息通知管理API")
 @RequestMapping("/api/notification")
 @RequiredArgsConstructor
+@Validated
 public class NotificationController {
 
     private final NotificationService service;

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {OrgNodeDTO} from '../../api/gen/data-contracts.ts';
+import type {OrgNodeDTO} from '@/api/dto';
 import Loading from '../../components/Loading';
 
 /**
@@ -22,7 +22,7 @@ const OrgPage: React.FC = () => {
     }
   }
 
-  async function handleDelete(node: OrgNodeDTO) {
+  async function handleDelete(node: DTO.OrgNodeDTO) {
     if (!window.confirm(`确认删除【${node.name}】？`)) return;
     setLoading(true);
     try {
@@ -36,7 +36,7 @@ const OrgPage: React.FC = () => {
   useEffect(() => { fetchTree(); }, []);
 
   // 递归渲染树节点
-  function renderTree(nodes: OrgNodeDTO[]) {
+  function renderTree(nodes: DTO.OrgNodeDTO[]) {
     return (
       <ul className="pl-4">
         {nodes.map(n => (

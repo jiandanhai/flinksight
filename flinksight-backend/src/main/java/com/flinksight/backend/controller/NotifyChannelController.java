@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "api", description = "通知渠道管理控制器API")
 @RequestMapping("/api/notify-channel")
 @RequiredArgsConstructor
+@Validated
 public class NotifyChannelController {
 
     private final NotifyChannelService notifyChannelService;

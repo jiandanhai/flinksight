@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {RoleDTO} from '../../api/gen/data-contracts.ts';
+import type {RoleDTO} from '@/api/dto';
 import EditRoleModal from './EditRoleModal';
 import PageTable from '../../components/PageTable';
 import Loading from '../../components/Loading';
@@ -36,7 +36,7 @@ const RoleList: React.FC<Props> = ({ onSelect }) => {
     setModalVisible(true);
   }
 
-  async function handleDelete(role: RoleDTO) {
+  async function handleDelete(role: DTO.RoleDTO) {
     if (!window.confirm(`确认删除角色：${role.name}？`)) return;
     setLoading(true);
     try {
@@ -53,7 +53,7 @@ const RoleList: React.FC<Props> = ({ onSelect }) => {
         <button className="btn-primary" onClick={() => openModal()}>新建角色</button>
         <span>共{roles.length}个角色</span>
       </div>
-      <PageTable<RoleDTO>
+      <PageTable<DTO.RoleDTO>
         columns={[
           { key: 'name', title: '角色名', render: r => (
             <span className="text-blue-600 cursor-pointer" onClick={() => onSelect(r.id)}>{r.name}</span>

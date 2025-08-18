@@ -7,6 +7,7 @@ import com.flinksight.common.service.JobInstanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "api", description = "作业实例管理API")
 @RequestMapping("/api/job-instance")
 @RequiredArgsConstructor
+@Validated
 public class JobInstanceController {
 
     private final JobInstanceService service;

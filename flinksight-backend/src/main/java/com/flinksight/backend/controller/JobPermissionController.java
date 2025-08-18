@@ -7,6 +7,7 @@ import com.flinksight.common.service.JobPermissionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/job-permission")
 @RequiredArgsConstructor
+@Validated
 public class JobPermissionController {
 
     private final JobPermissionService jobPermissionService;

@@ -4,9 +4,9 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Card, Descriptions, Spin, Tag} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {RoleDTO} from '../../api/gen/data-contracts.ts';
+import type {RoleDTO} from '@/api/dto';
 
 interface Props {
   id: number;

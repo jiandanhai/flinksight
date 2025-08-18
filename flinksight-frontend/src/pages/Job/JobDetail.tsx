@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {JobDTO} from '../../api/gen/data-contracts.ts';
+import type {JobDTO} from '@/api/dto';
 import Loading from '../../components/Loading';
 
 interface Props {

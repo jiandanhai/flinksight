@@ -21,3 +21,17 @@
 - /api/alert/list
 - /api/cluster/list
 - ...其它所有主表
+
+# SSO登录验证流程
+    [前端页面]
+    |
+    |——(未登录时跳转)——>  /api/auth/sso/login   （由后端提供）
+    |                             |
+    |<——————[redirect uri = /api/auth/sso/callback ]———————|
+    |                             |
+    [后端拿到 code，去 SSO server 换 token、拉用户]
+    |
+    [生成 JWT，下发给前端]
+
+# 启动 mock 服务
+node mock-api.js

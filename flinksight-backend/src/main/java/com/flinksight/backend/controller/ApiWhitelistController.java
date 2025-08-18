@@ -6,6 +6,7 @@ import com.flinksight.common.service.ApiWhitelistService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "api", description = "接口白名单管理")
 @RequestMapping("/api/api-whitelist")
 @RequiredArgsConstructor
+@Validated
 public class ApiWhitelistController {
 
     private final ApiWhitelistService service;

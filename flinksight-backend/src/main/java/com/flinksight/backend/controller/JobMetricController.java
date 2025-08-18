@@ -10,6 +10,7 @@ import com.flinksight.common.service.JobMetricService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ import java.util.Map;
 @RequestMapping("/api/metric")
 @RequiredArgsConstructor
 @TenantRequired
+@Validated
 public class JobMetricController {
 
     private final JobMetricService jobMetricService;

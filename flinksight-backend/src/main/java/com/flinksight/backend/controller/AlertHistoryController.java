@@ -7,6 +7,7 @@ import com.flinksight.common.service.AlertHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "api", description = "告警历史事件")
 @RequestMapping("/api/alert-history")
 @RequiredArgsConstructor
+@Validated
 public class AlertHistoryController {
 
     private final AlertHistoryService service;

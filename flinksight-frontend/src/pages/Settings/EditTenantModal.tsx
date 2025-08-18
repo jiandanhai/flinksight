@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {TenantDTO} from '../../api/gen/data-contracts.ts';
+import type {TenantDTO} from '@/api/dto';
 
 interface Props {
   id: number | null;

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {ProfileDTO} from '../../api/gen/data-contracts.ts';
+import type {ProfileDTO} from '@/api/dto';
 import {Avatar, Button, Form, Input, message} from 'antd';
 
 /**
@@ -19,7 +19,7 @@ const ProfileInfo: React.FC = () => {
     });
   }, [form]);
 
-  const handleSubmit = async (values: ProfileDTO) => {
+  const handleSubmit = async (values: DTO.ProfileDTO) => {
     await api.updateProfile(values);
     message.success('资料已更新');
     setEditing(false);

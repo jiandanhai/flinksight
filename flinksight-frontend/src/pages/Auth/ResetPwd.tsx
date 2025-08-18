@@ -1,15 +1,15 @@
 import React, {useState} from 'react';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
 import {useNavigate, useSearchParams} from 'react-router-dom';
-import type {UserDTO} from '../../api/gen/data-contracts.ts';
+import type {UserDTO} from '@/api/dto';
 
 /**
  * 重置密码页面（通过邮箱token）
  */
 const ResetPwdPage: React.FC = () => {
   const [params] = useSearchParams();
-  const [form, setForm] = useState<UserDTO>({ token: params.get('token') || '', password: '' });
+  const [form, setForm] = useState<DTO.UserDTO>({ token: params.get('token') || '', password: '' });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const navigate = useNavigate();

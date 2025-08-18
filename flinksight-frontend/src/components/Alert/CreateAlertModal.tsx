@@ -1,9 +1,9 @@
 // src/components/Alert/CreateAlertModal.tsx
 import React from 'react';
 import {Form, Input, message, Modal, Select} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import {AlertLevelDTO} from '../../api/gen/data-contracts.ts';
+import {AlertLevelDTO} from '@/api/dto';
 
 /**
  * 新建报警流弹窗组件

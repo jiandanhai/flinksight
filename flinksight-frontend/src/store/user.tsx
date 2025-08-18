@@ -6,7 +6,7 @@ import React, {
   useState,
   PropsWithChildren,
 } from 'react';
-import { setApiToken } from '@/api/gen/client';
+
 
 // 用户结构：根据你后端 JWT 中解析信息适配
 interface UserInfo {
@@ -63,17 +63,17 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
 
     if (t) {
       setToken(t);
-      setApiToken(t);
+      sessionStorage.setItem("authToken", t);
       setUserInfo(parseUserFromToken(t));
     } else {
-      setApiToken(undefined);
+      sessionStorage.removeItem("authToken");
     }
     setHydrated(true);
   }, []);
 
   const login = (t: string) => {
     setToken(t);
-    setApiToken(t);
+    sessionStorage.setItem("authToken", t);
     const user = parseUserFromToken(t);
     setUserInfo(user);
     try {
@@ -85,7 +85,8 @@ export const UserProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const logout = () => {
     setToken(null);
     setUserInfo(null);
-    setApiToken(undefined);
+    sessionStorage.removeItem("authToken");
+    sessionStorage.removeItem("authToken");
     try {
       sessionStorage.removeItem('authToken');
       localStorage.removeItem('authToken');

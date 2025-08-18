@@ -4,7 +4,7 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Card, Form, Input, message} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
 
 const SettingsPage: React.FC = () => {

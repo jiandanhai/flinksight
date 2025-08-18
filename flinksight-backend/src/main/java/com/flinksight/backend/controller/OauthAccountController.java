@@ -8,6 +8,7 @@ import com.flinksight.common.service.OauthAccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/sso/oauth-account")
 @RequiredArgsConstructor
+@Validated
 public class OauthAccountController {
 
     private final OauthAccountService oauthAccountService;

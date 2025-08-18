@@ -4,21 +4,27 @@ import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.backend.security.jwt.JwtUtil;
 import com.flinksight.backend.security.rbac.OpPermission;
 import com.flinksight.backend.security.tenant.TenantRequired;
+import com.flinksight.common.dto.MenuNodeDTO;
 import com.flinksight.common.dto.UserDTO;
 import com.flinksight.common.dto.UserPermissionResDTO;
 import com.flinksight.common.dto.UserTokenStateDTO;
 import com.flinksight.common.enums.ErrorCode;
 import com.flinksight.common.model.PageResult;
+import com.flinksight.common.service.MenuService;
 import com.flinksight.common.service.OpAudit;
 import com.flinksight.common.service.TokenVersionService;
 import com.flinksight.common.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * 用户接口
@@ -28,9 +34,11 @@ import java.util.List;
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
 @TenantRequired
+@Validated
 public class UserController {
 
     private final UserService userService;
+    private final MenuService menuService;
     private final List<TokenVersionService> tokenVersionServices;  // ← 注意是 List，而不是单个
     private final JwtUtil jwtUtil;                   // 用来兜底解析 userId（可选）
 
@@ -38,7 +46,7 @@ public class UserController {
      * 获取当前登录用户信息（需鉴权，JWT自动注入用户身份）
      * 用于前端获取用户基础信息和权限等
      */
-    @Operation(summary = "获取当前用户信息", description = "通过JWT/Session获取当前登录用户基础资料和角色信息")
+    @Operation(summary = "获取当前用户信息", description = "通过JWT/Session获取当前登录用户基础资料和角色信息",operationId = "userGetCurrentUser")
     @GetMapping("/me")
     // @PreAuthorize("isAuthenticated()") // 如果项目开启了方法级鉴权
     public ApiResponse<UserDTO> getCurrentUser() {
@@ -156,5 +164,21 @@ public class UserController {
 
         List<String> permissions = userService.getAuthorities(userId, tenantId);
         return ApiResponse.ok(new UserPermissionResDTO(permissions));
+    }
+
+    /**
+     * 对外接口：
+     * GET /api/user/menus?userId=1001&tenantId=1
+     * 请求头 Accept-Language: zh / en
+     */
+    @Operation(summary = "获取当前用户菜单列表", operationId = "getUserMenus")
+    @GetMapping("/menus")
+    public ResponseEntity<List<MenuNodeDTO>> getUserMenus(
+            @RequestParam("userId") Long userId,
+            @RequestParam(value = "tenantId", required = false) Long tenantId, HttpServletRequest request
+    ) {
+        Locale locale = request.getLocale(); // 或 LocaleContextHolder.getLocale()
+        List<MenuNodeDTO> tree = menuService.getMenuTreeForUser(userId, tenantId, locale);
+        return ResponseEntity.ok(tree);
     }
 }

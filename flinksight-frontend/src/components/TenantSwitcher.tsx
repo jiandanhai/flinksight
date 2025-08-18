@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {Select, Spin} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
 import {useTenant} from '../store/tenant';
 

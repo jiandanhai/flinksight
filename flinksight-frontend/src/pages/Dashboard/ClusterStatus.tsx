@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as echarts from "echarts";
-import api from "src/api/gen/client";
 import { getTenantId } from "@/utils/tenant";
 import { Card, Col, Row, Statistic } from "antd";
 import dayjs from "dayjs";
+import { dashboardStatisticsClusterHealthMetrics,dashboardClusterTrend } from "../../api/modules";
 
 // DTO 类型定义（如已生成可删除）
 interface ClusterHealthMetricsDTO {
@@ -31,7 +31,7 @@ const ClusterStatus: React.FC = () => {
 
   // 获取静态指标
   const fetchMetrics = async () => {
-    const res = await api.dashboardStatisticsClusterHealthMetrics({ tenantId: getTenantId() });
+    const res = await dashboardStatisticsClusterHealthMetrics({ tenantId: getTenantId() });
     setMetrics(res.data);
     if (res.data && pieChartRef.current) {
       if (!pieInstance.current) {
@@ -58,7 +58,7 @@ const ClusterStatus: React.FC = () => {
 
   // 获取24小时趋势
   const fetchTrend = async () => {
-    const res = await api.dashboardClusterTrend({
+    const res = await dashboardClusterTrend({
       tenantId: getTenantId(),
       from: dayjs().subtract(3, "day").toISOString(),
       to: dayjs().endOf("day").toISOString(),

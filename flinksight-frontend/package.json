@@ -10,17 +10,20 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "gen-api": "swagger-typescript-api generate --type-only-imports -p ../flinksight-backend/src/main/resources/static/openapi.json -o src/api/gen -d src/api/gen/models --modular --name api.ts && node scripts/patch-type-imports.cjs && node scripts/rename-api.cjs",
+    "gen-api": "npx tsx ./scripts/swagger-openapi-to-axios.ts --swagger=../flinksight-backend/src/main/resources/static/openapi.json --outdir=./src/api --baseURL=\"import.meta.env.VITE_API_BASE_URL || '/api'\" --emitStatic=auto --verbose=true",
     "prebuild": "npm run gen-api"
   },
   "dependencies": {
     "@ant-design/icons": "^6.0.0",
+    "@ant-design/plots": "^2.6.3",
     "@ant-design/pro-components": "^2.8.10",
     "@antv/g2plot": "^2.4.33",
+    "@apidevtools/swagger-parser": "^12.0.0",
     "antd": "^5.26.6",
     "axios": "^1.11.0",
     "echarts": "^6.0.0",
     "msw": "^2.2.2",
+    "prettier": "^3.6.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.1"

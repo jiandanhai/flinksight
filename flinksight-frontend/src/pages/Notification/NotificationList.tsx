@@ -4,9 +4,9 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, message, Modal, Space, Table, Tag} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {NotificationDTO} from '../../api/gen/data-contracts.ts';
+import type {NotificationDTO} from '@/api/dto';
 import EditNotificationModal from './EditNotificationModal';
 import {useUser} from '../../store/user';
 
@@ -31,7 +31,7 @@ const NotificationList: React.FC = () => {
   useEffect(() => { fetch(); }, []);
 
   // 启停
-  async function handleEnable(n: NotificationDTO) {
+  async function handleEnable(n: DTO.NotificationDTO) {
     await api.updateNotification(n.id, { enabled: !n.enabled });
     message.success(n.enabled ? '已停用' : '已启用');
     fetch();

@@ -4,9 +4,9 @@
  */
 import React, {useEffect} from 'react';
 import {Form, Input, message, Modal, Select, Switch} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {NotifyChannelDTO} from '../../api/gen/data-contracts.ts';
+import type {NotifyChannelDTO} from '@/api/dto';
 
 const { Option } = Select;
 

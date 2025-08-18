@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {SysParamDTO} from '../../api/gen/data-contracts.ts';
+import type {SysParamDTO} from '@/api/dto';
 import Loading from '../../components/Loading';
 
 /**
@@ -25,7 +25,7 @@ const SysParam: React.FC = () => {
   useEffect(() => { fetchParams(); }, []);
 
   // 修改并保存
-  async function handleSave(p: SysParamDTO, value: string) {
+  async function handleSave(p: DTO.SysParamDTO, value: string) {
     setLoading(true);
     try {
       await api.updateSysParam(p.id, { ...p, value });

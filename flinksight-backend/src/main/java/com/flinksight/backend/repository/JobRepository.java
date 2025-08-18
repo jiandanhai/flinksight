@@ -1,6 +1,7 @@
 package com.flinksight.backend.repository;
 
 import com.flinksight.backend.domain.Job;
+import com.flinksight.backend.repository.projection.KeyCountView;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,6 +23,11 @@ public interface JobRepository extends JpaRepository<Job, Long>, SoftDeleteRepos
     int countByTenantIdAndIsDeleted(Long tenantId, int isDeleted);
     int countByTenantIdAndStatusAndIsDeleted(Long tenantId, Integer status, int isDeleted);
 
-    @Query("SELECT j.status, COUNT(j) FROM Job j WHERE j.tenantId = :tenantId AND j.isDeleted = :isDeleted GROUP BY j.status")
-    List<Object[]> countJobByStatusGroup(@Param("tenantId") Long tenantId, @Param("isDeleted") int isDeleted);
+    @Query("""
+      select j.status as key, count(j.id) as cnt
+      from Job j
+      where j.tenantId = :tenantId and j.isDeleted = :isDeleted
+      group by j.status
+    """)
+    List<KeyCountView> countJobByStatusGroup(@Param("tenantId") Long tenantId, @Param("isDeleted") int isDeleted);
 }

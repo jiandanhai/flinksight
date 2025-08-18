@@ -4,7 +4,7 @@
  */
 import React from "react";
 import { Button, Card, Form, Input, message, Tabs } from "antd";
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
 const SystemSettings: React.FC = () => {
   const [form] = Form.useForm();

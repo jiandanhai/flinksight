@@ -4,9 +4,9 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, message, Modal, Space, Table, Tag} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {AlertRuleDTO} from '../../api/gen/data-contracts.ts';
+import type {AlertRuleDTO} from '@/api/dto';
 import EditRuleModal from './EditRuleModal';
 import {useUser} from '../../store/user';
 
@@ -38,7 +38,7 @@ const RuleList: React.FC<Props> = ({ alertId, onRulesChange }) => {
   useEffect(() => { fetch(); }, [alertId]);
 
   // 启停
-  async function handleEnable(rule: AlertRuleDTO) {
+  async function handleEnable(rule: DTO.AlertRuleDTO) {
     await api.updateAlertRule(rule.id, { enabled: !rule.enabled });
     message.success(rule.enabled ? '已停用' : '已启用');
     fetch();

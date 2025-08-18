@@ -5,9 +5,9 @@
 import React, {useEffect, useState} from 'react';
 import {Button, Card, Descriptions, Form, Input, message, Modal, Spin, Table} from 'antd';
 import {useUser} from '../../store/user';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {ProfileDTO, UserLoginHistoryDTO} from '../../api/gen/data-contracts.ts';
+import type {ProfileDTO, UserLoginHistoryDTO} from '@/api/dto';
 
 const ProfilePage: React.FC = () => {
   const { id } = useUser();

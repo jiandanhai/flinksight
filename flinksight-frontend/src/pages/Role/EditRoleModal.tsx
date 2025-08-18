@@ -4,9 +4,9 @@
  */
 import React, {useEffect} from 'react';
 import {Form, Input, message, Modal, Select} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {RoleDTO} from '../../api/gen/data-contracts.ts';
+import type {RoleDTO} from '@/api/dto';
 
 const { Option } = Select;
 

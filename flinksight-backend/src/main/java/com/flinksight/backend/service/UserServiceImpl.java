@@ -54,7 +54,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public UserDTO getCurrentUserProfile() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        System.out.println("###"+principal.getClass().getName());
         SecurityUser currentUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return userStructMapper.toDTO(currentUser.getUser());
     }
@@ -136,6 +135,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         List<Long> roleIds = userRoleRepository.findRoleIdsByUserIdAndTenantIdAndIsDeletedAndIsDeleted(userId,tenantId,0);
         Set<String> authorities = new HashSet<>();
         for (Long roleId : roleIds) {
+            log.info("##[USER SERVICE GET USER_ROLE ->ROLE ID] roleId :{}",roleId);
             authorities.addAll(rolePermissionRepository.findPermissionCodesByRoleIdAndIsDeleted(roleId,0));
         }
         return new ArrayList<>(authorities);

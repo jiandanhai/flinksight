@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {LoginLogDTO} from '../../api/gen/data-contracts.ts';
+import type {LoginLogDTO} from '@/api/dto';
 import {Table} from 'antd';
 
 /**

@@ -4,9 +4,9 @@
  */
 import React, {useEffect, useState} from "react";
 import {Descriptions, Modal, Spin, Tag} from "antd";
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {NodeDTO, NodeMetricDTO} from '../../api/gen/data-contracts.ts';
+import type {NodeDTO, NodeMetricDTO} from '@/api/dto';
 import * as echarts from "echarts";
 
 interface Props {

@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Input, message, Modal, Select } from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
 // 假设你的 openapi 已生成 Tenant 类型，如果没有可以用下面的 interface 临时代替
 interface Tenant {

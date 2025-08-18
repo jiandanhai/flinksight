@@ -8,6 +8,7 @@ import com.flinksight.common.service.ClusterService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/cluster")
 @RequiredArgsConstructor
 @TenantRequired
+@Validated
 public class ClusterController {
 
     private final ClusterService clusterService;

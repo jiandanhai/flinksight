@@ -8,6 +8,7 @@ import com.flinksight.common.service.AlertService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/alert")
 @RequiredArgsConstructor
 @TenantRequired
+@Validated
 public class AlertController {
 
     private final AlertService alertService;

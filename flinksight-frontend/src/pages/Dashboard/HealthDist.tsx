@@ -1,9 +1,9 @@
 // src/pages/Dashboard/HealthDist.tsx
 import React, { useEffect, useRef, useState } from "react";
 import * as echarts from "echarts";
-import api from "@/api/gen/client";
 import { getTenantId } from "@/utils/tenant";
 import { Card, Spin, Empty } from "antd";
+import { dashboardStatisticsHealth } from "../../api/modules";
 
 // 颜色配置
 const COLOR_MAP = {
@@ -29,7 +29,7 @@ const HealthDist: React.FC = () => {
   const fetchHealthDist = async () => {
     setLoading(true);
     try {
-      const res = await api.dashboardStatisticsHealth({ tenantId: getTenantId() });
+      const res = await dashboardStatisticsHealth({ tenantId: getTenantId() });
       const d = res.data || { healthy: 0, warning: 0, critical: 0 };
       const pieData = [
         { value: d.healthy, name: "健康" },

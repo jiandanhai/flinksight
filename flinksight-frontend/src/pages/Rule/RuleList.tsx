@@ -4,9 +4,9 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Input, message, Modal, Select, Space, Table, Tag} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {AlertRuleDTO} from '../../api/gen/data-contracts.ts';
+import type {AlertRuleDTO} from '@/api/dto';
 import EditRuleModal from './EditRuleModal';
 import {useUser} from '../../store/user';
 
@@ -19,7 +19,7 @@ const RuleList: React.FC = () => {
   const [size, setSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState<AlertRuleDTO>({});
+  const [query, setQuery] = useState<DTO.AlertRuleDTO>({});
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);

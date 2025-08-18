@@ -12,4 +12,6 @@ public enum PermissionTypeEnum {
 
     private final String code;
     private final String desc;
+
+
 }

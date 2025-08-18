@@ -5,6 +5,8 @@ import com.flinksight.backend.domain.Cluster;
 import com.flinksight.backend.domain.ClusterStatusHistory;
 import com.flinksight.backend.repository.*;
 import com.flinksight.backend.repository.projection.ClusterStatusTrendProjection;
+import com.flinksight.backend.repository.projection.KeyCountMapper;
+import com.flinksight.backend.repository.projection.KeyCountView;
 import com.flinksight.common.dto.*;
 import com.flinksight.common.enums.AlertLevelEnum;
 import com.flinksight.common.enums.ClusterHealthStatusEnum;
@@ -13,6 +15,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.DashboardService;
 import com.flinksight.common.utils.DateUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +31,7 @@ import java.util.stream.Collectors;
  *
  * 所有数据均通过Repository多表聚合统计，严格多租户隔离，数据统计真实可靠。
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardService {
@@ -146,34 +150,28 @@ public class DashboardServiceImpl implements DashboardService {
     @Transactional(readOnly = true)
     public PageResult<JobFunnelDTO> getJobFunnel(Long tenantId, int page, int size) {
         // 1. 查询所有分组统计结果
-        List<Object[]> statList = jobRepository.countJobByStatusGroup(tenantId,0);
+        List<KeyCountView> statList = jobRepository.countJobByStatusGroup(tenantId, 0);
+        log.info("#[dashboard Job funnel] statList => {}", statList.toString());
 
         // 2. 组装JobFunnelDTO
         List<JobFunnelDTO> allStages = statList.stream()
                 .map(row -> JobFunnelDTO.builder()
-                        .stage((String) row[0])
-                        .count(((Number) row[1]).intValue())
-                        .stageDesc(getStageDesc((String) row[0]))
+                        .stage((String) JobStatusEnum.labelOfCode(KeyCountMapper.asInt(row.getKey())))
+                        .count(((Number) row.getCnt()).intValue())
+                        .stageDesc(getStageDesc((String) JobStatusEnum.labelOfCode(KeyCountMapper.asInt(row.getKey()))))
                         .build())
                 .collect(Collectors.toList());
-
+        log.info("#[dashboard Job funnel] allStages => {}", allStages.toString());
         // 3. 自定义排序
-        List<JobStatusEnum> order = Arrays.asList(
-                JobStatusEnum.CREATED,
-                JobStatusEnum.RUNNING,
-                JobStatusEnum.FAILED,
-                JobStatusEnum.STOPPED,
-                JobStatusEnum.RESTARTING,
-                JobStatusEnum.UNKNOWN
-        );
-        allStages.sort(Comparator.comparingInt(o -> order.indexOf(o.getStage())));
+        allStages.sort(Comparator.comparingInt(o -> JobStatusEnum.codeOfLabel(o.getStage())));
 
         // 4. 计算转化率
         int prev = allStages.size() > 0 ? allStages.get(0).getCount() : 1;
         for (int i = 0; i < allStages.size(); i++) {
-            int cur = allStages.get(i).getCount();
+            JobFunnelDTO jfd = allStages.get(i);
+            int cur = jfd.getCount();
             String rate = prev > 0 ? String.format("%.1f%%", cur * 100.0 / prev) : "0%";
-            allStages.get(i).setConversionRate(rate);
+            jfd.setConversionRate(rate);
             prev = cur;
         }
 

@@ -4,9 +4,9 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, message, Modal, Space, Table, Tag} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {RoleDTO} from '../../api/gen/data-contracts.ts';
+import type {RoleDTO} from '@/api/dto';
 import EditRoleModal from './EditRoleModal';
 import RoleDetail from './RoleDetail';
 import {useUser} from '../../store/user';
@@ -70,7 +70,7 @@ const RoleList: React.FC = () => {
           { title: '描述', dataIndex: 'desc' },
           {
             title: '操作',
-            render: (_: any, r: RoleDTO) => (
+            render: (_: any, r: DTO.RoleDTO) => (
               <Space>
                 <Button type="link" size="small" onClick={() => { setEditId(r.id); setModalVisible(true); }} disabled={!canEdit}>编辑</Button>
                 <Button type="link" size="small" danger onClick={() => handleDelete(r.id)} disabled={!canEdit}>删除</Button>

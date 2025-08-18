@@ -1,10 +1,11 @@
 package com.flinksight.backend.security;
 
+import com.flinksight.backend.config.CorsProperties;
 import com.flinksight.backend.security.jwt.JwtAuthFilter;
 import com.flinksight.backend.security.token.TokenGuardFilter;
 import com.flinksight.backend.service.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
-// 移除 Keycloak 相关 import（保留其它不变）
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,20 +20,24 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.Arrays;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity  // 支持@PreAuthorize、@Secured
 @RequiredArgsConstructor
 public class SecurityConfig {
+    private final CorsProperties corsProperties;
     private final JwtAuthFilter jwtAuthFilter;
     private final TokenGuardFilter tokenGuardFilter;
     private final UserServiceImpl userServiceImpl;
-    private final CorsConfigurationSource corsConfigurationSource;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -49,7 +54,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain apiFilterChain(HttpSecurity http,
-                                              HandlerMappingIntrospector introspector) throws Exception {
+                                              HandlerMappingIntrospector introspector,
+                                              CorsConfigurationSource corsConfigurationSource) throws Exception {
 
         // MVC 感知的路径匹配器（对齐 Spring MVC 的 PathPattern/ServletPath 规则）
         MvcRequestMatcher.Builder mvc = new MvcRequestMatcher.Builder(introspector);
@@ -109,5 +115,22 @@ public class SecurityConfig {
     @Bean
     public org.springframework.security.authentication.AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOrigins(Arrays.asList(corsProperties.getAllowedOrigins().split(",")));
+        config.setAllowedMethods(Arrays.asList(corsProperties.getAllowedMethods().split(",")));
+        config.setAllowedHeaders(Arrays.asList(corsProperties.getAllowedHeaders().split(",")));
+        config.setExposedHeaders(Arrays.asList(corsProperties.getExposedHeaders().split(",")));
+        config.setAllowCredentials(corsProperties.isAllowCredentials());
+        config.setMaxAge(corsProperties.getMaxAge());
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        log.info("#[CORS SecurityConfig] config => {}", config);
+        return source;
     }
 }

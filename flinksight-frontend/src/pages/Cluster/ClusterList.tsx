@@ -4,9 +4,9 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Input, message, Modal, Space, Table, Tag} from 'antd';
-import  api  from 'src/api/gen/client';
+import api from '@/api/api-compat';
 
-import type {ClusterDTO} from '../../api/gen/data-contracts.ts';
+import type {ClusterDTO} from '@/api/dto';
 import EditClusterModal from './EditClusterModal';
 import ClusterDetail from './ClusterDetail';
 import {useUser} from '../../store/user';
@@ -19,7 +19,7 @@ const ClusterList: React.FC = () => {
   const [size, setSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState<ClusterDTO>({});
+  const [query, setQuery] = useState<DTO.ClusterDTO>({});
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
