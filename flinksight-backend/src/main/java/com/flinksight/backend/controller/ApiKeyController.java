@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ApiKeyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,13 +24,13 @@ public class ApiKeyController {
     private final ApiKeyService service;
 
     @Operation(summary = "", operationId = "createApiKey")
-    @PostMapping
-    public ApiKeyDTO create(@RequestBody ApiKeyDTO dto) {
+    @PostMapping("/create")
+    public ApiKeyDTO create(@RequestBody  @Valid ApiKeyDTO dto) {
         return service.createOrUpdate(dto);
     }
 
     @Operation(summary = "", operationId = "getApiKey")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<ApiKeyDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -37,7 +38,7 @@ public class ApiKeyController {
     }
 
     @Operation(summary = "", operationId = "getAllApiKeys")
-    @GetMapping
+    @GetMapping("/list")
     public ApiResponse<PageResult<ApiKeyDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -54,14 +55,14 @@ public class ApiKeyController {
     }
 
     @Operation(summary = "", operationId = "updateApiKey")
-    @PutMapping
-    public ApiResponse<ApiKeyDTO> update(@RequestBody ApiKeyDTO dto) {
+    @PutMapping("/update")
+    public ApiResponse<ApiKeyDTO> update(@RequestBody  @Valid ApiKeyDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", operationId = "deleteApiKey")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

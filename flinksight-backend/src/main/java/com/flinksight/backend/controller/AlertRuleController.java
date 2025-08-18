@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.AlertRuleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,13 +25,13 @@ public class AlertRuleController {
 
     @Operation(summary = "新建报警规则", operationId = "createAlertRule")
     @PostMapping("/create")
-    public ApiResponse<AlertRuleDTO> create(@RequestBody AlertRuleDTO dto) {
+    public ApiResponse<AlertRuleDTO> create(@RequestBody  @Valid AlertRuleDTO dto) {
         return ApiResponse.ok(alertRuleService.createAlertRule(dto));
     }
 
     @Operation(summary = "更新报警规则", operationId = "updateAlertRule")
     @PostMapping("/update")
-    public ApiResponse<AlertRuleDTO> update(@RequestBody AlertRuleDTO dto) {
+    public ApiResponse<AlertRuleDTO> update(@RequestBody  @Valid AlertRuleDTO dto) {
         return ApiResponse.ok(alertRuleService.updateAlertRule(dto));
     }
 

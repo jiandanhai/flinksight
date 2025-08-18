@@ -53,7 +53,7 @@ public class UserPostController {
     }
 
     @Operation(summary = "", description = "",operationId = "getUserPost")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<UserPostDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -61,7 +61,7 @@ public class UserPostController {
     }
 
     @Operation(summary = "", description = "",operationId = "deleteUserPost")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

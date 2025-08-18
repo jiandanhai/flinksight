@@ -41,7 +41,7 @@ public class OpsTaskController {
      * @return 更新后的任务信息
      */
     @Operation(summary = "", description = "", operationId = "updateOpsTask")
-    @PostMapping("/update")
+    @PutMapping("/update")
     public ApiResponse<OpsTaskDTO> update(@Valid @RequestBody OpsTaskDTO dto) {
         return ApiResponse.ok(opsTaskService.update(dto));
     }

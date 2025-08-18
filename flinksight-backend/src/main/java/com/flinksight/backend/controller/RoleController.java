@@ -7,6 +7,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.RoleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,7 @@ public class RoleController {
 
     @Operation(summary = "新建角色", description = "Create new role",operationId = "createRole")
     @PostMapping("/create")
-    public ApiResponse<RoleDTO> createRole(@RequestBody RoleDTO dto) {
+    public ApiResponse<RoleDTO> createRole(@RequestBody @Valid RoleDTO dto) {
         return ApiResponse.ok(roleService.createRole(dto));
     }
 
@@ -57,12 +58,12 @@ public class RoleController {
 
     @Operation(summary = "编辑角色",operationId = "updateRole")
     @PutMapping("/update")
-    public ApiResponse<RoleDTO> update(@RequestBody RoleDTO dto) {
+    public ApiResponse<RoleDTO> update(@RequestBody @Valid RoleDTO dto) {
         return ApiResponse.ok(roleService.update(dto));
     }
 
     @Operation(summary = "删除角色", description = "Delete role by ID",operationId = "deleteRole")
-    @DeleteMapping("/id/{id}")
+    @DeleteMapping("/delete/{id}")
     public ApiResponse<Void> deleteRole(@PathVariable Long id) {
         roleService.softDelete(id);
         return ApiResponse.ok(null);

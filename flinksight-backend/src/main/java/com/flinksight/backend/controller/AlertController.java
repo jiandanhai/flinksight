@@ -7,6 +7,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.AlertService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -26,12 +27,12 @@ public class AlertController {
 
     @Operation(summary = "新建报警事件", operationId = "createAlert")
     @PostMapping("/create")
-    public ApiResponse<AlertDTO> createAlert(@RequestBody AlertDTO alert) {
+    public ApiResponse<AlertDTO> createAlert(@RequestBody @Valid AlertDTO alert) {
         return ApiResponse.ok(alertService.createAlert(alert));
     }
 
     @Operation(summary = "根据ID查询报警事件", operationId = "getAlert")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<AlertDTO> getAlertById(@PathVariable Long id) {
         return alertService.getAlertById(id)
                 .map(ApiResponse::ok)
@@ -70,12 +71,12 @@ public class AlertController {
 
     @Operation(summary = "更新报警事件", description = "Update alert info",operationId = "updateAlert")
     @PutMapping("/update")
-    public ApiResponse<AlertDTO> updateAlert(@RequestBody AlertDTO alert) {
+    public ApiResponse<AlertDTO> updateAlert(@RequestBody  @Valid AlertDTO alert) {
         return ApiResponse.ok(alertService.updateAlert(alert));
     }
 
     @Operation(summary = "删除报警事件（软删）", description = "Soft delete alert",operationId = "deleteAlert")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ApiResponse<Void> deleteAlert(@PathVariable Long id) {
         alertService.softDelete(id);
         return ApiResponse.ok(null);

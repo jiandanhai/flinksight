@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +25,12 @@ public class NotificationController {
 
     @Operation(summary = "", description = "",operationId = "createNotification")
     @PostMapping
-    public ApiResponse<NotificationDTO> create(@RequestBody NotificationDTO dto) {
+    public ApiResponse<NotificationDTO> create(@RequestBody @Valid NotificationDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "getNotification")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<NotificationDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -37,7 +38,7 @@ public class NotificationController {
     }
 
     @Operation(summary = "", description = "",operationId = "getAllNotifications")
-    @GetMapping
+    @GetMapping("/list")
     public ApiResponse<PageResult<NotificationDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -63,14 +64,14 @@ public class NotificationController {
     }
 
     @Operation(summary = "", description = "",operationId = "createNotification")
-    @PutMapping
-    public ApiResponse<NotificationDTO> update(@RequestBody NotificationDTO dto) {
+    @PutMapping("/update")
+    public ApiResponse<NotificationDTO> update(@RequestBody @Valid NotificationDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "deleteNotification")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

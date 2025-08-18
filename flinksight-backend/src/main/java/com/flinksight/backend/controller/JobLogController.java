@@ -7,6 +7,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.JobLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -28,12 +29,12 @@ public class JobLogController {
 
     @Operation(summary = "新建任务日志", description = "Create job log",operationId = "createJobLog")
     @PostMapping("/create")
-    public ApiResponse<JobLogDTO> createJobLog(@RequestBody JobLogDTO dto) {
+    public ApiResponse<JobLogDTO> createJobLog(@RequestBody @Valid JobLogDTO dto) {
         return ApiResponse.ok(jobLogService.createJobLog(dto));
     }
 
     @Operation(summary = "根据ID查询日志", description = "Get log by ID",operationId = "getJobLog")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<JobLogDTO> getById(@PathVariable Long id) {
         return jobLogService.getJobLogById(id)
                 .map(ApiResponse::ok)
@@ -64,7 +65,7 @@ public class JobLogController {
     }
 
     @Operation(summary = "删除日志（软删）", description = "Soft delete job log",operationId = "deleteJobLog")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ApiResponse<Void> deleteJobLog(@PathVariable Long id) {
         jobLogService.softDelete(id);
         return ApiResponse.ok(null);

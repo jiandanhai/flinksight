@@ -53,7 +53,7 @@ public class GroupRoleController {
     }
 
     @Operation(summary = "", description = "",operationId = "getGroupRole")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<GroupRoleDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -61,7 +61,7 @@ public class GroupRoleController {
     }
 
     @Operation(summary = "", description = "",operationId = "deleteGroupRole")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.TagService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,13 +25,13 @@ public class TagController {
 
     @Operation(summary = "", description = "",operationId = "createTag")
     @PostMapping
-    public ApiResponse<TagDTO> create(@RequestBody TagDTO dto) {
+    public ApiResponse<TagDTO> create(@RequestBody @Valid TagDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "getTag")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<TagDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -38,7 +39,7 @@ public class TagController {
     }
 
     @Operation(summary = "", description = "",operationId = "getAllTags")
-    @GetMapping
+    @GetMapping("/list")
     public ApiResponse<PageResult<TagDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -54,13 +55,13 @@ public class TagController {
     }
 
     @Operation(summary = "", description = "",operationId = "updateTag")
-    @PutMapping
-    public ApiResponse<TagDTO> update(@RequestBody TagDTO dto) {
+    @PutMapping("/update")
+    public ApiResponse<TagDTO> update(@RequestBody  @Valid  TagDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "deleteTag")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

@@ -52,7 +52,7 @@ public class RoleMenuController {
     }
 
     @Operation(summary = "", description = "",operationId = "getRoleMenu")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<RoleMenuDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -60,7 +60,7 @@ public class RoleMenuController {
     }
 
     @Operation(summary = "", description = "",operationId = "deleteRoleMenu")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

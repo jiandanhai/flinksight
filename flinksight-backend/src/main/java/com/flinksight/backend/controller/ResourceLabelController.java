@@ -54,7 +54,7 @@ public class ResourceLabelController {
     }
 
     @Operation(summary = "", description = "",operationId = "getResourceLabel")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<ResourceLabelDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -62,7 +62,7 @@ public class ResourceLabelController {
     }
 
     @Operation(summary = "", description = "",operationId = "deleteResourceLabel")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

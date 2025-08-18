@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.IntegrationConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,13 +24,13 @@ public class IntegrationConfigController {
     private final IntegrationConfigService service;
 
     @Operation(summary = "", description = "",operationId = "createIntegrationConfig")
-    @PostMapping
-    public ApiResponse<IntegrationConfigDTO> create(@RequestBody IntegrationConfigDTO dto) {
+    @PostMapping("/create")
+    public ApiResponse<IntegrationConfigDTO> create(@RequestBody  @Valid IntegrationConfigDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "getIntegrationConfig")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<IntegrationConfigDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -37,7 +38,7 @@ public class IntegrationConfigController {
     }
 
     @Operation(summary = "", description = "",operationId = "getAllIntegrationConfigs")
-    @GetMapping
+    @GetMapping("/list")
     public ApiResponse<PageResult<IntegrationConfigDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -54,13 +55,13 @@ public class IntegrationConfigController {
     }
 
     @Operation(summary = "", description = "",operationId = "updateIntegrationConfig")
-    @PutMapping
+    @PutMapping("/update")
     public ApiResponse<IntegrationConfigDTO> update(@RequestBody IntegrationConfigDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "deleteIntegrationConfig")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

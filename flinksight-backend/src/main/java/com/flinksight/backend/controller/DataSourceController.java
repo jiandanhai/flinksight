@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.DataSourceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,13 +25,13 @@ public class DataSourceController {
 
     @Operation(summary = "", description = "Get clusters by tenant",operationId = "createDataSource")
     @PostMapping
-    public ApiResponse<DataSourceDTO> create(@RequestBody DataSourceDTO dto) {
+    public ApiResponse<DataSourceDTO> create(@RequestBody  @Valid DataSourceDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "Get clusters by tenant",operationId = "getDataSource")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<DataSourceDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -38,7 +39,7 @@ public class DataSourceController {
     }
 
     @Operation(summary = "", description = "Get clusters by tenant",operationId = "getAllDataSources")
-    @GetMapping
+    @GetMapping("/list")
     public ApiResponse<PageResult<DataSourceDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -56,13 +57,13 @@ public class DataSourceController {
 
     @Operation(summary = "", description = "Get clusters by tenant",operationId = "updateDataSource")
     @PutMapping
-    public ApiResponse<DataSourceDTO> update(@RequestBody DataSourceDTO dto) {
+    public ApiResponse<DataSourceDTO> update(@RequestBody  @Valid DataSourceDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "Get clusters by tenant",operationId = "deleteDataSource")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/id/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

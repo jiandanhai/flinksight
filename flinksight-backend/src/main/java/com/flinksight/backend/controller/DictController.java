@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.DictService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,14 +24,14 @@ public class DictController {
     private final DictService service;
 
     @Operation(summary = "", description = "",operationId = "createDict")
-    @PostMapping
-    public ApiResponse<DictDTO> create(@RequestBody DictDTO dto) {
+    @PostMapping("/create")
+    public ApiResponse<DictDTO> create(@RequestBody  @Valid DictDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "getDict")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<DictDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -47,14 +48,14 @@ public class DictController {
     }
 
     @Operation(summary = "", description = "",operationId = "updateDict")
-    @PutMapping
-    public ApiResponse<DictDTO> update(@RequestBody DictDTO dto) {
+    @PutMapping("/update")
+    public ApiResponse<DictDTO> update(@RequestBody  @Valid DictDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "deleteDict")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

@@ -9,6 +9,7 @@ import com.flinksight.common.service.JobInstanceService;
 import com.flinksight.common.service.JobMetricService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -32,12 +33,12 @@ public class JobMetricController {
 
     @Operation(summary = "新建任务指标", description = "Create job metric",operationId = "createMetric")
     @PostMapping("/create")
-    public ApiResponse<JobMetricDTO> createMetric(@RequestBody JobMetricDTO dto) {
+    public ApiResponse<JobMetricDTO> createMetric(@RequestBody @Valid JobMetricDTO dto) {
         return ApiResponse.ok(jobMetricService.createMetric(dto));
     }
 
     @Operation(summary = "根据ID查询指标", description = "Get metric by ID",operationId = "getMetric")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<JobMetricDTO> getById(@PathVariable Long id) {
         return jobMetricService.getMetricById(id)
                 .map(ApiResponse::ok)
@@ -68,7 +69,7 @@ public class JobMetricController {
     }
 
     @Operation(summary = "", description = "",operationId = "deleteMetric")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ApiResponse<Void> deleteMetric(@PathVariable Long id) {
         jobMetricService.softDelete(id);
         return ApiResponse.ok(null);

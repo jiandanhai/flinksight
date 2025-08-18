@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ResourceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,13 +25,13 @@ public class ResourceController {
 
     @Operation(summary = "", description = "",operationId = "createResource")
     @PostMapping
-    public ApiResponse<ResourceDTO> create(@RequestBody ResourceDTO dto) {
+    public ApiResponse<ResourceDTO> create(@RequestBody @Valid ResourceDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "getResource")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<ResourceDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -38,7 +39,7 @@ public class ResourceController {
     }
 
     @Operation(summary = "", description = "",operationId = "getAllResources")
-    @GetMapping
+    @GetMapping("/list")
     public ApiResponse<PageResult<ResourceDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -55,14 +56,14 @@ public class ResourceController {
     }
 
     @Operation(summary = "", description = "",operationId = "updateResource")
-    @PutMapping
-    public ApiResponse<ResourceDTO> update(@RequestBody ResourceDTO dto) {
+    @PutMapping("/update")
+    public ApiResponse<ResourceDTO> update(@RequestBody  @Valid  ResourceDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "deleteResource")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

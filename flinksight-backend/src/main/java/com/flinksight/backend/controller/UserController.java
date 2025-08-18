@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -58,14 +59,14 @@ public class UserController {
 
     @Operation(summary = "",operationId = "ssoUserRegister")
     @PostMapping("/register")
-    public UserDTO register(@RequestBody UserDTO dto) {
+    public UserDTO register(@RequestBody  @Valid UserDTO dto) {
         return userService.register(dto);
     }
 
 
     @Operation(summary = "创建用户", description = "Create new user",operationId = "createUser")
     @PostMapping("/create")
-    public ApiResponse<UserDTO> createUser(@RequestBody UserDTO dto) {
+    public ApiResponse<UserDTO> createUser(@RequestBody  @Valid UserDTO dto) {
         return ApiResponse.ok(userService.createUser(dto));
     }
 
@@ -98,7 +99,7 @@ public class UserController {
     @Operation(summary = "软删除用户", description = "Soft delete user",operationId = "deleteUser")
     @OpPermission("user:delete")
     @OpAudit(action = "DELETE_USER", targetType = "User", targetIdSpEL = "#id", contentSpEL = "'删除用户-' + #id")
-    @DeleteMapping("/id/{id}")
+    @DeleteMapping("/delete/{id}")
     public ApiResponse<Void> softDeleteUser(
             @Parameter(description = "用户ID") @PathVariable Long id) {
         if (userService.softDelete(id)) {

@@ -52,7 +52,7 @@ public class RolePermissionController {
     }
 
     @Operation(summary = "", description = "",operationId = "getRolePermission")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<RolePermissionDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -60,7 +60,7 @@ public class RolePermissionController {
     }
 
     @Operation(summary = "", description = "",operationId = "deleteRolePermission")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

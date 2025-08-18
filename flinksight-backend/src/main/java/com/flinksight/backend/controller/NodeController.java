@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NodeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,13 +25,13 @@ public class NodeController {
 
     @Operation(summary = "", description = "",operationId = "createNode")
     @PostMapping
-    public ApiResponse<NodeDTO> create(@RequestBody NodeDTO dto) {
+    public ApiResponse<NodeDTO> create(@RequestBody @Valid NodeDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "getNode")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<NodeDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -38,7 +39,7 @@ public class NodeController {
     }
 
     @Operation(summary = "", description = "",operationId = "getAllNodes")
-    @GetMapping
+    @GetMapping("/list")
     public ApiResponse<PageResult<NodeDTO>> getAll(
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "20") int size) {
@@ -55,13 +56,13 @@ public class NodeController {
     }
 
     @Operation(summary = "", description = "",operationId = "updateNode")
-    @PutMapping
-    public ApiResponse<NodeDTO> update(@RequestBody NodeDTO dto) {
+    @PutMapping("/update")
+    public ApiResponse<NodeDTO> update(@RequestBody @Valid NodeDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "deleteNode")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

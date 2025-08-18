@@ -7,6 +7,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.OauthAccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,7 @@ public class OauthAccountController {
 
     @Operation(summary = "绑定第三方账号",operationId = "bindSsoOauthAccount")
     @PostMapping("/bind")
-    public ApiResponse<OauthAccountDTO> bind(@RequestBody OauthAccountDTO dto) {
+    public ApiResponse<OauthAccountDTO> bind(@RequestBody @Valid OauthAccountDTO dto) {
         return ApiResponse.ok(oauthAccountService.bindAccount(dto));
     }
 

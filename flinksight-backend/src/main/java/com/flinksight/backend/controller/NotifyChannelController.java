@@ -30,7 +30,7 @@ public class NotifyChannelController {
     }
 
     @Operation(summary = "", description = "", operationId = "updateNotifyChannel")
-    @PostMapping("/update")
+    @PutMapping("/update")
     public ApiResponse<NotifyChannelDTO> update(@Valid @RequestBody NotifyChannelDTO dto) {
         return ApiResponse.ok(notifyChannelService.update(dto));
     }

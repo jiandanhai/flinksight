@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.MetricDashboardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -26,12 +27,12 @@ public class MetricDashboardController {
 
     @Operation(summary = "", description = "",operationId = "createMetricDashboard")
     @PostMapping
-    public MetricDashboardDTO create(@RequestBody MetricDashboardDTO dto) {
+    public MetricDashboardDTO create(@RequestBody @Valid MetricDashboardDTO dto) {
         return service.createOrUpdate(dto);
     }
 
     @Operation(summary = "", description = "",operationId = "getMetricDashboard")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public Optional<MetricDashboardDTO> getById(@PathVariable Long id) {
         return service.getById(id);
     }
@@ -54,13 +55,13 @@ public class MetricDashboardController {
     }
 
     @Operation(summary = "", description = "",operationId = "updateMetricDashboard")
-    @PutMapping
-    public ApiResponse<MetricDashboardDTO> update(@RequestBody MetricDashboardDTO dto) {
+    @PutMapping("/update")
+    public ApiResponse<MetricDashboardDTO> update(@RequestBody @Valid MetricDashboardDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "deleteMetricDashboard")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

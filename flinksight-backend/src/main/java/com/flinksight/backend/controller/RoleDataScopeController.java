@@ -52,7 +52,7 @@ public class RoleDataScopeController {
     }
 
     @Operation(summary = "删除角色", description = "Delete role by ID",operationId = "getRoleDataScope")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<RoleDataScopeDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -60,7 +60,7 @@ public class RoleDataScopeController {
     }
 
     @Operation(summary = "删除角色", description = "Delete role by ID",operationId = "deleteRoleDataScope")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

@@ -28,7 +28,7 @@ public class OrgNodeController {
     }
 
     @Operation(summary = "", description = "", operationId = "updateOrgNode")
-    @PostMapping("/update")
+    @PutMapping("/update")
     public ApiResponse<OrgNodeDTO> update(@Valid @RequestBody OrgNodeDTO dto) {
         return ApiResponse.ok(orgNodeService.update(dto));
     }

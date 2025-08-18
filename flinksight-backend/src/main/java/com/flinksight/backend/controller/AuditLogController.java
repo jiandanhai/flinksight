@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.AuditLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,8 +24,8 @@ public class AuditLogController {
     private final AuditLogService service;
 
     @Operation(summary = "分页获取所有报警历史记录", operationId = "createAuditLog")
-    @PostMapping
-    public ApiResponse<AuditLogDTO> create(@RequestBody AuditLogDTO dto) {
+    @PostMapping("/create")
+    public ApiResponse<AuditLogDTO> create(@RequestBody  @Valid AuditLogDTO dto) {
 
         return ApiResponse.ok(service.createAuditLog(dto));
     }
@@ -48,8 +49,8 @@ public class AuditLogController {
     }
 
     @Operation(summary = "", operationId = "updateAuditLog")
-    @PutMapping
-    public ApiResponse<AuditLogDTO> update(@RequestBody AuditLogDTO dto) {
+    @PutMapping("/update")
+    public ApiResponse<AuditLogDTO> update(@RequestBody  @Valid AuditLogDTO dto) {
 
         return ApiResponse.ok(service.createAuditLog(dto));
     }

@@ -6,6 +6,7 @@ import com.flinksight.common.dto.JobRegisterRequestDTO;
 import com.flinksight.common.service.JobRegisterService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,7 +32,7 @@ public class JobRegisterController {
      */
     @Operation(summary = "", description = "",operationId = "registerJob")
     @PostMapping("/register")
-    public ApiResponse<JobInfoDTO> registerJob(@RequestBody JobRegisterRequestDTO req) {
+    public ApiResponse<JobInfoDTO> registerJob(@RequestBody @Valid JobRegisterRequestDTO req) {
         // （建议接口层可加租户/平台黑白名单防刷）
         JobInfoDTO job = jobRegisterService.register(req);
         return ApiResponse.ok(job);

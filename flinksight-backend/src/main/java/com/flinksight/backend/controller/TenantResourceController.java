@@ -53,7 +53,7 @@ public class TenantResourceController {
     }
 
     @Operation(summary = "删除租户", description = "Delete tenant",operationId = "getTenantResource")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<TenantResourceDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -61,7 +61,7 @@ public class TenantResourceController {
     }
 
     @Operation(summary = "删除租户", description = "Delete tenant",operationId = "deleteTenantResource")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

@@ -68,7 +68,7 @@ public class JobPermissionController {
      * 查询某用户对某作业的权限（Owner/Admin/Viewer等）
      */
     @Operation(summary = "", description = "",operationId = "getJobPermissionsByJobAndUser")
-    @GetMapping("/user")
+    @GetMapping("/user-permission")
     public ApiResponse<PageResult<JobPermissionDTO>> getUserPermissions(
             @RequestParam Long jobId,
             @RequestParam String userId,

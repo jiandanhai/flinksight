@@ -23,7 +23,7 @@ public class NodeHealthController {
     private final NodeHealthService service;
 
     @Operation(summary = "", description = "",operationId = "getNodeHealth")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<NodeHealthDTO> getById(@PathVariable Long id) {
         return service.getLatestByNodeId(id)
                 .map(ApiResponse::ok)
@@ -40,7 +40,7 @@ public class NodeHealthController {
     }
 
     @Operation(summary = "", description = "",operationId = "deleteNodeHealth")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

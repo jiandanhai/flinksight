@@ -51,7 +51,7 @@ public class UserGroupController {
     }
 
     @Operation(summary = "", description = "",operationId = "getUserGroup")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<UserGroupDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -59,7 +59,7 @@ public class UserGroupController {
     }
 
     @Operation(summary = "", description = "",operationId = "deleteUserGroup")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

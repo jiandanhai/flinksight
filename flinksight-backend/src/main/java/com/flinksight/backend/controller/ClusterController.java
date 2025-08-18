@@ -7,6 +7,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ClusterService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,7 @@ public class ClusterController {
 
     @Operation(summary = "新建集群", description = "Create new cluster",operationId = "createCluster")
     @PostMapping("/create")
-    public ApiResponse<ClusterDTO> createCluster(@RequestBody ClusterDTO dto) {
+    public ApiResponse<ClusterDTO> createCluster(@RequestBody  @Valid ClusterDTO dto) {
         return ApiResponse.ok(clusterService.createOrUpdate(dto));
     }
 
@@ -57,7 +58,7 @@ public class ClusterController {
 
     @Operation(summary = "更新集群信息", description = "Update cluster info",operationId = "updateCluster")
     @PutMapping("/update")
-    public ApiResponse<ClusterDTO> updateCluster(@RequestBody ClusterDTO dto) {
+    public ApiResponse<ClusterDTO> updateCluster(@RequestBody  @Valid ClusterDTO dto) {
         return ApiResponse.ok(clusterService.createOrUpdate(dto));
     }
 

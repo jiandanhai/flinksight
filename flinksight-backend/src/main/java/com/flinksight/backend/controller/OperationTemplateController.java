@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.OperationTemplateService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +25,12 @@ public class OperationTemplateController {
 
     @Operation(summary = "", description = "",operationId = "createOperationTemplate")
     @PostMapping
-    public ApiResponse<OperationTemplateDTO> create(@RequestBody OperationTemplateDTO dto) {
+    public ApiResponse<OperationTemplateDTO> create(@RequestBody @Valid OperationTemplateDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "getOperationTemplate")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<OperationTemplateDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -37,7 +38,7 @@ public class OperationTemplateController {
     }
 
     @Operation(summary = "", description = "",operationId = "getAllOperationTemplates")
-    @GetMapping
+    @GetMapping("/list")
     public ApiResponse<PageResult<OperationTemplateDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -54,13 +55,13 @@ public class OperationTemplateController {
     }
 
     @Operation(summary = "", description = "",operationId = "updateOperationTemplate")
-    @PutMapping
-    public ApiResponse<OperationTemplateDTO> update(@RequestBody OperationTemplateDTO dto) {
+    @PutMapping("/update")
+    public ApiResponse<OperationTemplateDTO> update(@RequestBody @Valid OperationTemplateDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "deleteOperationTemplate")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

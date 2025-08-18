@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.SysParamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,13 +25,13 @@ public class SysParamController {
 
     @Operation(summary = "", description = "",operationId = "createSysParam")
     @PostMapping
-    public ApiResponse<SysParamDTO> create(@RequestBody SysParamDTO dto) {
+    public ApiResponse<SysParamDTO> create(@RequestBody @Valid SysParamDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "getSysParam")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<SysParamDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -38,7 +39,7 @@ public class SysParamController {
     }
 
     @Operation(summary = "", description = "",operationId = "getAllSysParams")
-    @GetMapping
+    @GetMapping("/list")
     public ApiResponse<PageResult<SysParamDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -46,13 +47,13 @@ public class SysParamController {
     }
 
     @Operation(summary = "", description = "",operationId = "updateSysParam")
-    @PutMapping
+    @PutMapping("/update")
     public ApiResponse<SysParamDTO> update(@RequestBody SysParamDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "deleteSysParam")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

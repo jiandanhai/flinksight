@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.JobInstanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,7 @@ public class JobInstanceController {
 
     @Operation(summary = "", description = "",operationId = "createJobInstance")
     @PostMapping("/create")
-    public ApiResponse<JobInstanceDTO> create(@RequestBody JobInstanceDTO dto) {
+    public ApiResponse<JobInstanceDTO> create(@RequestBody @Valid JobInstanceDTO dto) {
 
         return ApiResponse.ok(service.createJob(dto));
     }
@@ -54,7 +55,7 @@ public class JobInstanceController {
     }
 
     @Operation(summary = "", description = "",operationId = "getJobInstance")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<JobInstanceDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -62,7 +63,7 @@ public class JobInstanceController {
     }
 
     @Operation(summary = "", description = "",operationId = "deleteJobInstance")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ApiAccessLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,13 +24,13 @@ public class ApiAccessLogController {
     private final ApiAccessLogService service;
 
     @Operation(summary = "", operationId = "createApiAccessLog")
-    @PostMapping
-    public ApiResponse<ApiAccessLogDTO> create(@RequestBody ApiAccessLogDTO apiAccessLogDTO) {
+    @PostMapping("/create")
+    public ApiResponse<ApiAccessLogDTO> create(@RequestBody  @Valid ApiAccessLogDTO apiAccessLogDTO) {
         return ApiResponse.ok(service.createOrUpdate(apiAccessLogDTO));
     }
 
     @Operation(summary = "", operationId = "getApiAccessLog")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<ApiAccessLogDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -37,7 +38,7 @@ public class ApiAccessLogController {
     }
 
     @Operation(summary = "", operationId = "getAllApiAccessLogs")
-    @GetMapping
+    @GetMapping("/list")
     public ApiResponse<PageResult<ApiAccessLogDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -54,13 +55,13 @@ public class ApiAccessLogController {
     }
 
     @Operation(summary = "", operationId = "updateApiAccessLog")
-    @PutMapping
-    public ApiResponse<ApiAccessLogDTO> update(@RequestBody ApiAccessLogDTO dto) {
+    @PutMapping("/update")
+    public ApiResponse<ApiAccessLogDTO> update(@RequestBody  @Valid ApiAccessLogDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", operationId = "deleteApiAccessLog")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

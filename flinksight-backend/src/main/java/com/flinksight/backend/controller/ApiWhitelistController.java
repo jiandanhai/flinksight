@@ -5,6 +5,7 @@ import com.flinksight.common.dto.ApiWhitelistDTO;
 import com.flinksight.common.service.ApiWhitelistService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -22,14 +23,14 @@ public class ApiWhitelistController {
     private final ApiWhitelistService service;
 
     @Operation(summary = "分页获取所有报警历史记录", operationId = "createApiWhitelist")
-    @PostMapping
-    public ApiResponse<ApiWhitelistDTO> create(@RequestBody ApiWhitelistDTO dto) {
+    @PostMapping("/create")
+    public ApiResponse<ApiWhitelistDTO> create(@RequestBody  @Valid ApiWhitelistDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "分页获取所有报警历史记录", operationId = "getApiWhitelist")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<ApiWhitelistDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -37,13 +38,13 @@ public class ApiWhitelistController {
     }
 
     @Operation(summary = "分页获取所有报警历史记录", operationId = "updateApiWhitelist")
-    @PutMapping
-    public ApiResponse<ApiWhitelistDTO> update(@RequestBody ApiWhitelistDTO dto) {
+    @PutMapping("/update")
+    public ApiResponse<ApiWhitelistDTO> update(@RequestBody  @Valid ApiWhitelistDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "分页获取所有报警历史记录", operationId = "deleteApiWhitelist")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

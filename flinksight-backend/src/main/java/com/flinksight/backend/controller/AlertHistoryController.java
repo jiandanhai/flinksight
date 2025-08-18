@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.AlertHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,14 +24,14 @@ public class AlertHistoryController {
     private final AlertHistoryService service;
 
     @Operation(summary = "创建报警历史事件", description = "Update alert info",operationId = "createAlertHistory")
-    @PostMapping
-    public ApiResponse<AlertHistoryDTO> create(@RequestBody AlertHistoryDTO dto) {
+    @PostMapping("/create")
+    public ApiResponse<AlertHistoryDTO> create(@RequestBody  @Valid AlertHistoryDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "获取报警历史事件", description = "Update alert info",operationId = "getAlertHistory")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<AlertHistoryDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -38,7 +39,7 @@ public class AlertHistoryController {
     }
 
     @Operation(summary = "分页获取所有报警历史记录", operationId = "getAllAlertHistorys")
-    @GetMapping
+    @GetMapping("/list")
     public ApiResponse<PageResult<AlertHistoryDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -55,14 +56,14 @@ public class AlertHistoryController {
     }
 
     @Operation(summary = "更新报警历史记录", operationId = "updateAlertHistory")
-    @PutMapping
-    public ApiResponse<AlertHistoryDTO> update(@RequestBody AlertHistoryDTO dto) {
+    @PutMapping("/update")
+    public ApiResponse<AlertHistoryDTO> update(@RequestBody  @Valid AlertHistoryDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "更新报警历史记录", operationId = "deleteAlertHistory")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

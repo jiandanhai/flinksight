@@ -53,7 +53,7 @@ public class DeptRoleController {
     }
 
     @Operation(summary = "", description = "",operationId = "getDeptRole")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<DeptRoleDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -61,7 +61,7 @@ public class DeptRoleController {
     }
 
     @Operation(summary = "", description = "",operationId = "deleteDeptRole")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

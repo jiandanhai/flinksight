@@ -52,7 +52,7 @@ public class UserApiController {
     }
 
     @Operation(summary = "", description = "",operationId = "getUserApi")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<UserApiDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -60,7 +60,7 @@ public class UserApiController {
     }
 
     @Operation(summary = "", description = "",operationId = "deleteUserApi")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

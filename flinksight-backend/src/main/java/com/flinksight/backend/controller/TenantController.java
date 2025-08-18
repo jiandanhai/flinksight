@@ -7,6 +7,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.TenantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -26,12 +27,12 @@ public class TenantController {
 
     @Operation(summary = "新建租户", description = "Create new tenant",operationId = "createTenant")
     @PostMapping("/create")
-    public ApiResponse<TenantDTO> createTenant(@RequestBody TenantDTO dto) {
+    public ApiResponse<TenantDTO> createTenant(@RequestBody  @Valid TenantDTO dto) {
         return ApiResponse.ok(tenantService.createTenant(dto));
     }
 
     @Operation(summary = "根据ID查询租户", description = "Get tenant by ID",operationId = "getTenant")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<TenantDTO> getById(@PathVariable Long id) {
         return tenantService.getTenantById(id)
                 .map(ApiResponse::ok)
@@ -48,12 +49,12 @@ public class TenantController {
 
     @Operation(summary = "更新租户信息", description = "Update tenant info",operationId = "updateTenant")
     @PutMapping("/update")
-    public ApiResponse<TenantDTO> updateTenant(@RequestBody TenantDTO dto) {
+    public ApiResponse<TenantDTO> updateTenant(@RequestBody  @Valid TenantDTO dto) {
         return ApiResponse.ok(tenantService.updateTenant(dto));
     }
 
     @Operation(summary = "删除租户", description = "Delete tenant",operationId = "deleteTenant")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ApiResponse<Void> deleteTenant(@PathVariable Long id) {
         tenantService.softDelete(id);
         return ApiResponse.ok(null);

@@ -7,6 +7,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -38,7 +39,7 @@ public class    JobController {
                 .orElse(ApiResponse.ok(null));
     }
     @Operation(summary = "", operationId = "getAllJobs")
-    @GetMapping
+    @GetMapping("/list")
     public ApiResponse<PageResult<JobDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -47,7 +48,7 @@ public class    JobController {
 
 
     @Operation(summary = "查询租户下所有任务", description = "Get jobs by tenant",operationId = "getJobsByTenant")
-    @GetMapping("/list")
+    @GetMapping("/tenant/list")
     public ApiResponse<PageResult<JobDTO>> getJobsByTenant(
             @RequestParam Long tenantId,
             @RequestParam(defaultValue = "0") int page,
@@ -67,12 +68,12 @@ public class    JobController {
 
     @Operation(summary = "更新任务信息", description = "Update job info",operationId = "updateJob")
     @PutMapping("/update")
-    public ApiResponse<JobDTO> updateJob(@RequestBody JobDTO dto) {
+    public ApiResponse<JobDTO> updateJob(@RequestBody @Valid JobDTO dto) {
         return ApiResponse.ok(jobService.updateJob(dto));
     }
 
     @Operation(summary = "删除任务（软删）", description = "Soft delete job",operationId = "deleteJob")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ApiResponse<Void> deleteJob(@PathVariable Long id) {
         jobService.softDelete(id);
         return ApiResponse.ok(null);

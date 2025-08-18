@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ResourceGroupService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +25,12 @@ public class ResourceGroupController {
 
     @Operation(summary = "", description = "",operationId = "createResourceGroup")
     @PostMapping
-    public ApiResponse<ResourceGroupDTO> create(@RequestBody ResourceGroupDTO dto) {
+    public ApiResponse<ResourceGroupDTO> create(@RequestBody @Valid ResourceGroupDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "getResourceGroup")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<ResourceGroupDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -37,7 +38,7 @@ public class ResourceGroupController {
     }
 
     @Operation(summary = "", description = "",operationId = "getAllResourceGroups")
-    @GetMapping
+    @GetMapping("/list")
     public ApiResponse<PageResult<ResourceGroupDTO>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -54,13 +55,13 @@ public class ResourceGroupController {
     }
 
     @Operation(summary = "", description = "",operationId = "updateResourceGroup")
-    @PutMapping
+    @PutMapping("/update")
     public ApiResponse<ResourceGroupDTO> update(@RequestBody ResourceGroupDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "deleteResourceGroup")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

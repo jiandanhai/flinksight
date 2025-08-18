@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.LoginHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,13 +25,13 @@ public class LoginHistoryController {
 
     @Operation(summary = "", description = "",operationId = "createLoginHistory")
     @PostMapping
-    public ApiResponse<LoginHistoryDTO> create(@RequestBody LoginHistoryDTO dto) {
+    public ApiResponse<LoginHistoryDTO> create(@RequestBody @Valid LoginHistoryDTO dto) {
 
         return ApiResponse.ok(service.create(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "getLoginHistory")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<LoginHistoryDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -55,7 +56,7 @@ public class LoginHistoryController {
     }
 
     @Operation(summary = "", description = "",operationId = "deleteLoginHistory")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

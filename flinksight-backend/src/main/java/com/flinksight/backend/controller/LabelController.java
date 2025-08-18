@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.LabelService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +25,12 @@ public class LabelController {
 
     @Operation(summary = "", description = "",operationId = "createLabel")
     @PostMapping
-    public ApiResponse<LabelDTO> create(@RequestBody LabelDTO dto) {
+    public ApiResponse<LabelDTO> create(@RequestBody @Valid LabelDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "getLabel")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<LabelDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -46,13 +47,13 @@ public class LabelController {
     }
 
     @Operation(summary = "", description = "",operationId = "updateLabel")
-    @PutMapping
-    public ApiResponse<LabelDTO> update(@RequestBody LabelDTO dto) {
+    @PutMapping("/update")
+    public ApiResponse<LabelDTO> update(@RequestBody @Valid LabelDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "deleteLabel")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

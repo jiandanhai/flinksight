@@ -5,6 +5,7 @@ import com.flinksight.common.dto.ProfileDTO;
 import com.flinksight.common.service.ProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -23,13 +24,13 @@ public class ProfileController {
 
     @Operation(summary = "创建用户档案", operationId = "createProfile")
     @PostMapping
-    public ApiResponse<ProfileDTO> create(@RequestBody ProfileDTO dto) {
+    public ApiResponse<ProfileDTO> create(@RequestBody @Valid ProfileDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "根据档案ID获取", operationId = "getProfile")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<ProfileDTO> getById(@PathVariable Long id) {
         return service.getById(id)
                 .map(ApiResponse::ok)
@@ -44,13 +45,13 @@ public class ProfileController {
     }
 
     @Operation(summary = "更新用户档案", operationId = "updateProfile")
-    @PutMapping
-    public ApiResponse<ProfileDTO> update(@RequestBody ProfileDTO dto) {
+    @PutMapping("/update")
+    public ApiResponse<ProfileDTO> update(@RequestBody @Valid ProfileDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "删除用户档案", operationId = "deleteProfile")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

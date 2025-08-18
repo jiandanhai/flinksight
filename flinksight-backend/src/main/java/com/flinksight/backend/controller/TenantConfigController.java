@@ -6,6 +6,7 @@ import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.TenantConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -26,13 +27,13 @@ public class TenantConfigController {
 
     @Operation(summary = "", description = "",operationId = "createTenantConfig")
     @PostMapping
-    public ApiResponse<TenantConfigDTO> create(@RequestBody TenantConfigDTO dto) {
+    public ApiResponse<TenantConfigDTO> create(@RequestBody  @Valid TenantConfigDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "getTenantConfig")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public Optional<TenantConfigDTO> getById(@PathVariable Long id) {
         return service.getById(id);
     }
@@ -46,14 +47,14 @@ public class TenantConfigController {
     }
 
     @Operation(summary = "", description = "",operationId = "updateTenantConfig")
-    @PutMapping
+    @PutMapping("/update")
     public ApiResponse<TenantConfigDTO> update(@RequestBody TenantConfigDTO dto) {
 
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "deleteTenantConfig")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }
