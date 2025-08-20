@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Tag(name = "api", description = "用户-部门分配管理API")
 @RestController
-@RequestMapping("/api/user-department")
+@RequestMapping("/api/user/department")
 @RequiredArgsConstructor
 @Validated
 public class UserDepartmentController {

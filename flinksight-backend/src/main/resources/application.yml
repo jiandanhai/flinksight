@@ -73,5 +73,28 @@ security:
     issuer: "flinksight"
     audience: "api"
 
+  permission-filter:
+    enabled: true
+    # 你的业务接口统一前缀
+    api-prefix: "/api"
+    # 是否把 menu-map.yaml 里的一级/二级菜单 path 也加入白名单
+    include-menu-map: true
+    # 这里只放“固定公共资源/SSO/两个人员接口”，菜单会自动合并，不需要手填
+    skip:
+      - "/v3/api-docs/**"
+      - "/swagger-ui/**"
+      - "/swagger-resources/**"
+      - "/webjars/**"
+      - "/doc.html"
+      - "/static/**"
+      - "/favicon.ico"
+      - "/assets/**"
+      - "/actuator/**"
+      - "/health"
+      - "/public/**"
+      - "/sso/**"
+      - "GET /api/user/me"
+      - "GET /api/user/menus"
+
 
 # 多租户/审计可加自定义配置

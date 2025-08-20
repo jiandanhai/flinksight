@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @Tag(name = "api", description = "访问日志管理")
-@RequestMapping("/api/api-access-log")
+@RequestMapping("/api/api/access-log")
 @RequiredArgsConstructor
 @Validated
 public class ApiAccessLogController {

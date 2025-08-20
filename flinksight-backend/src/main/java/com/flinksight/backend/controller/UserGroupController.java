@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Tag(name = "api", description = "用户分组分配管理API")
 @RestController
-@RequestMapping("/api/user-group")
+@RequestMapping("/api/user/group")
 @RequiredArgsConstructor
 @Validated
 public class UserGroupController {

@@ -138,6 +138,12 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             log.info("##[USER SERVICE GET USER_ROLE ->ROLE ID] roleId :{}",roleId);
             authorities.addAll(rolePermissionRepository.findPermissionCodesByRoleIdAndIsDeleted(roleId,0));
         }
+        // 也可以在这里顺便 union 用户直赋的 permission（如果有 user_permission 表）
+        //authorities.addAll(userPermissionRepository.findCodesByUserIdAndTenantId(userId, tenantId));
+
+        // 过滤启用状态（如果你的 repo 没过滤 enabled，可在这里再保险过滤一次）
+        //authorities = authorities.stream().filter(code -> permRepository.isEnabled(code, tenantId)).collect(Collectors.toSet());
+
         return new ArrayList<>(authorities);
     }
 

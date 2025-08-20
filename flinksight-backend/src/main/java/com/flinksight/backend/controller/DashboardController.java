@@ -10,15 +10,16 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Map;
 
 /**
@@ -74,12 +75,20 @@ public class DashboardController {
     public ApiResponse<AlertTrendDTO> getAlertTrend(
             @RequestParam(required = false) Long tenantId,
             @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
             @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant  to
     ) {
-        LocalDate end = (to == null) ? LocalDate.now() : to;
-        LocalDate start = (from == null) ? end.minusDays(6) : from; // 默认近 7 天
+
+        ZoneId zone = ZoneId.systemDefault(); // 或固定 ZoneId.of("Asia/Shanghai") / "UTC"
+        LocalDate end = (to == null)
+                ? LocalDate.now(zone)
+                : LocalDateTime.ofInstant(to, zone).toLocalDate();
+
+        LocalDate start = (from == null)
+                ? end.minusDays(6)
+                : LocalDateTime.ofInstant(from, zone).toLocalDate();
+
         log.info("#[dashboard alert-trend] tenantId => {}", tenantId);
         return ApiResponse.ok(dashboardService.getAlertTrend(resolveTenantId(tenantId), start, end));
     }
@@ -99,35 +108,41 @@ public class DashboardController {
 
     @Operation(summary = "大屏监控指标卡", operationId = "dashboardStatisticsAlertCountByLevel")
     @GetMapping("/severity")
-    public ResponseEntity<?> getAlertLevelStats(
+    public ApiResponse<?> getAlertLevelStats(
             @RequestParam Long tenantId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end
-    ) {
-        return ResponseEntity.ok(dashboardService.getAlertCountBySeverity(tenantId, start, end));
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss[.SSS]X")
+            LocalDateTime from,
+            @RequestParam(required = false)
+            @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss[.SSS]X")
+            LocalDateTime to)
+     {
+         LocalDateTime end = (to == null) ? LocalDateTime.now() : to;
+         LocalDateTime start = (from == null) ? end.minusDays(6) : from;
+        return ApiResponse.ok(dashboardService.getAlertCountBySeverity(tenantId, start, end));
     }
 
 
     @Operation(summary = "", operationId = "dashboardStatisticsAlertCountByStatus")
     @GetMapping("/status")
-    public ResponseEntity<?> getStatusStats(@RequestParam Long tenantId,
+    public ApiResponse<?> getStatusStats(@RequestParam Long tenantId,
                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
                                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
-        return ResponseEntity.ok(dashboardService.getAlertCountByStatus(tenantId, start, end));
+        return ApiResponse.ok(dashboardService.getAlertCountByStatus(tenantId, start, end));
     }
 
     @Operation(summary = "", operationId = "dashboardStatisticsResponseSeconds")
     @GetMapping("/response-time")
-    public ResponseEntity<?> getResponseTime(@RequestParam Long tenantId) {
-        return ResponseEntity.ok(Map.of("averageResponseSeconds", dashboardService.getAverageResponseSeconds(tenantId)));
+    public ApiResponse<?> getResponseTime(@RequestParam Long tenantId) {
+        return ApiResponse.ok(Map.of("averageResponseSeconds", dashboardService.getAverageResponseSeconds(tenantId)));
     }
 
     @Operation(summary = "", operationId = "dashboardStatisticsFailedJobAlertTrend")
     @GetMapping("/job-fail-trend")
-    public ResponseEntity<?> getFailedJobAlertTrend(@RequestParam Long tenantId,
+    public ApiResponse<?> getFailedJobAlertTrend(@RequestParam Long tenantId,
                                                     @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
                                                     @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
-        return ResponseEntity.ok(dashboardService.getFailedJobAlertTrend(tenantId, start, end));
+        return ApiResponse.ok(dashboardService.getFailedJobAlertTrend(tenantId, start, end));
     }
 
     @Operation(summary = "获取集群健康统计指标", operationId = "dashboardStatisticsClusterHealthMetrics")

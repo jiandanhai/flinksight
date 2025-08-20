@@ -18,7 +18,7 @@ import java.util.Optional;
  */
 @Tag(name = "api", description = "指标看板管理API")
 @RestController
-@RequestMapping("/api/metric-dashboard")
+@RequestMapping("/api/metric/dashboard")
 @RequiredArgsConstructor
 @Validated
 public class MetricDashboardController {

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Tag(name = "api", description = "角色-数据权限分配管理API")
 @RestController
-@RequestMapping("/api/role-data-scope")
+@RequestMapping("/api/role/data-scope")
 @RequiredArgsConstructor
 @Validated
 public class RoleDataScopeController {

@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
  */
 @Tag(name = "api", description = "Job任务日志API")
 @RestController
-@RequestMapping("/api/joblog")
+@RequestMapping("/api/job/log")
 @RequiredArgsConstructor
 @TenantRequired
 @Validated

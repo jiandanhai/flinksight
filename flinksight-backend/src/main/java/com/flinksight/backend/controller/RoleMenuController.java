@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Tag(name = "api", description = "角色-菜单分配管理API")
 @RestController
-@RequestMapping("/api/role-menu")
+@RequestMapping("/api/role/menu")
 @RequiredArgsConstructor
 @Validated
 public class RoleMenuController {

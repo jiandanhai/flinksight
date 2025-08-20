@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @Tag(name = "api", description = "告警历史事件")
-@RequestMapping("/api/alert-history")
+@RequestMapping("/api/alert/history")
 @RequiredArgsConstructor
 @Validated
 public class AlertHistoryController {

@@ -20,13 +20,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
-
+import org.springframework.beans.factory.annotation.Qualifier;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 @Configuration
@@ -40,6 +42,7 @@ public class SecurityConfig {
     private final UserServiceImpl userServiceImpl;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    private final PermissionCheckFilter permissionCheckFilter;
 
     /**
      * Dao认证Provider，关联自定义UserDetailsService和密码加密
@@ -55,40 +58,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain apiFilterChain(HttpSecurity http,
                                               HandlerMappingIntrospector introspector,
-                                              CorsConfigurationSource corsConfigurationSource) throws Exception {
-
-        // MVC 感知的路径匹配器（对齐 Spring MVC 的 PathPattern/ServletPath 规则）
-        MvcRequestMatcher.Builder mvc = new MvcRequestMatcher.Builder(introspector);
-
-        // 关键：限定自定义过滤器的触发路径（保留原有 JWT/TokenGuard 逻辑）
-        jwtAuthFilter.setRequestMatcher(mvc.pattern("/api/**"));
-
-        http
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                              CorsConfigurationSource corsConfigurationSource,
+                                              @Qualifier("publicMatchers") List<RequestMatcher> publicMatchers) throws Exception {
+        MvcRequestMatcher.Builder mvc = new MvcRequestMatcher.Builder(introspector);// MVC 感知的路径匹配器（对齐 Spring MVC 的 PathPattern/ServletPath 规则）
+        jwtAuthFilter.setRequestMatcher(mvc.pattern("/api/**")); // 关键：限定自定义过滤器的触发路径（保留原有 JWT/TokenGuard 逻辑）
+        http.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
-                .authorizeHttpRequests(auth -> auth
-                        // ====== Swagger/OpenAPI/Knife4j文档全路径放行 ======
-                        .requestMatchers(
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-resources/**",
-                                "/webjars/**",
-                                "/doc.html",
-                                "/static/**", "/favicon.ico", "/assets/**",
-                                "/actuator/**", "/health", "/public/**"
-                        ).permitAll()
-
-                        // SSO 桥接端点保留（不再挂 Keycloak 过滤器）
-                        .requestMatchers("/sso/sso-login", "/sso/callback", "/sso/login", "/sso/register").permitAll()
-                        // 若只做 IdP 退出跳转，可将下一行改为 permitAll()
-                        .requestMatchers("/sso/logout").permitAll()
-
-                        // 业务 API 保护（JWT）
+                .authorizeHttpRequests(auth ->  auth
+                        // ① 这里一次性放行——用我们统一构建的 publicMatchers（不用再手写硬编码）
+                        .requestMatchers(publicMatchers.toArray(new RequestMatcher[0])).permitAll()
+                        // ② /api/** 下其余的都需要认证
                         .requestMatchers("/api/**").authenticated()
-
-                        // 其他拒绝（按需调整）
+                        // 其他全部拒绝（按需调整）
                         .anyRequest().denyAll()
                 )
                 // 在 JwtAuthFilter 前挂 TokenGuardFilter
@@ -108,7 +90,8 @@ public class SecurityConfig {
                 )
                 .httpBasic(Customizer.withDefaults())
                 .authenticationProvider(authenticationProvider());
-
+        // 将权限检查挂在认证之后
+        http.addFilterAfter(permissionCheckFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
@@ -133,4 +116,5 @@ public class SecurityConfig {
         log.info("#[CORS SecurityConfig] config => {}", config);
         return source;
     }
+
 }

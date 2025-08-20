@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  * 报警规则管理接口
  */
 @RestController
-@RequestMapping("/api/alert-rule")
+@RequestMapping("/api/alert/rule")
 @Tag(name = "api", description = "报警规则配置管理")
 @RequiredArgsConstructor
 @Validated

@@ -1,0 +1,185 @@
+# 规则按顺序匹配；命中后基于 {RESOURCE}_{ACTION} 生成权限码
+# RESOURCE 取自 /api/{resource}/... 的 {resource} 段并转大写
+# ACTION 来自 method + 末段词(bySuffix) 或 default
+
+rules:
+  - pattern: /api/dashboard/**
+    methods: [ GET, POST, PUT, PATCH, DELETE ]
+    mapping:
+      GET:
+        bySuffix:
+          - [ list,   VIEW ]
+          - [ page,   VIEW ]
+          - [ detail, VIEW ]
+          - [ get,    VIEW ]
+        default: VIEW
+      POST:
+        bySuffix:
+          - [ create, CREATE ]
+          - [ add,    CREATE ]
+          - [ new,    CREATE ]
+        default: CREATE
+      PUT:    { default: UPDATE }
+      PATCH:  { default: UPDATE }
+      DELETE: { default: DELETE }
+
+  - pattern: /api/cluster/**
+    methods: [ GET, POST, PUT, PATCH, DELETE ]
+    mapping:
+      GET:    { default: VIEW }
+      POST:   { default: CREATE }
+      PUT:    { default: UPDATE }
+      PATCH:  { default: UPDATE }
+      DELETE: { default: DELETE }
+
+  - pattern: /api/job/**
+    methods: [ GET, POST, PUT, PATCH, DELETE ]
+    mapping:
+      GET: { default: VIEW }
+      POST:
+        bySuffix:
+          - [ stop,  STOP ]
+          - [ start, START ]
+        default: CREATE
+      PUT:    { default: UPDATE }
+      PATCH:  { default: UPDATE }
+      DELETE: { default: DELETE }
+
+  - pattern: /api/metric/dashboard/**
+    methods: [ GET, POST, PUT, PATCH, DELETE ]
+    mapping:
+      GET: { default: VIEW }
+      POST:
+        bySuffix:
+          - [ stop,  STOP ]
+          - [ start, START ]
+        default: CREATE
+      PUT:    { default: UPDATE }
+      PATCH:  { default: UPDATE }
+      DELETE: { default: DELETE }
+
+  - pattern: /api/alert/**
+    methods: [ GET, POST, PUT, PATCH, DELETE ]
+    mapping:
+      GET:    { default: VIEW }
+      POST:   { default: CREATE }
+      PUT:    { default: UPDATE }
+      PATCH:  { default: UPDATE }
+      DELETE: { default: DELETE }
+
+  - pattern: /api/notify/**
+    methods: [ GET, POST, PUT, PATCH, DELETE ]
+    mapping:
+      GET:    { default: VIEW }
+      POST:   { default: CREATE }
+      PUT:    { default: UPDATE }
+      PATCH:  { default: UPDATE }
+      DELETE: { default: DELETE }
+
+  - pattern: /api/user/**
+    methods: [ GET, POST, PUT, PATCH, DELETE ]
+    mapping:
+      GET:
+        bySuffix:
+          - [ list,   VIEW ]
+          - [ page,   VIEW ]
+          - [ detail, VIEW ]
+          - [ get,    VIEW ]
+        default: VIEW
+      POST:
+        bySuffix:
+          - [ create, CREATE ]
+          - [ add,    CREATE ]
+          - [ new,    CREATE ]
+        default: CREATE
+      PUT:    { default: UPDATE }
+      PATCH:  { default: UPDATE }
+      DELETE: { default: DELETE }
+
+  - pattern: /api/role/**
+    methods: [ GET, POST, PUT, PATCH, DELETE ]
+    mapping:
+      GET:
+        bySuffix:
+          - [ list,   VIEW ]
+          - [ page,   VIEW ]
+          - [ detail, VIEW ]
+          - [ get,    VIEW ]
+        default: VIEW
+      POST:
+        bySuffix:
+          - [ create, CREATE ]
+          - [ add,    CREATE ]
+          - [ new,    CREATE ]
+        default: CREATE
+      PUT:    { default: UPDATE }
+      PATCH:  { default: UPDATE }
+      DELETE: { default: DELETE }
+
+  - pattern: /api/tenant/**
+    methods: [ GET, POST, PUT, PATCH, DELETE ]
+    mapping:
+      GET:
+        bySuffix:
+          - [ list,   VIEW ]
+          - [ page,   VIEW ]
+          - [ detail, VIEW ]
+          - [ get,    VIEW ]
+        default: VIEW
+      POST:
+        bySuffix:
+          - [ create, CREATE ]
+          - [ add,    CREATE ]
+          - [ new,    CREATE ]
+        default: CREATE
+      PUT:    { default: UPDATE }
+      PATCH:  { default: UPDATE }
+      DELETE: { default: DELETE }
+
+  - pattern: /api/resource/**
+    methods: [ GET, POST, PUT, PATCH, DELETE ]
+    mapping:
+      GET:
+        bySuffix:
+          - [ list,   VIEW ]
+          - [ page,   VIEW ]
+          - [ detail, VIEW ]
+          - [ get,    VIEW ]
+        default: VIEW
+      POST:
+        bySuffix:
+          - [ create, CREATE ]
+          - [ add,    CREATE ]
+          - [ new,    CREATE ]
+        default: CREATE
+      PUT:    { default: UPDATE }
+      PATCH:  { default: UPDATE }
+      DELETE: { default: DELETE }
+
+  - pattern: /api/ops/**
+    methods: [ GET, POST, PUT, PATCH, DELETE ]
+    mapping:
+      GET:
+        bySuffix:
+          - [ list,   VIEW ]
+          - [ page,   VIEW ]
+          - [ detail, VIEW ]
+          - [ get,    VIEW ]
+        default: VIEW
+      POST:
+        bySuffix:
+          - [ create, CREATE ]
+          - [ add,    CREATE ]
+          - [ new,    CREATE ]
+        default: CREATE
+      PUT:    { default: UPDATE }
+      PATCH:  { default: UPDATE }
+      DELETE: { default: DELETE }
+
+# 没命中任何 rules 时的全局兜底（可选）
+default:
+  GET:    VIEW
+  POST:   CREATE
+  PUT:    UPDATE
+  PATCH:  UPDATE
+  DELETE: DELETE

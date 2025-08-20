@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Tag(name = "api", description = "Job作业权限分配与查询API")
 @RestController
-@RequestMapping("/api/job-permission")
+@RequestMapping("/api/job/permission")
 @RequiredArgsConstructor
 @Validated
 public class JobPermissionController {

@@ -1,0 +1,176 @@
+# 顶层白名单 + 二级页面清单（真源）
+tops:
+  - code: dashboard
+    titleZh: 总览大屏
+    titleEn: Dashboard
+    path: /dashboard
+    icon: HomeOutlined
+    order: 10
+    perm: DASHBOARD_VIEW
+    children: []
+
+  - code: tenant
+    titleZh: 租户管理
+    titleEn: Tenant
+    path: /tenant
+    icon: CloudOutlined
+    order: 15
+    perm: TENANT_VIEW
+    children:
+      - code: tenant.list
+        titleZh: 租户列表
+        titleEn: Tenant List
+        path: /tenant/list
+        order: 10
+        perm: TENANT_VIEW
+
+  - code: users
+    titleZh: 用户中心
+    titleEn: Users
+    path: /users
+    icon: UserOutlined
+    order: 20
+    perm: USER_VIEW
+    children:
+      - code: users.list
+        titleZh: 用户列表
+        titleEn: User List
+        path: /users/list
+        order: 10
+        perm: USER_VIEW
+      - code: users.profile
+        titleZh: 个人中心
+        titleEn: Profile
+        path: /users/profile
+        order: 20
+        perm: USER_VIEW
+
+  - code: alerts
+    titleZh: 报警中心
+    titleEn: Alerts
+    path: /alerts
+    icon: BellOutlined
+    order: 40
+    perm: ALERT_VIEW
+    children:
+      - code: alerts.list
+        titleZh: 报警流水
+        titleEn: Alerts List
+        path: /alerts/list
+        order: 10
+        perm: ALERT_VIEW
+      - code: alerts.notification
+        titleZh: 通知中心
+        titleEn: Notification
+        path: /alerts/notification
+        order: 20
+        perm: ALERT_VIEW
+
+  - code: cluster
+    titleZh: 集群管理
+    titleEn: Clusters
+    path: /cluster
+    icon: DatabaseOutlined
+    order: 30
+    perm: CLUSTER_VIEW
+    children:
+      - code: cluster.list
+        titleZh: 集群列表
+        titleEn: Cluster List
+        path: /cluster/list
+        order: 10
+        perm: CLUSTER_VIEW
+      - code: cluster.node
+        titleZh: 节点状态
+        titleEn: Node Status
+        path: /cluster/node
+        order: 20
+        perm: CLUSTER_VIEW
+
+  - code: job
+    titleZh: 作业运维
+    titleEn: Jobs
+    path: /job
+    icon: DatabaseOutlined
+    order: 35
+    perm: JOB_VIEW
+    children:
+      - code: job.list
+        titleZh: 作业列表
+        titleEn: Job List
+        path: /job/list
+        order: 10
+        perm: JOB_VIEW
+      # 如需把明细页也暴露为菜单再开启：
+      # - code: job.detail
+      #   titleZh: 作业明细
+      #   titleEn: Job Detail
+      #   path: /job/detail/:jobId
+      #   order: 20
+      #   perm: JOB_VIEW
+
+  - code: files
+    titleZh: 文件中心
+    titleEn: Files
+    path: /files
+    icon: CloudOutlined
+    order: 50
+    perm: FILE_VIEW
+    children: []
+
+  - code: settings
+    titleZh: 系统设置
+    titleEn: Settings
+    path: /settings
+    icon: SettingOutlined
+    order: 60
+    perm: SETTINGS_VIEW
+    children:
+      - code: settings.user
+        titleZh: 用户管理
+        titleEn: Users
+        path: /settings/user
+        order: 10
+        perm: USER_VIEW
+      - code: settings.role
+        titleZh: 角色管理
+        titleEn: Roles
+        path: /settings/role
+        order: 20
+        perm: ROLE_VIEW
+      - code: settings.tenant
+        titleZh: 租户管理
+        titleEn: Tenant
+        path: /settings/tenant
+        order: 30
+        perm: TENANT_VIEW
+
+  - code: metrics
+    titleZh: 指标可视化
+    titleEn: Metrics
+    path: /metrics
+    icon: AreaChartOutlined
+    order: 70
+    perm: METRICS_VIEW
+    children:
+      - code: metrics.dashboard
+        titleZh: 指标大屏
+        titleEn: Metric Dashboard
+        path: /metrics/dashboard
+        order: 10
+        perm: METRICS_VIEW
+
+  - code: ops
+    titleZh: 运营大屏
+    titleEn: Ops
+    path: /ops
+    icon: FundOutlined
+    order: 80
+    perm: OPS_VIEW
+    children:
+      - code: ops.dashboard
+        titleZh: SaaS运营大屏
+        titleEn: SaaS Ops
+        path: /ops/dashboard
+        order: 10
+        perm: OPS_VIEW

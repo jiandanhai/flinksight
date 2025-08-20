@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Tag(name = "api",description = "运维自动化任务管理控制器API")
 @RestController
-@RequestMapping("/api/ops-task")
+@RequestMapping("/api/ops/task")
 @RequiredArgsConstructor
 @Validated
 public class OpsTaskController {

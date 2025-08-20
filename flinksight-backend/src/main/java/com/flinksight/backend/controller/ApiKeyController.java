@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @Tag(name = "api", description = "秘钥管理管理")
-@RequestMapping("/api/api-key")
+@RequestMapping("/api/api/key")
 @RequiredArgsConstructor
 @Validated
 public class ApiKeyController {

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Tag(name = "api", description = "用户角色分配管理API")
 @RestController
-@RequestMapping("/api/user-role")
+@RequestMapping("/api/user/role")
 @RequiredArgsConstructor
 @Validated
 public class UserRoleController {

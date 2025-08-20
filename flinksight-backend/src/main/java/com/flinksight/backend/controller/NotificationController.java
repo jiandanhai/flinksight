@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @Tag(name = "api", description = "消息通知管理API")
-@RequestMapping("/api/notification")
+@RequestMapping("/api/notify")
 @RequiredArgsConstructor
 @Validated
 public class NotificationController {

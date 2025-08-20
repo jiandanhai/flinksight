@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Tag(name = "api", description = "用户-租户关联管理API")
 @RestController
-@RequestMapping("/api/user-tenant")
+@RequestMapping("/api/user/tenant")
 @RequiredArgsConstructor
 @Validated
 public class UserTenantController {

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Tag(name = "api",description = "资源-标签关联管理API")
 @RestController
-@RequestMapping("/api/resource-label")
+@RequestMapping("/api/resource/label")
 @RequiredArgsConstructor
 @Validated
 public class ResourceLabelController {

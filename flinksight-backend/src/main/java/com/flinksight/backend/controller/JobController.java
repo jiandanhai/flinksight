@@ -3,7 +3,10 @@ package com.flinksight.backend.controller;
 import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.backend.security.tenant.TenantRequired;
 import com.flinksight.common.dto.JobDTO;
+import com.flinksight.common.dto.JobInfoDTO;
+import com.flinksight.common.dto.JobRegisterRequestDTO;
 import com.flinksight.common.model.PageResult;
+import com.flinksight.common.service.JobRegisterService;
 import com.flinksight.common.service.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,6 +28,7 @@ public class    JobController {
 
     private final JobService jobService;
 
+    private final JobRegisterService jobRegisterService;
     @Operation(summary = "新建任务", description = "Create new job",operationId = "createJob")
     @PostMapping("/create")
     public ApiResponse<JobDTO> createJob(@RequestBody JobDTO dto) {
@@ -77,5 +81,16 @@ public class    JobController {
     public ApiResponse<Void> deleteJob(@PathVariable Long id) {
         jobService.softDelete(id);
         return ApiResponse.ok(null);
+    }
+
+    /**
+     * 自动注册作业，平台幂等/权限校验/多租户
+     */
+    @Operation(summary = "", description = "",operationId = "registerJob")
+    @PostMapping("/register")
+    public ApiResponse<JobInfoDTO> registerJob(@RequestBody @Valid JobRegisterRequestDTO req) {
+        // （建议接口层可加租户/平台黑白名单防刷）
+        JobInfoDTO job = jobRegisterService.register(req);
+        return ApiResponse.ok(job);
     }
 }

@@ -16,14 +16,14 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @Tag(name = "api", description = "审计日志管理")
-@RequestMapping("/api/audit-log")
+@RequestMapping("/api/audit/log")
 @RequiredArgsConstructor
 @Validated
 public class AuditLogController {
 
     private final AuditLogService service;
 
-    @Operation(summary = "分页获取所有报警历史记录", operationId = "createAuditLog")
+    @Operation(summary = "", operationId = "createAuditLog")
     @PostMapping("/create")
     public ApiResponse<AuditLogDTO> create(@RequestBody  @Valid AuditLogDTO dto) {
 
@@ -31,7 +31,7 @@ public class AuditLogController {
     }
 
     @Operation(summary = "", operationId = "getAuditLog")
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ApiResponse<AuditLogDTO> getById(@PathVariable Long id) {
         return service.getAuditLogById(id)
                 .map(ApiResponse::ok)
@@ -56,7 +56,7 @@ public class AuditLogController {
     }
 
     @Operation(summary = "", operationId = "deleteAuditLog")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
         return service.softDelete(id);
     }

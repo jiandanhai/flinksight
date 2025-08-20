@@ -22,7 +22,7 @@ import java.util.Map;
  */
 @Tag(name = "api", description = "Job任务指标API")
 @RestController
-@RequestMapping("/api/metric")
+@RequestMapping("/api/job/metric")
 @RequiredArgsConstructor
 @TenantRequired
 @Validated

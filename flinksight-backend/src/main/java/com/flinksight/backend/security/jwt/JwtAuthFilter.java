@@ -11,24 +11,27 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
  * JWT认证过滤器，支持RBAC权限装载
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -67,7 +70,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String tenantStr = null;
         if (StringUtils.hasText(token) && jwtProvider.validateToken(token)) {
             tenantStr = String.valueOf(jwtProvider.getTenantIdFromToken(token)); // null 安全，返回 null 或 "123"
-            System.out.println("[JWT Filter] tenantId from token: " + tenantStr);
         }
         if (!StringUtils.hasText(tenantStr)) tenantStr = request.getHeader("X-Tenant-Id");
         if (!StringUtils.hasText(tenantStr)) tenantStr = request.getParameter("tenantId");
@@ -79,7 +81,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (tenantId != null) {
             TenantContext.setTenantId(tenantId); // 👈 必须：在任何 Service 前
         }
-        System.out.println("jwt tenant in filter(before service) = {"+tenantId+"}");
+        log.info("[JWT Filter] tenantId from token: {}",tenantStr);
         try {
             if (StringUtils.hasText(token) && jwtProvider.validateToken(token)) {
                 String username = jwtProvider.getUsernameFromToken(token);
@@ -91,6 +93,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     User user = userStructMapper.toEntity(userOpt.get());
                     List<String> perms = userService.getAuthorities(user.getId(),user.getTenantId());
                     List<GrantedAuthority> authorities = perms.stream()
+                            .filter(Objects::nonNull)
+                            .map(String::trim)
+                            .filter(s -> !s.isEmpty())
+                            .map(String::toUpperCase)   // 统一
+                            .distinct()
                             .map(SimpleGrantedAuthority::new)
                             .collect(Collectors.toList());
                     // 构造SecurityUser

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Tag(name = "api", description = "节点健康管理API")
 @RestController
-@RequestMapping("/api/node-health")
+@RequestMapping("/api/node/health")
 @RequiredArgsConstructor
 @Validated
 public class NodeHealthController {

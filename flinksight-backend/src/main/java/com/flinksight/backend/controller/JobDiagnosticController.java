@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @Tag(name = "api", description = "任务链路与日志API")
-@RequestMapping("/api/job-diagnostic")
+@RequestMapping("/api/job/diagnostic")
 @RequiredArgsConstructor
 @Validated
 public class JobDiagnosticController {

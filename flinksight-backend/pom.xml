@@ -118,6 +118,11 @@
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>2.4.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>2.2</version>
+        </dependency>
         <!-- MapStruct核心依赖 -->
         <dependency>
             <groupId>org.mapstruct</groupId>

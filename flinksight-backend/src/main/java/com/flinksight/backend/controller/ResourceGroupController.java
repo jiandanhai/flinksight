@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Tag(name = "api",description = "资源分组管理API")
 @RestController
-@RequestMapping("/api/resource-group")
+@RequestMapping("/api/resource/group")
 @RequiredArgsConstructor
 @Validated
 public class ResourceGroupController {

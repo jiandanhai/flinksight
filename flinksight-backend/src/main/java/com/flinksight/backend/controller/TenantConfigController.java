@@ -18,7 +18,7 @@ import java.util.Optional;
  */
 @Tag(name = "api", description = "租户配置管理API")
 @RestController
-@RequestMapping("/api/tenant-config")
+@RequestMapping("/api/tenant/config")
 @RequiredArgsConstructor
 @Validated
 public class TenantConfigController {
