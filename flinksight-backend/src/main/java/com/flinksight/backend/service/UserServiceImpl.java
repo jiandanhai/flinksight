@@ -4,10 +4,7 @@ import com.flinksight.backend.domain.User;
 import com.flinksight.backend.domain.UserTokenState;
 import com.flinksight.backend.exception.BusinessException;
 import com.flinksight.backend.mapper.UserStructMapper;
-import com.flinksight.backend.repository.RolePermissionRepository;
-import com.flinksight.backend.repository.UserRepository;
-import com.flinksight.backend.repository.UserRoleRepository;
-import com.flinksight.backend.repository.UserTokenStateRepository;
+import com.flinksight.backend.repository.*;
 import com.flinksight.backend.security.SecurityUser;
 import com.flinksight.backend.security.tenant.TenantRequired;
 import com.flinksight.common.dto.UserDTO;
@@ -49,6 +46,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private final RolePermissionRepository rolePermissionRepository;
     private final UserRoleRepository userRoleRepository;
     private final UserTokenStateRepository tokenStateRepo;
+    private final PermissionRepository permRepo;
     private final UserStructMapper userStructMapper;
 
     @Override
@@ -132,12 +130,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      */
     @Override
     public List<String> getAuthorities(Long userId,Long tenantId) {
-        List<Long> roleIds = userRoleRepository.findRoleIdsByUserIdAndTenantIdAndIsDeletedAndIsDeleted(userId,tenantId,0);
-        Set<String> authorities = new HashSet<>();
-        for (Long roleId : roleIds) {
-            log.info("##[USER SERVICE GET USER_ROLE ->ROLE ID] roleId :{}",roleId);
-            authorities.addAll(rolePermissionRepository.findPermissionCodesByRoleIdAndIsDeleted(roleId,0));
-        }
+        final Set<String> authorities = new HashSet<>(permRepo.findCodesByUser(userId, tenantId));
         // 也可以在这里顺便 union 用户直赋的 permission（如果有 user_permission 表）
         //authorities.addAll(userPermissionRepository.findCodesByUserIdAndTenantId(userId, tenantId));
 

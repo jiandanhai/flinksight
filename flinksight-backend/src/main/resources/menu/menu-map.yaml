@@ -1,4 +1,4 @@
-# 顶层白名单 + 二级页面清单（真源）
+# 顶层菜单（真源）
 tops:
   - code: dashboard
     titleZh: 总览大屏
@@ -8,63 +8,6 @@ tops:
     order: 10
     perm: DASHBOARD_VIEW
     children: []
-
-  - code: tenant
-    titleZh: 租户管理
-    titleEn: Tenant
-    path: /tenant
-    icon: CloudOutlined
-    order: 15
-    perm: TENANT_VIEW
-    children:
-      - code: tenant.list
-        titleZh: 租户列表
-        titleEn: Tenant List
-        path: /tenant/list
-        order: 10
-        perm: TENANT_VIEW
-
-  - code: users
-    titleZh: 用户中心
-    titleEn: Users
-    path: /users
-    icon: UserOutlined
-    order: 20
-    perm: USER_VIEW
-    children:
-      - code: users.list
-        titleZh: 用户列表
-        titleEn: User List
-        path: /users/list
-        order: 10
-        perm: USER_VIEW
-      - code: users.profile
-        titleZh: 个人中心
-        titleEn: Profile
-        path: /users/profile
-        order: 20
-        perm: USER_VIEW
-
-  - code: alerts
-    titleZh: 报警中心
-    titleEn: Alerts
-    path: /alerts
-    icon: BellOutlined
-    order: 40
-    perm: ALERT_VIEW
-    children:
-      - code: alerts.list
-        titleZh: 报警流水
-        titleEn: Alerts List
-        path: /alerts/list
-        order: 10
-        perm: ALERT_VIEW
-      - code: alerts.notification
-        titleZh: 通知中心
-        titleEn: Notification
-        path: /alerts/notification
-        order: 20
-        perm: ALERT_VIEW
 
   - code: cluster
     titleZh: 集群管理
@@ -101,49 +44,27 @@ tops:
         path: /job/list
         order: 10
         perm: JOB_VIEW
-      # 如需把明细页也暴露为菜单再开启：
-      # - code: job.detail
-      #   titleZh: 作业明细
-      #   titleEn: Job Detail
-      #   path: /job/detail/:jobId
-      #   order: 20
-      #   perm: JOB_VIEW
 
-  - code: files
-    titleZh: 文件中心
-    titleEn: Files
-    path: /files
-    icon: CloudOutlined
-    order: 50
-    perm: FILE_VIEW
-    children: []
-
-  - code: settings
-    titleZh: 系统设置
-    titleEn: Settings
-    path: /settings
-    icon: SettingOutlined
-    order: 60
-    perm: SETTINGS_VIEW
+  - code: alerts
+    titleZh: 报警中心
+    titleEn: Alerts
+    path: /alerts
+    icon: BellOutlined
+    order: 40
+    perm: ALERT_VIEW
     children:
-      - code: settings.user
-        titleZh: 用户管理
-        titleEn: Users
-        path: /settings/user
+      - code: alerts.list
+        titleZh: 报警流水
+        titleEn: Alerts List
+        path: /alerts/list
         order: 10
-        perm: USER_VIEW
-      - code: settings.role
-        titleZh: 角色管理
-        titleEn: Roles
-        path: /settings/role
+        perm: ALERT_VIEW
+      - code: alerts.notification
+        titleZh: 通知中心
+        titleEn: Notification
+        path: /alerts/notification
         order: 20
-        perm: ROLE_VIEW
-      - code: settings.tenant
-        titleZh: 租户管理
-        titleEn: Tenant
-        path: /settings/tenant
-        order: 30
-        perm: TENANT_VIEW
+        perm: ALERT_VIEW
 
   - code: metrics
     titleZh: 指标可视化
@@ -174,3 +95,56 @@ tops:
         path: /ops/dashboard
         order: 10
         perm: OPS_VIEW
+
+  - code: files
+    titleZh: 文件中心
+    titleEn: Files
+    path: /files
+    icon: CloudOutlined
+    order: 50
+    perm: FILE_VIEW
+    children: [ ]
+
+  # 个人中心（仅当前登录用户）
+  - code: profile
+    titleZh: 个人中心
+    titleEn: Profile
+    path: /profile
+    icon: UserOutlined
+    order: 90
+    perm: USER_VIEW
+    children:
+      - code: profile.center
+        titleZh: 我的资料
+        titleEn: My Profile
+        path: /profile/center
+        order: 10
+        perm: USER_VIEW
+
+  # 系统设置（集中放 RBAC / 租户）
+  - code: settings
+    titleZh: 系统设置
+    titleEn: Settings
+    path: /settings
+    icon: SettingOutlined
+    order: 100
+    perm: SETTINGS_VIEW
+    children:
+      - code: settings.user
+        titleZh: 用户管理
+        titleEn: Users
+        path: /settings/user
+        order: 10
+        perm: USER_VIEW
+      - code: settings.role
+        titleZh: 角色管理
+        titleEn: Roles
+        path: /settings/role
+        order: 20
+        perm: ROLE_VIEW
+      - code: settings.tenant
+        titleZh: 租户管理
+        titleEn: Tenant
+        path: /settings/tenant
+        order: 30
+        perm: TENANT_VIEW

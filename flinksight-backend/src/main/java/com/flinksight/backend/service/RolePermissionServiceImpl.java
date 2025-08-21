@@ -23,20 +23,20 @@ public class RolePermissionServiceImpl implements RolePermissionService {
     private final RolePermissionRepository repository;
     private final RolePermissionStructMapper rolePermissionStructMapper;
     @Override
-    public RolePermissionDTO assignPermissionToRole(Long roleId, Long permissionId) {
+    public RolePermissionDTO assignPermissionToRole(Long roleId, String permissionCode) {
         RolePermission rp = RolePermission.builder()
             .roleId(roleId)
-            .permissionId(permissionId)
+            .permissionCode(permissionCode)
             .isDeleted(0)
             .build();
         return rolePermissionStructMapper.toDTO(repository.save(rp));
     }
 
     @Override
-    public boolean removePermissionFromRole(Long roleId, Long permissionId) {
-        List<RolePermission> list = repository.findByRoleIdAndPermissionIdAndIsDeleted(roleId,permissionId, 0);
+    public boolean removePermissionFromRole(Long roleId, String permissionCode) {
+        List<RolePermission> list = repository.findByRoleIdAndPermissionCodeAndIsDeleted(roleId,permissionCode, 0);
         for (RolePermission rp : list) {
-            if (rp.getPermissionId().equals(permissionId)) {
+            if (rp.getPermissionCode().equals(permissionCode)) {
                 rp.setIsDeleted(1);
                 repository.save(rp);
                 return true;
@@ -53,8 +53,8 @@ public class RolePermissionServiceImpl implements RolePermissionService {
     }
 
     @Override
-    public PageResult<RolePermissionDTO> findByPermissionId(Long permissionId,int page, int size) {
-        Page<RolePermission> result = repository.findByPermissionIdAndIsDeleted(permissionId,0, PageRequest.of(page, size, Sort.by("id").descending()));
+    public PageResult<RolePermissionDTO> findByPermissionCode(String permissionCode,int page, int size) {
+        Page<RolePermission> result = repository.findByPermissionCodeAndIsDeleted(permissionCode,0, PageRequest.of(page, size, Sort.by("id").descending()));
         Page<RolePermissionDTO> dtoPage = result.map(rolePermissionStructMapper::toDTO);
         return new PageResult<>(dtoPage);
     }

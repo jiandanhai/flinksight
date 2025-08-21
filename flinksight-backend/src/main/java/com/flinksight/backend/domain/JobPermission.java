@@ -19,12 +19,12 @@ import java.io.Serializable;
 @Table(
         name = "job_permission",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_job_user_permission", columnNames = {"job_id", "user_id", "permission_id"})
+                @UniqueConstraint(name = "uk_job_user_permission", columnNames = {"job_id", "user_id", "permission_code"})
         },
         indexes = {
                 @Index(name = "idx_jobperm_job", columnList = "job_id"),
                 @Index(name = "idx_jobperm_user", columnList = "user_id"),
-                @Index(name = "idx_jobperm_perm", columnList = "permission_id"),
+                @Index(name = "idx_jobperm_perm", columnList = "permission_code"),
                 @Index(name = "idx_jobperm_tenant", columnList = "tenant_id")
         }
 )
@@ -49,9 +49,8 @@ public class JobPermission implements Serializable {
     @Schema(description = "用户ID（业务标识）")
     private String userId;
 
-    @Column(name = "permission_id", nullable = false)
-    @Schema(description = "权限ID")
-    private Long permissionId;
+    @Column(name="permission_code", length=50, nullable=false)
+    private String permissionCode;
 
     @Column(name = "is_deleted", nullable = false)
     @Schema(description = "软删除标志 0=正常 1=删除")

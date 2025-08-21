@@ -42,5 +42,5 @@ public interface PermissionService extends SoftDeleteService<PermissionDTO, Long
     /**
      * 校验用户是否拥有某平台级权限点（不涉及具体作业）
      */
-    boolean userHasPermission(Long userId, String permissionCode);
+    boolean userHasPermission(Long userId, Long tenantId,String permissionCode);
 }

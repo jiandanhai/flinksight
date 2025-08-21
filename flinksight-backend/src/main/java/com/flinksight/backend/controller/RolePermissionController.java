@@ -24,14 +24,14 @@ public class RolePermissionController {
 
     @Operation(summary = "", description = "",operationId = "assignRolePermission")
     @PostMapping("/assign")
-    public ApiResponse<RolePermissionDTO> assign(@RequestParam Long roleId, @RequestParam Long permissionId) {
-        return ApiResponse.ok(service.assignPermissionToRole(roleId, permissionId));
+    public ApiResponse<RolePermissionDTO> assign(@RequestParam Long roleId, @RequestParam String permissionCode) {
+        return ApiResponse.ok(service.assignPermissionToRole(roleId, permissionCode));
     }
 
     @Operation(summary = "", description = "",operationId = "removeRolePermission")
     @PostMapping("/remove")
-    public boolean remove(@RequestParam Long roleId, @RequestParam Long permissionId) {
-        return service.removePermissionFromRole(roleId, permissionId);
+    public boolean remove(@RequestParam Long roleId, @RequestParam String permissionCode) {
+        return service.removePermissionFromRole(roleId, permissionCode);
     }
 
     @Operation(summary = "", description = "",operationId = "getRolePermissionsByRole")
@@ -44,11 +44,11 @@ public class RolePermissionController {
     }
 
     @Operation(summary = "", description = "",operationId = "getRolePermissionsByPermission")
-    @GetMapping("/permission/{permissionId}")
-    public ApiResponse<PageResult<RolePermissionDTO>> findByPermissionId(@PathVariable Long permissionId,
+    @GetMapping("/permission/{permissionCode}")
+    public ApiResponse<PageResult<RolePermissionDTO>> findByPermissionId(@PathVariable String permissionCode,
                                                       @RequestParam(defaultValue = "0") int page,
                                                       @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByPermissionId(permissionId,page,size));
+        return ApiResponse.ok(service.findByPermissionCode(permissionCode,page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "getRolePermission")

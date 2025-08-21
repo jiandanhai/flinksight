@@ -23,12 +23,12 @@ public interface JobPermissionService {
     /**
      * 给指定用户分配作业权限
      */
-    void grantPermission(Long jobId, Long tenantId, String userId, Long permissionId);
+    void grantPermission(Long jobId, Long tenantId, String userId, String permissionCode);
 
     /**
      * 回收用户的作业权限
      */
-    void revokePermission(Long jobId, String userId, Long permissionId);
+    void revokePermission(Long jobId, String userId, String permissionCode);
 
     /**
      * 校验指定用户是否拥有某作业的管理权限

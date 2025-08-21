@@ -15,13 +15,10 @@ import java.util.List;
 @Repository
 public interface UserRoleRepository extends JpaRepository<UserRole, Long> {
     Page<UserRole> findByUserIdAndIsDeleted(Long userId, Integer isDeleted, Pageable pageable);
+
     Page<UserRole> findByRoleIdAndIsDeleted(Long roleId, Integer isDeleted, Pageable pageable);
+
     Page<UserRole> findByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted, Pageable pageable);
-
-    @Query("SELECT ur.roleId FROM UserRole ur WHERE ur.userId = :userId AND ur.tenantId = :tenantId AND ur.isDeleted = :isDeleted")
-    List<Long> findRoleIdsByUserIdAndTenantIdAndIsDeletedAndIsDeleted(@Param("userId") Long userId, @Param("tenantId") Long tenantId,  @Param("isDeleted") Integer isDeleted);
-    void deleteByUserIdAndRoleId(Long userId, Long roleId);
-
     /**
      * 根据用户ID查询所有角色关系
      * @param userId 用户ID

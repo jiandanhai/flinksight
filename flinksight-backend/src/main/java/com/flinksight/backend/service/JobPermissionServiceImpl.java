@@ -32,7 +32,7 @@ public class JobPermissionServiceImpl implements JobPermissionService {
         // 假设“OWNER”权限编码，实际可按需求调整
         Permission ownerPerm = permissionRepository.findByCode("JOB_OWNER");
         if (ownerPerm == null) throw new RuntimeException("平台未配置作业OWNER权限");
-        if (jobPermissionRepository.existsByJobIdAndUserIdAndPermissionId(jobId, operatorUserId, ownerPerm.getId())) {
+        if (jobPermissionRepository.existsByJobIdAndUserIdAndPermissionCode(jobId, operatorUserId, ownerPerm.getCode())) {
             // 幂等校验
             return;
         }
@@ -40,7 +40,7 @@ public class JobPermissionServiceImpl implements JobPermissionService {
                 .jobId(jobId)
                 .tenantId(tenantId)
                 .userId(operatorUserId)
-                .permissionId(ownerPerm.getId())
+                .permissionCode(ownerPerm.getCode())
                 .build();
         jobPermissionRepository.save(perm);
     }
@@ -54,23 +54,23 @@ public class JobPermissionServiceImpl implements JobPermissionService {
 
     @Override
     @Transactional
-    public void grantPermission(Long jobId, Long tenantId, String userId, Long permissionId) {
-        if (jobPermissionRepository.existsByJobIdAndUserIdAndPermissionId(jobId, userId, permissionId)) {
+    public void grantPermission(Long jobId, Long tenantId, String userId, String permissionCode) {
+        if (jobPermissionRepository.existsByJobIdAndUserIdAndPermissionCode(jobId, userId, permissionCode)) {
             throw new RuntimeException("用户已拥有该作业权限");
         }
         JobPermission perm = JobPermission.builder()
                 .jobId(jobId)
                 .tenantId(tenantId)
                 .userId(userId)
-                .permissionId(permissionId)
+                .permissionCode(permissionCode)
                 .build();
         jobPermissionRepository.save(perm);
     }
 
     @Override
     @Transactional
-    public void revokePermission(Long jobId, String userId, Long permissionId) {
-        jobPermissionRepository.deleteByJobIdAndUserIdAndPermissionId(jobId, userId, permissionId);
+    public void revokePermission(Long jobId, String userId, String permissionCode) {
+        jobPermissionRepository.deleteByJobIdAndUserIdAndPermissionCode(jobId, userId, permissionCode);
     }
 
     @Override
@@ -87,13 +87,13 @@ public class JobPermissionServiceImpl implements JobPermissionService {
     }
 
     private JobPermissionDTO toDTO(JobPermission perm) {
-        Permission permission = permissionRepository.findById(perm.getPermissionId()).orElse(null);
+        Permission permission = permissionRepository.findByCode(perm.getPermissionCode());
         return JobPermissionDTO.builder()
                 .id(perm.getId())
                 .jobId(perm.getJobId())
                 .tenantId(perm.getTenantId())
                 .userId(perm.getUserId())
-                .permissionId(perm.getPermissionId())
+                .permissionCode(perm.getPermissionCode())
                 .permissionCode(permission != null ? permission.getCode() : null)
                 .permissionName(permission != null ? permission.getName() : null)
                 .build();

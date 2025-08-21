@@ -1,11 +1,8 @@
 package com.flinksight.backend.security;
 
-import com.flinksight.backend.domain.Permission;
 import com.flinksight.backend.domain.User;
 import com.flinksight.backend.repository.PermissionRepository;
-import com.flinksight.backend.repository.RolePermissionRepository;
 import com.flinksight.backend.repository.UserRepository;
-import com.flinksight.backend.repository.UserRoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,16 +11,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Service
 public class SecurityUserDetailsService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
-    @Autowired private UserRoleRepository userRoleRepository;
-    @Autowired private RolePermissionRepository rolePermissionRepository;
-    @Autowired private PermissionRepository permissionRepository;
+    @Autowired private PermissionRepository permRepo;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -36,17 +30,7 @@ public class SecurityUserDetailsService implements UserDetailsService {
 
         User user = userRepository.findByUsernameAndTenantId(uname, tenantId)
                 .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
-
-        List<Long> roleIds = userRoleRepository.findRoleIdsByUserId(user.getId());
-
-        Set<String> permissionCodes = new HashSet<>();
-        for (Long roleId : roleIds) {
-            List<Long> permIds = rolePermissionRepository.findPermissionIdsByRoleId(roleId);
-            for (Long permId : permIds) {
-                permissionRepository.findById(permId)
-                    .map(Permission::getCode).ifPresent(permissionCodes::add);
-            }
-        }
-        return new SecurityUser(user, new ArrayList<>(permissionCodes));
+        final Set<String> authorities = new HashSet<>(permRepo.findCodesByUser(user.getId(), tenantId));
+        return new SecurityUser(user, new ArrayList<>(authorities));
     }
 }

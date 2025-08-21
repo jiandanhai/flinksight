@@ -43,10 +43,10 @@ public class JobPermissionController {
     public ApiResponse<Void> grantPermission(
             @RequestParam Long jobId,
             @RequestParam String userId,
-            @RequestParam Long permissionId,
+            @RequestParam String permissionCode,
             @RequestParam Long tenantId
     ) {
-        jobPermissionService.grantPermission(jobId, tenantId, userId, permissionId);
+        jobPermissionService.grantPermission(jobId, tenantId, userId, permissionCode);
         return ApiResponse.ok(null);
     }
 
@@ -58,9 +58,9 @@ public class JobPermissionController {
     public ApiResponse<Void> revokePermission(
             @RequestParam Long jobId,
             @RequestParam String userId,
-            @RequestParam Long permissionId
+            @RequestParam String permissionCode
     ) {
-        jobPermissionService.revokePermission(jobId, userId, permissionId);
+        jobPermissionService.revokePermission(jobId, userId, permissionCode);
         return ApiResponse.ok(null);
     }
 

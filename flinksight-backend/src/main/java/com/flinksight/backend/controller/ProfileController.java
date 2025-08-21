@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Tag(name = "api",description = "用户扩展档案管理API")
 @RestController
-@RequestMapping("/api/user/profile")
+@RequestMapping("/api/profile")
 @RequiredArgsConstructor
 @Validated
 public class ProfileController {

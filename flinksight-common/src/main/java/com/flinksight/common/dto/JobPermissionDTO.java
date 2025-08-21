@@ -31,9 +31,6 @@ public class JobPermissionDTO  implements Serializable {
     @Schema(description = "用户ID")
     private String userId;
 
-    @Schema(description = "权限ID")
-    private Long permissionId;
-
     // 业务场景可选：冗余权限名、作业名、授权人等
     @Schema(description = "权限编码（可选）")
     private String permissionCode;

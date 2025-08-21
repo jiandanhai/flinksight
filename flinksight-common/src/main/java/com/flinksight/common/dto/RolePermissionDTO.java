@@ -16,6 +16,6 @@ import java.io.Serializable;
 public class RolePermissionDTO  implements Serializable {
     private Long id;
     private Long roleId;
-    private Long permissionId;
+    private Long permissionCode;
     private Integer isDeleted;
 }

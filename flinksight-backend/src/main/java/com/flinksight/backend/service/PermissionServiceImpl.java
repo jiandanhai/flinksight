@@ -60,9 +60,9 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
-    public boolean userHasPermission(Long userId, String permissionId) {
+    public boolean userHasPermission(Long userId, Long tenantId,String permissionCode) {
         // 一般平台级权限直接查用户-权限表，具体可根据实际模型实现
-        return repository.userHasPermission(userId, permissionId) > 0;
+        return repository.userHasPermission(userId, tenantId,permissionCode) > 0;
     }
 
     @Override

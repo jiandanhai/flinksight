@@ -25,12 +25,12 @@ public interface JobPermissionRepository extends JpaRepository<JobPermission, Lo
     /**
      * 检查某用户对某作业是否已拥有指定权限（幂等校验）
      */
-    boolean existsByJobIdAndUserIdAndPermissionId(Long jobId, String userId, Long permissionId);
+    boolean existsByJobIdAndUserIdAndPermissionCode(Long jobId, String userId, String permissionCode);
 
     /**
      * 删除某用户对某作业的指定权限（回收权限）
      */
-    void deleteByJobIdAndUserIdAndPermissionId(Long jobId, String userId, Long permissionId);
+    void deleteByJobIdAndUserIdAndPermissionCode(Long jobId, String userId, String permissionCode);
 
     /**
      * 只要有一条关联即认为有权限（可根据具体角色/权限进一步细化）
