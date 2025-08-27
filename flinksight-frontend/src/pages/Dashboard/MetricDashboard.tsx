@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { Card, Col, DatePicker, Empty, Row, Spin, message } from "antd";
 import { Line } from "@ant-design/plots";
 import dayjs, { Dayjs } from "dayjs";
-import { getTenantId } from "@/utils/tenant";
 import { dashboardStatisticsMetricSeries } from "../../api/modules";
 
 const { RangePicker } = DatePicker;
@@ -31,7 +30,6 @@ const MetricDashboard: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     const [from, to] = dateRange;
-    const tenantId = getTenantId();
 
     try {
       const results: Record<string, MetricSeriesDTO> = {};
@@ -39,7 +37,6 @@ const MetricDashboard: React.FC = () => {
       await Promise.all(
         METRICS.map(async ({ key }) => {
           const res = await dashboardStatisticsMetricSeries({
-            tenantId,
             metric: key,
             from: from.toISOString(),
             to: to.toISOString(),

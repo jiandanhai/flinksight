@@ -4,10 +4,9 @@
  */
 import React, {useEffect, useState} from "react";
 import {Descriptions, Modal, Spin, Tag} from "antd";
-import api from '@/api/api-compat';
-
 import type {NodeDTO, NodeMetricDTO} from '@/api/dto';
 import * as echarts from "echarts";
+import { getNode,getNodeMetric} from "@/api/modules";
 
 interface Props {
   id: number;
@@ -23,7 +22,7 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
   useEffect(() => {
     if (!open) return;
     setLoading(true);
-    Promise.all([api.getNode(id), api.getNodeMetric(id)]).then(([res, mres]) => {
+    Promise.all([getNode(id), getNodeMetric(id)]).then(([res, mres]) => {
       setData(res.data);
       setMetrics(mres.data || []);
     }).finally(() => setLoading(false));

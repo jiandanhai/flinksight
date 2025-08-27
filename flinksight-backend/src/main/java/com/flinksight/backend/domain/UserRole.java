@@ -1,5 +1,6 @@
 package com.flinksight.backend.domain;
 
+import com.flinksight.common.service.DefaultSort;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,6 +29,7 @@ import java.time.LocalDateTime;
 )
 @Schema(description = "用户-角色关联表")
 @SQLRestriction("is_deleted=0")
+@DefaultSort(fields = {"assignTime", "id"})
 public class UserRole implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

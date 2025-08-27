@@ -1,6 +1,8 @@
 package com.flinksight.backend.controller;
 
 import com.flinksight.backend.common.ApiResponse;
+import com.flinksight.common.dto.FunnelResponseDTO;
+import com.flinksight.common.dto.KpiResponseDTO;
 import com.flinksight.common.dto.OpsTaskDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.OpsTaskService;
@@ -8,8 +10,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 /**
  * 运维自动化任务管理控制器
@@ -54,7 +59,7 @@ public class OpsTaskController {
     @Operation(summary = "", description = "", operationId = "deleteOpsTask")
     @PostMapping("/delete/{id}")
     public ApiResponse<Void> delete(@PathVariable Long id) {
-        opsTaskService.delete(id);
+        opsTaskService.sDelete(id);
         return ApiResponse.ok(null);
     }
 
@@ -70,29 +75,33 @@ public class OpsTaskController {
     }
 
     /**
-     * 查询租户下全部有效任务
-     * @param tenantId 租户ID
-     * @return 任务列表
-     */
-    @Operation(summary = "", description = "", operationId = "getOpsTasksByTenant")
-    @GetMapping("/list")
-    public ApiResponse<PageResult<OpsTaskDTO>> listByTenant(@RequestParam Long tenantId,
-                                                      @RequestParam(defaultValue = "0") int page,
-                                                      @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(opsTaskService.listByTenant(tenantId,page,size));
-    }
-
-    /**
      * 查询租户下指定状态的任务
-     * @param tenantId 租户ID
      * @param status 状态
      * @return 任务列表
      */
-    @Operation(summary = "", description = "", operationId = "getOpsTasksByTenantAndStatus")
-    @GetMapping("/list-by-status")
-    public ApiResponse<PageResult<OpsTaskDTO>> listByTenantAndStatus(@RequestParam Long tenantId, @RequestParam String status,
+    @Operation(summary = "", description = "", operationId = "listOpsTasks")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<OpsTaskDTO>> list(@RequestParam String status,
                                                                      @RequestParam(defaultValue = "0") int page,
                                                                      @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(opsTaskService.listByTenantAndStatus(tenantId, status,page,size));
+        return ApiResponse.ok(opsTaskService.list(status,page,size));
+    }
+
+    @Operation(summary = "KPI 趋势（新建数/成功数）", description = "", operationId = "opsGetKpi")
+    @GetMapping("/kpi")
+    public ApiResponse<KpiResponseDTO> kpi(@RequestParam(value = "from", required = false)
+                                               @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                                            @RequestParam(value = "to", required = false)
+                                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+    ) {
+        return ApiResponse.ok(opsTaskService.getKpi(from, to));
+    }
+
+    @Operation(summary = "转化漏斗", description = "", operationId = "opsGetFunnel")
+    @GetMapping("/funnel")
+    public ApiResponse<FunnelResponseDTO> funnel(
+            @RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        return ApiResponse.ok(opsTaskService.getFunnel(date));
     }
 }

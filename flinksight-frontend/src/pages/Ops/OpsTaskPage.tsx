@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import api from '@/api/api-compat';
-
+import { listOpsTasks, deleteOpsTask } from "@/api/modules";
 import type {OpsTaskDTO} from '@/api/dto';
 import PageTable from '../../components/PageTable';
 import Loading from '../../components/Loading';
@@ -16,7 +15,7 @@ const OpsTaskPage: React.FC = () => {
   async function fetchTasks() {
     setLoading(true);
     try {
-      const data = await api.getAllOpsTasks({ page: 1, size: 30 });
+      const data = await listOpsTasks({ page: 1, size: 30 });
       setTasks(data);
     } finally {
       setLoading(false);
@@ -36,7 +35,7 @@ const OpsTaskPage: React.FC = () => {
   async function handleDelete(id: number) {
     setLoading(true);
     try {
-      await api.deleteOpsTask(id);
+      await deleteOpsTask(id);
       fetchTasks();
     } finally {
       setLoading(false);
@@ -48,7 +47,7 @@ const OpsTaskPage: React.FC = () => {
   return (
     <div>
       <h3 className="font-bold text-lg mb-6">运维自动化任务</h3>
-      <PageTable<DTO.OpsTaskDTO>
+      <PageTable<OpsTaskDTO>
         columns={[
           { key: 'name', title: '任务名' },
           { key: 'script', title: '脚本' },

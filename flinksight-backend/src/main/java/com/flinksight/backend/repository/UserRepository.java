@@ -51,12 +51,11 @@ public interface UserRepository extends JpaRepository<User, Long>, SoftDeleteRep
 
     // 兼容单租户，或不区分 isDeleted
     Optional<User> findByUsernameAndTenantId(String username, Long tenantId);
-    // 按用户名和未删除状态查找用户（isDeleted = 0/false）
-    Optional<User> findByUsernameAndIsDeleted(String username, Integer isDeleted);
 
-    User findByEmailAndIsDeleted(String email, Integer isDeleted);
 
-    User findByIdAndIsDeleted(Long id, Integer isDeleted);
+    User findByTenantIdAndEmailAndIsDeleted(Long tenantId,String email, Integer isDeleted);
 
     long countByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted);
+
+    User findByIdAndTenantIdAndIsDeleted(Long id, Long tenantId, Integer isDeleted);
 }

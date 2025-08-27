@@ -1,5 +1,6 @@
 package com.flinksight.backend.domain;
 
+import com.flinksight.common.service.DefaultSort;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "org_node")
+@DefaultSort(fields = {"createdAt", "id"})
 public class OrgNode implements Serializable {
 
     @Id

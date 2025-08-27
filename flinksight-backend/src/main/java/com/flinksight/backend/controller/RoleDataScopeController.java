@@ -34,21 +34,13 @@ public class RoleDataScopeController {
         return service.removeDataScopeFromRole(roleId, dataScopeId);
     }
 
-    @Operation(summary = "", description = "",operationId = "getRoleDataScopesByRole")
-    @GetMapping("/role/{roleId}")
-    public ApiResponse<PageResult<RoleDataScopeDTO>> findByRole(
-            @PathVariable Long roleId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByRoleId(roleId,page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getRoleDataScopesByDataScope")
-    @GetMapping("/data-scope/{dataScopeId}")
-    public ApiResponse<PageResult<RoleDataScopeDTO>> findByDataScope(@PathVariable Long dataScopeId,
+    @Operation(summary = "", description = "",operationId = "listRoleDataScopes")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<RoleDataScopeDTO>> findByDataScope(@RequestParam Long roleId,
+                                                                    @RequestParam Long dataScopeId,
                                                                     @RequestParam(defaultValue = "0") int page,
                                                                     @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByDataScopeId(dataScopeId,page,size));
+        return ApiResponse.ok(service.list(roleId,dataScopeId,page,size));
     }
 
     @Operation(summary = "删除角色", description = "Delete role by ID",operationId = "getRoleDataScope")
@@ -62,6 +54,6 @@ public class RoleDataScopeController {
     @Operation(summary = "删除角色", description = "Delete role by ID",operationId = "deleteRoleDataScope")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

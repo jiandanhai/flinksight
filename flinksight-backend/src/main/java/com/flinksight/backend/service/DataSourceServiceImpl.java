@@ -1,8 +1,10 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.DataSource;
 import com.flinksight.backend.mapper.DataSourceStructMapper;
 import com.flinksight.backend.repository.DataSourceRepository;
+import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.common.dto.DataSourceDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.DataSourceService;
@@ -10,7 +12,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -35,21 +36,14 @@ public class DataSourceServiceImpl implements DataSourceService {
     }
 
     @Override
-    public PageResult<DataSourceDTO> findByTenantId(Long tenantId,int page, int size) {
-        Page<DataSource> result = repository.findByTenantIdAndIsDeleted(tenantId, 0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<DataSourceDTO> dtoPage = result.map(dataSourceStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<DataSourceDTO> list(int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, DataSource.class); // 统一 1→0
+        Page<DataSource> result = repository.findByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(), 0, pr);
+        return PageHelpers.toPageResult(result, dataSourceStructMapper::toDTO, true); // 返回 1-ba
     }
 
     @Override
-    public PageResult<DataSourceDTO> getAll(int page, int size) {
-        Page<DataSource> result = repository.findByIsDeleted( 0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<DataSourceDTO> dtoPage = result.map(dataSourceStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
-
-    @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<DataSourceDTO> opt = repository.findById(id).map(dataSourceStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             DataSourceDTO dto = opt.get();

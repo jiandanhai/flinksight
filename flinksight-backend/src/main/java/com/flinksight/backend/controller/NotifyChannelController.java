@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 /**
  * 通知渠道管理控制器
  */
@@ -32,27 +34,34 @@ public class NotifyChannelController {
     @Operation(summary = "", description = "", operationId = "updateNotifyChannel")
     @PutMapping("/update")
     public ApiResponse<NotifyChannelDTO> update(@Valid @RequestBody NotifyChannelDTO dto) {
-        return ApiResponse.ok(notifyChannelService.update(dto));
+        return ApiResponse.ok(notifyChannelService.update(dto.getId(),dto));
+    }
+
+    @Operation(summary = "", description = "", operationId = "getNotifyChannel")
+    @GetMapping("/get/{id}")
+    public ApiResponse<Optional<NotifyChannelDTO>> getNotifyChannel(@PathVariable Long id) {
+        return ApiResponse.ok(notifyChannelService.getMyById(id));
+    }
+
+    @Operation(summary = "通知渠道列表（分页）", description = "", operationId = "listNotifications")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<NotifyChannelDTO>> list(@RequestParam(defaultValue = "0") int page,
+                                                          @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(notifyChannelService.list(page,size));
+    }
+
+    // ====== 前端：updateNotification(id, patch)（更新渠道，例如启停/改配置/改名称）=====
+    @Operation(summary = "更新渠道（Patch，忽略空字段）")
+    @PutMapping("/update/{id}")
+    public NotifyChannelDTO updateNotification(@PathVariable Long id, @Valid @RequestBody NotifyChannelDTO patch) {
+
+        return notifyChannelService.update(id, patch);
     }
 
     @Operation(summary = "", description = "", operationId = "deleteNotifyChannel")
     @PostMapping("/delete/{id}")
     public ApiResponse<Void> delete(@PathVariable Long id) {
-        notifyChannelService.delete(id);
+        notifyChannelService.sDelete(id);
         return ApiResponse.ok(null);
-    }
-
-    @Operation(summary = "", description = "", operationId = "getNotifyChannel")
-    @GetMapping("/get/{id}")
-    public ApiResponse<NotifyChannelDTO> getById(@PathVariable Long id) {
-        return ApiResponse.ok(notifyChannelService.getById(id));
-    }
-
-    @Operation(summary = "", description = "", operationId = "getNotifyChannelsByTenant")
-    @GetMapping("/list")
-    public ApiResponse<PageResult<NotifyChannelDTO>> list(@RequestParam Long tenantId,
-                                                          @RequestParam(defaultValue = "0") int page,
-                                                          @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(notifyChannelService.listByTenant(tenantId,page,size));
     }
 }

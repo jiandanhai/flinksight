@@ -30,7 +30,7 @@ public interface PermissionService extends SoftDeleteService<PermissionDTO, Long
     /**
      * 查询所有权限点
      */
-    PageResult<PermissionDTO> getAllPermissions(int page, int size);
+    PageResult<PermissionDTO> list(int page, int size);
 
     /**
      * 检查租户是否有权注册新作业

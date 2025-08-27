@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import api from '@/api/api-compat';
-
+import { getMetric,createMetricDashboard,updateMetricDashboard} from "../../api/modules";
 import type {MetricDashboardDTO} from '@/api/dto';
 
 interface Props {
@@ -21,7 +20,7 @@ const EditMetricModal: React.FC<Props> = ({ id, onClose, onOk }) => {
   useEffect(() => {
     if (id) {
       setLoading(true);
-      api.getMetric(id).then(data => setForm({
+      getMetric(id).then(data => setForm({
         name: data.name, code: data.code, desc: data.desc, type: data.type, unit: data.unit, tags: data.tags
       })).finally(() => setLoading(false));
     } else {
@@ -34,9 +33,9 @@ const EditMetricModal: React.FC<Props> = ({ id, onClose, onOk }) => {
     setLoading(true);
     try {
       if (id) {
-        await api.updateMetricDashboard(id, form as MetricDashboardDTO);
+        await updateMetricDashboard(id, form as MetricDashboardDTO);
       } else {
-        await api.createMetric(form as MetricDashboardDTO);
+        await createMetricDashboard(form as MetricDashboardDTO);
       }
       onClose();
       onOk();

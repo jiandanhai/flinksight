@@ -1,5 +1,6 @@
 package com.flinksight.backend.domain;
 
+import com.flinksight.common.service.DefaultSort;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,63 +9,91 @@ import org.hibernate.annotations.SQLRestriction;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-/**
- * 报警事件实体
- * Alert Entity
- */
+// import 同上省略
 @Getter
 @Setter
 @Entity
-@Table(name = "`alert`") // ⚡ 防止关键字冲突
+@Table(
+        name = "`alert`",
+        indexes = {
+                @Index(name = "idx_alert_tenant_status_time", columnList = "tenant_id,status,created_at"),
+                @Index(name = "idx_alert_rule", columnList = "rule_id")
+        }
+)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "报警事件表")
-@SQLRestriction("is_deleted=0") // ⚡ 替代 Hibernate 6.3 的 @Where
+@SQLRestriction("is_deleted=0")
+@DefaultSort(fields = {"createdAt", "id"})
 public class Alert implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Schema(description = "主键ID")
     private Long id;
 
     @Column(name = "tenant_id", nullable = false)
-    @Schema(description = "租户ID")
     private Long tenantId;
 
-    @Column(name = "job_id", nullable = false)
-    @Schema(description = "任务ID")
+    @Column(name = "cluster_id", nullable = false)
+    @Schema(description = "集群ID")
+    private Long clusterId;
+
+    @Column(name = "job_id")
     private Long jobId;
 
+    // ✅ 软关联到规则（可为空：也支持非规则型事件）
+    @Column(name = "rule_id")
+    private Long ruleId;
+
+    // ✅ 规则快照（触发当时的关键信息，防止规则后续修改影响历史）
+    @Column(name = "rule_name", length = 128)
+    private String ruleName;
+
+    @Column(name = "metric_key", length = 64)
+    private String metricKey;
+
+    @Column(name = "threshold")
+    private Double threshold;
+
+    @Column(name = "compare_op", length = 8)
+    private String compareOp;
+
+    @Column(name = "channel", length = 32)
+    private String channel;
+
     @Column(length = 16)
-    @Schema(description = "报警级别")
     private String level;
 
     @Column(length = 32)
-    @Schema(description = "报警类型")
     private String type;
 
     @Column(length = 255)
-    @Schema(description = "报警内容")
     private String message;
 
     @Column(nullable = false)
-    @Schema(description = "状态(0未处理1处理中2关闭)")
-    private Integer status = 0; // ⚡ 默认值放到 Java，不要 columnDefinition
+    private Integer status = 0; // 0未处理 1处理中 2关闭
 
     @Column(name = "handler_id")
-    @Schema(description = "处理人")
     private Long handlerId;
 
     @Column(name = "is_deleted", nullable = false)
-    @Schema(description = "软删除")
     private Integer isDeleted = 0;
 
     @Column(name = "created_at", updatable = false)
-    @Schema(description = "产生时间")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    @Schema(description = "更新时间")
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (updatedAt == null) updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

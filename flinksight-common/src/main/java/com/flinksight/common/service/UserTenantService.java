@@ -8,8 +8,7 @@ import java.util.Optional;
 public interface UserTenantService extends SoftDeleteService<UserTenantDTO, Long> {
     UserTenantDTO assignTenantToUser(Long userId, Long tenantId);
     boolean removeTenantFromUser(Long userId, Long tenantId);
-    PageResult<UserTenantDTO> findByUserId(Long userId,int page, int size);
-    PageResult<UserTenantDTO> findByTenantId(Long tenantId,int page, int size);
     Optional<UserTenantDTO> getById(Long id);
-    PageResult<UserTenantDTO> findByUserAndTenant(Long userId, Long tenantId,int page, int siz);
+
+    PageResult<UserTenantDTO> list(Long userId, Long tenantId, int page, int size);
 }

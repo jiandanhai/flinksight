@@ -1,5 +1,6 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.Tenant;
 import com.flinksight.backend.exception.BusinessException;
 import com.flinksight.backend.mapper.TenantStructMapper;
@@ -13,7 +14,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -50,10 +50,10 @@ public class TenantServiceImpl implements TenantService {
     }
 
     @Override
-    public PageResult<TenantDTO> getAllTenants(int page, int size) {
-        Page<Tenant> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<TenantDTO> dtoPage = result.map(tenantStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<TenantDTO> list(int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, Tenant.class); // 统一 1→0
+        Page<Tenant> result = repository.findByIsDeleted(0, pr);
+        return PageHelpers.toPageResult(result, tenantStructMapper::toDTO, true); //
     }
 
     @Override
@@ -72,7 +72,7 @@ public class TenantServiceImpl implements TenantService {
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<TenantDTO> opt = repository.findById(id).map(tenantStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             TenantDTO dto = opt.get();

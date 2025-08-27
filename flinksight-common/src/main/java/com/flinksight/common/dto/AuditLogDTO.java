@@ -26,31 +26,34 @@ public class AuditLogDTO  implements Serializable {
     @Schema(description = "用户ID")
     private Long userId;
 
-    @Schema(description = "操作时间")
-    private LocalDateTime operateTime;
-
-    @Schema(description = "操作人ID")
-    private String operatorId;
-
-    @Schema(description = "操作人名称")
-    private String operatorName;
-
     @Schema(description = "租户ID")
     private Long tenantId;
+
+    @Schema(description = "操作人ID（字符串形态，兼容外部系统ID）")
+    private String operatorId;
+
+    @Schema(description = "操作人名称（username/显示名）")
+    private String operatorName;
+
+    @Schema(description = "操作时间（显示用）")
+    private LocalDateTime operateTime;
+
+    @Schema(description = "创建时间（落库时间，通常与operateTime相同）")
+    private LocalDateTime createTime;
 
     @Schema(description = "操作类型（如CREATE/DELETE/EXPORT/LOGIN等）")
     private String action;
 
-    @Schema(description = "目标类型（如User、Job、Cluster等）")
+    @Schema(description = "目标类型（如User、Job、Cluster、Alert、Rule等）")
     private String targetType;
 
-    @Schema(description = "目标对象ID")
+    @Schema(description = "目标对象ID（字符串形态，兼容UUID/雪花/复合KEY）")
     private String targetId;
 
-    @Schema(description = "操作内容/详情（如变更前后、请求参数等）")
+    @Schema(description = "操作内容/详情（如变更前后、请求参数等,建议为简要JSON，避免过长）")
     private String content;
 
-    @Schema(description = "前端来源页面、接口")
+    @Schema(description = "前端来源页面、接口 （URI + HTTP方法）")
     private String source;
 
     @Schema(description = "traceId，全链路追踪标识")
@@ -59,13 +62,12 @@ public class AuditLogDTO  implements Serializable {
     @Schema(description = "操作结果（SUCCESS/FAIL等）")
     private String result;
 
-    @Schema(description = "失败原因（如有）")
+    @Schema(description = "失败原因（如有截断后简要存储））")
     private String failReason;
 
     @Schema(description = "ip地址")
     private String ip;
-    @Schema(description = "注册时间")
-    private LocalDateTime createTime;
+
 
     @Schema(description = "是否删除 0正常 1删除")
     private Integer isDeleted;

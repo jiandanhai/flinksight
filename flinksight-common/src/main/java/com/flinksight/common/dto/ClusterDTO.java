@@ -22,7 +22,7 @@ public class ClusterDTO implements Serializable {
     private String version;
     private String tags;
     private String apiEndpoint;
-    private Integer status;
+    private Integer status; /** 1=启用, 0=禁用 */
     private String remark;
     private Integer isDeleted;
     private LocalDateTime createTime;

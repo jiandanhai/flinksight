@@ -1,5 +1,6 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.RoleDataScope;
 import com.flinksight.backend.mapper.RoleDataScopeStructMapper;
 import com.flinksight.backend.repository.RoleDataScopeRepository;
@@ -10,7 +11,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -47,17 +47,10 @@ public class RoleDataScopeServiceImpl implements RoleDataScopeService {
     }
 
     @Override
-    public PageResult<RoleDataScopeDTO> findByRoleId(Long roleId,int page, int size) {
-        Page<RoleDataScope> result = repository.findByRoleIdAndIsDeleted(roleId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<RoleDataScopeDTO> dtoPage = result.map(roleDataScopeStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
-
-    @Override
-    public PageResult<RoleDataScopeDTO> findByDataScopeId(Long dataScopeId,int page, int size) {
-        Page<RoleDataScope> result = repository.findByDataScopeIdAndIsDeleted(dataScopeId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<RoleDataScopeDTO> dtoPage = result.map(roleDataScopeStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<RoleDataScopeDTO> list(Long roleId, Long dataScopeId, int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, RoleDataScope.class); // 统一 1→0
+        Page<RoleDataScope> result = repository.pageQuery(roleId, dataScopeId, pr);
+        return PageHelpers.toPageResult(result, roleDataScopeStructMapper::toDTO, true); // 返回
     }
 
     @Override
@@ -66,7 +59,7 @@ public class RoleDataScopeServiceImpl implements RoleDataScopeService {
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<RoleDataScopeDTO> opt = repository.findById(id).map(roleDataScopeStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             RoleDataScopeDTO dto = opt.get();

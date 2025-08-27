@@ -1,5 +1,6 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.ResourceLabel;
 import com.flinksight.backend.mapper.ResourceLabelStructMapper;
 import com.flinksight.backend.repository.ResourceLabelRepository;
@@ -10,7 +11,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -48,17 +48,10 @@ public class ResourceLabelServiceImpl implements ResourceLabelService {
     }
 
     @Override
-    public PageResult<ResourceLabelDTO> findByResourceId(Long resourceId,int page, int size) {
-        Page<ResourceLabel> result = repository.findByResourceIdAndIsDeleted(resourceId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<ResourceLabelDTO> dtoPage = result.map(resourceLabelStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
-
-    @Override
-    public PageResult<ResourceLabelDTO> findByLabelId(Long labelId,int page, int size) {
-        Page<ResourceLabel> result = repository.findByLabelIdAndIsDeleted(labelId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<ResourceLabelDTO> dtoPage = result.map(resourceLabelStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<ResourceLabelDTO> list(Long resourceId, Long labelId, int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, ResourceLabel.class); // 统一 1→0
+        Page<ResourceLabel> result = repository.pageQuery(resourceId, labelId, pr);
+        return PageHelpers.toPageResult(result, resourceLabelStructMapper::toDTO, true); // 返回
     }
 
     @Override
@@ -67,7 +60,7 @@ public class ResourceLabelServiceImpl implements ResourceLabelService {
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<ResourceLabelDTO> opt = repository.findById(id).map(resourceLabelStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             ResourceLabelDTO dto = opt.get();

@@ -8,6 +8,5 @@ import java.util.Optional;
 public interface ApiKeyService extends SoftDeleteService<ApiKeyDTO, Long> {
     ApiKeyDTO createOrUpdate(ApiKeyDTO apiKey);
     Optional<ApiKeyDTO> getById(Long id);
-    PageResult<ApiKeyDTO> findByTenantId(Long tenantId,int page, int size);
-    PageResult<ApiKeyDTO> getAll(int page, int size);
+    PageResult<ApiKeyDTO> list(int page, int size);
 }

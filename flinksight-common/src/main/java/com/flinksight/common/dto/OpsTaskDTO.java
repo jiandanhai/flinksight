@@ -25,6 +25,9 @@ public class OpsTaskDTO implements Serializable {
     @Schema(description = "租户ID")
     private Long tenantId;
 
+    @Schema(description = "自动化运维模板ID")
+    private Long templateId;
+
     @Schema(description = "任务名称")
     private String name;
 

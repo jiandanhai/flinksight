@@ -39,4 +39,9 @@ public interface AlertHistoryRepository extends JpaRepository<AlertHistory, Long
             "FROM AlertHistory a " +
             "WHERE a.tenantId = :tenantId AND a.status = 1 AND a.operateTime IS NOT NULL")
     Double averageResponseTimeSeconds(@Param("tenantId") Long tenantId);
+
+
+    List<AlertHistory> findTop10ByAlertIdAndTenantIdAndIsDeletedOrderByCreatedAtDesc(Long alertId, Long tenantId, Integer isDeleted);
+
+    List<AlertHistory> findByAlertIdAndTenantIdAndIsDeletedOrderByCreatedAtDesc(Long alertId, Long tenantId, Integer isDeleted);
 }

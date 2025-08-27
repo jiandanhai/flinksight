@@ -8,7 +8,6 @@ import com.flinksight.common.dto.MenuNodeDTO;
 import com.flinksight.common.dto.UserDTO;
 import com.flinksight.common.dto.UserPermissionResDTO;
 import com.flinksight.common.dto.UserTokenStateDTO;
-import com.flinksight.common.enums.ErrorCode;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.MenuService;
 import com.flinksight.common.service.OpAudit;
@@ -82,18 +81,14 @@ public class UserController {
     @Operation(summary = "",operationId = "getSsoUserByAccount")
     @GetMapping("/account/{account}")
     public ApiResponse<UserDTO> findByAccount(@PathVariable String account) {
-        return userService.findByAccount(account)
-                .map(ApiResponse::ok)
-                .orElse(ApiResponse.error(ErrorCode.NOT_FOUND,"用户不存在"));
+        return ApiResponse.ok(userService.findByAccount(account));
     }
 
-    @Operation(summary = "分页查询用户", description = "Get user list by tenant with paging",operationId = "getUsersByTenant")
+    @Operation(summary = "分页查询用户", description = "Get user list by tenant with paging",operationId = "listUsers")
     @GetMapping("/list")
-    public ApiResponse<PageResult<UserDTO>> getUsersByTenant(
-            @RequestParam Long tenantId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(userService.getUsersByTenant(tenantId,page,size));
+    public ApiResponse<PageResult<UserDTO>> list(@RequestParam(defaultValue = "0") int page,
+                                                             @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(userService.list(page,size));
     }
 
     @Operation(summary = "软删除用户", description = "Soft delete user",operationId = "deleteUser")
@@ -102,7 +97,7 @@ public class UserController {
     @DeleteMapping("/delete/{id}")
     public ApiResponse<Void> softDeleteUser(
             @Parameter(description = "用户ID") @PathVariable Long id) {
-        if (userService.softDelete(id)) {
+        if (userService.sDelete(id)) {
             return ApiResponse.ok(null);
         }
         return ApiResponse.ok(null);
@@ -130,7 +125,7 @@ public class UserController {
     }
 
 
-    @Operation(summary = "本地 JWT 登出（吊销当前访问令牌）")
+    @Operation(summary = "本地 JWT 登出（吊销当前访问令牌）",operationId = "logout")
     @PostMapping("/logout")
     public ApiResponse<Void> logout(@RequestHeader(value = "Authorization", required = false) String bearer,
                                     @RequestParam(required = false) Long userId) {
@@ -159,11 +154,9 @@ public class UserController {
 
     @Operation(summary = "获取当前用户权限码列表", operationId = "userPermissions")
     @GetMapping("/permissions")
-    public ApiResponse<UserPermissionResDTO> getUserPermissions(
-            @RequestParam Long userId,
-            @RequestParam Long tenantId) {
-
-        List<String> permissions = userService.getAuthorities(userId, tenantId);
+    public ApiResponse<UserPermissionResDTO> getUserPermissions(@RequestParam Long userId,
+                                                                @RequestParam Long tenantId) {
+        List<String> permissions = userService.getAuthorities(userId,tenantId);
         return ApiResponse.ok(new UserPermissionResDTO(permissions));
     }
 
@@ -174,12 +167,10 @@ public class UserController {
      */
     @Operation(summary = "获取当前用户菜单列表", operationId = "getUserMenus")
     @GetMapping("/menus")
-    public ResponseEntity<List<MenuNodeDTO>> getUserMenus(
-            @RequestParam("userId") Long userId,
-            @RequestParam(value = "tenantId", required = false) Long tenantId, HttpServletRequest request
+    public ResponseEntity<List<MenuNodeDTO>> getUserMenus(HttpServletRequest request
     ) {
         Locale locale = request.getLocale(); // 或 LocaleContextHolder.getLocale()
-        List<MenuNodeDTO> tree = menuService.getMenuTreeForUser(userId, tenantId, locale);
+        List<MenuNodeDTO> tree = menuService.getMenuTreeForUser(locale);
         return ResponseEntity.ok(tree);
     }
 }

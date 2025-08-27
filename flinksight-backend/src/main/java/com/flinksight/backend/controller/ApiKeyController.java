@@ -37,21 +37,13 @@ public class ApiKeyController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "", operationId = "getAllApiKeys")
+    @Operation(summary = "", operationId = "listApiKeys")
     @GetMapping("/list")
-    public ApiResponse<PageResult<ApiKeyDTO>> getAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.getAll(page,size));
-    }
-
-    @Operation(summary = "", operationId = "getApiKeysByTenant")
-    @GetMapping("/tenant/{tenantId}")
-    public ApiResponse<PageResult<ApiKeyDTO>> findByTenantId(
+    public ApiResponse<PageResult<ApiKeyDTO>> list(
             @PathVariable Long tenantId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
+        return ApiResponse.ok(service.list(page,size));
     }
 
     @Operation(summary = "", operationId = "updateApiKey")
@@ -64,6 +56,6 @@ public class ApiKeyController {
     @Operation(summary = "", operationId = "deleteApiKey")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

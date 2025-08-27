@@ -1,5 +1,6 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.JobAlertLog;
 import com.flinksight.backend.domain.JobAlertRule;
 import com.flinksight.backend.mapper.JobAlertLogStructMapper;
@@ -12,7 +13,6 @@ import com.flinksight.common.service.JobAlertService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -46,10 +46,10 @@ public class JobAlertServiceImpl implements JobAlertService {
     }
 
     @Override
-    public PageResult<JobAlertRuleDTO> getActiveRulesByTenant(Long tenantId,int page, int size) {
-        Page<JobAlertRule> result = ruleRepo.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<JobAlertRuleDTO> dtoPage = result.map(jobAlertRuleStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<JobAlertRuleDTO> list(Long tenantId,int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, JobAlertRule.class); // 统一 1→0
+        Page<JobAlertRule> result = ruleRepo.findByTenantIdAndIsDeleted(tenantId,0, pr);
+        return PageHelpers.toPageResult(result, jobAlertRuleStructMapper::toDTO, true); // 返回 1-b
     }
 
     @Override

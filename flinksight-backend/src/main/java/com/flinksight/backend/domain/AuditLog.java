@@ -1,5 +1,6 @@
 package com.flinksight.backend.domain;
 
+import com.flinksight.common.service.DefaultSort;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
@@ -15,19 +16,19 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(
-        name = "audit_log",
+@Table(name = "audit_log",
         indexes = {
-                @Index(name = "idx_tenant", columnList = "tenant_id"),
-                @Index(name = "idx_trace", columnList = "trace_id"),
-                @Index(name = "idx_operator", columnList = "operator")
-        }
-)
+                @Index(name="idx_tenant",   columnList = "tenant_id,created_at"),
+                @Index(name="idx_target",   columnList = "target_type,target_id,created_at"),
+                @Index(name="idx_operator", columnList = "operator,created_at"),
+                @Index(name="idx_trace",    columnList = "trace_id")
+        })
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "操作审计日志表")
 @SQLRestriction("is_deleted=0")  // 替代 Hibernate 6.3 的 @Where
+@DefaultSort(fields = {"createdAt", "id"})
 public class AuditLog implements Serializable {
 
     @Id
@@ -43,7 +44,7 @@ public class AuditLog implements Serializable {
     @Schema(description = "操作人ID")
     private Long userId;
 
-    @Column(length = 64)
+    @Column(name="action",    nullable=false, length=64)
     @Schema(description = "操作类型")
     private String action;
 
@@ -53,7 +54,7 @@ public class AuditLog implements Serializable {
 
     @Column(name = "target_id")
     @Schema(description = "对象ID")
-    private Long targetId;
+    private String targetId;
 
     @Column(length = 45)
     @Schema(description = "IP地址")
@@ -62,6 +63,15 @@ public class AuditLog implements Serializable {
     @Column(length = 255)
     @Schema(description = "操作内容")
     private String content;
+
+    @Column(name="source",length=128)
+    private String source;
+
+    @Column(name="result",length=16)
+    private String result;       // SUCCESS/FAIL
+
+    @Column(name="fail_reason",length=512)
+    private String failReason;
 
     @Column(name = "operator", length = 64, nullable = false)
     @Schema(description = "操作人用户名/ID")

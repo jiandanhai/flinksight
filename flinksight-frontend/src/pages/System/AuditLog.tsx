@@ -4,7 +4,7 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Input, Table, Tag} from 'antd';
-import api from '@/api/api-compat';
+import { } from '@/api/modules';
 
 import type {AuditLogDTO} from '@/api/dto';
 
@@ -21,7 +21,7 @@ const AuditLogPage: React.FC = () => {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await api.getAllAuditLogs({ ...query, page, size });
+      const res = await listAuditLogs({ ...query, page, size });
       setLogs(res.data?.records || []);
       setTotal(res.data?.total || 0);
     } finally {
@@ -31,7 +31,7 @@ const AuditLogPage: React.FC = () => {
   useEffect(() => { fetch(); }, [query, page, size]);
 
   const handleExport = async () => {
-    await api.exportAuditLogs({ ...query, page, size });
+    await exportAuditLogs({ ...query, page, size });
     // 可直接 window.open(url) 或下载文件流
   };
 

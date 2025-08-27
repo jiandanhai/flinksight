@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Badge, Button, message, Modal, Table } from 'antd';
-import api from '@/api/api-compat';
+import { listNotifications ,notificationMarkRead,notificationDelete} from '@/api/modules';
 
 // 建议用后端 openapi 自动生成的 NotificationDTO 类型
 interface Notification {
@@ -23,7 +23,7 @@ const NotificationCenter: React.FC = () => {
   // 获取通知列表
   const fetch = async () => {
     setLoading(true);
-    const res = await api.notificationControllerList();
+    const res = await listNotifications();
     setList(res.data || []);
     setLoading(false);
   };
@@ -32,7 +32,7 @@ const NotificationCenter: React.FC = () => {
 
   // 批量标记已读
   const markRead = async (ids: number[]) => {
-    await api.notificationControllerMarkRead({ ids });
+    await notificationMarkRead({ ids });
     message.success('标记为已读');
     fetch();
   };
@@ -42,7 +42,7 @@ const NotificationCenter: React.FC = () => {
     Modal.confirm({
       title: '确认删除？',
       onOk: async () => {
-        await api.notificationControllerDelete({ ids });
+        await notificationDelete({ ids });
         message.success('删除成功');
         fetch();
       }

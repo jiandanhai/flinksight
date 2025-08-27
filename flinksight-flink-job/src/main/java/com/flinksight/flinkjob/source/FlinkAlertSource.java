@@ -31,8 +31,8 @@ public class FlinkAlertSource extends RichSourceFunction<AlertDTO> {
             alert.setId((long) random.nextInt(10000));
             alert.setTenantId(tenantId);
             alert.setMessage(messages[random.nextInt(messages.length)]);
-            alert.setCreateTime(LocalDateTime.now());
-            alert.setUpdateTime(LocalDateTime.now());
+            alert.setCreatedAt(LocalDateTime.now());
+            alert.setUpdatedAt(LocalDateTime.now());
             ctx.collect(alert);
             Thread.sleep(1000); // 每秒一条
         }

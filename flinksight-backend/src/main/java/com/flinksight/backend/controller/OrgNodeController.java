@@ -46,19 +46,17 @@ public class OrgNodeController {
         return ApiResponse.ok(orgNodeService.getById(id));
     }
 
-    @Operation(summary = "", description = "", operationId = "getOrgNodesByTenant")
+    @Operation(summary = "", description = "", operationId = "listOrgNodes")
     @GetMapping("/list")
-    public ApiResponse<PageResult<OrgNodeDTO>> list(@RequestParam Long tenantId,
-                                                    @RequestParam(defaultValue = "0") int page,
+    public ApiResponse<PageResult<OrgNodeDTO>> list(@RequestParam(defaultValue = "0") int page,
                                                     @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(orgNodeService.listByTenant(tenantId,page,size));
+        return ApiResponse.ok(orgNodeService.list(page,size));
     }
 
     @Operation(summary = "", description = "", operationId = "getOrgNodeTree")
     @GetMapping("/tree")
-    public ApiResponse<List<OrgNodeDTO>> tree(@RequestParam Long tenantId,
-                                              @RequestParam(defaultValue = "0") int page,
+    public ApiResponse<List<OrgNodeDTO>> tree(@RequestParam(defaultValue = "0") int page,
                                               @RequestParam(defaultValue = "20") int siz) {
-        return ApiResponse.ok(orgNodeService.getOrgTree(tenantId));
+        return ApiResponse.ok(orgNodeService.getOrgTree());
     }
 }

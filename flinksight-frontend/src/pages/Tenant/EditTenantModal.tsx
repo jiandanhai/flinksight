@@ -4,7 +4,7 @@
  */
 import React, {useEffect} from 'react';
 import {Form, Input, message, Modal, Switch} from 'antd';
-import api from '@/api/api-compat';
+import { getTenant, updateTenant,createTenant } from '@/api/modules';
 
 import type {TenantDTO} from '@/api/dto';
 
@@ -20,7 +20,7 @@ const EditTenantModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
 
   useEffect(() => {
     if (id) {
-      api.getTenant(id).then(res => form.setFieldsValue(res.data));
+      getTenant(id).then(res => form.setFieldsValue(res.data));
     } else {
       form.resetFields();
     }
@@ -29,10 +29,10 @@ const EditTenantModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
   const handleSubmit = async () => {
     const values = await form.validateFields();
     if (id) {
-      await api.updateTenant(id, values as TenantDTO);
+      await updateTenant(id, values as TenantDTO);
       message.success('编辑成功');
     } else {
-      await api.createTenant(values as TenantDTO);
+      await createTenant(values as TenantDTO);
       message.success('新建成功');
     }
     onOk();

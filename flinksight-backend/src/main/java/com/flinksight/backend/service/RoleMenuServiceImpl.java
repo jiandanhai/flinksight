@@ -1,5 +1,6 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.RoleMenu;
 import com.flinksight.backend.mapper.RoleMenuStructMapper;
 import com.flinksight.backend.repository.RoleMenuRepository;
@@ -10,7 +11,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -46,18 +46,12 @@ public class RoleMenuServiceImpl implements RoleMenuService {
         return false;
     }
 
-    @Override
-    public PageResult<RoleMenuDTO> findByRoleId(Long roleId,int page, int size) {
-        Page<RoleMenu> result = repository.findByRoleIdAndIsDeleted(roleId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<RoleMenuDTO> dtoPage = result.map(roleMenuStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
 
     @Override
-    public PageResult<RoleMenuDTO> findByMenuId(Long menuId,int page, int size) {
-        Page<RoleMenu> result = repository.findByMenuIdAndIsDeleted(menuId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<RoleMenuDTO> dtoPage = result.map(roleMenuStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<RoleMenuDTO> list(Long roleId, Long menuId, int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, RoleMenu.class); // 统一 1→0
+        Page<RoleMenu> result = repository.pageQuery(roleId, menuId, pr);
+        return PageHelpers.toPageResult(result, roleMenuStructMapper::toDTO, true); // 返回
     }
 
     @Override
@@ -66,7 +60,7 @@ public class RoleMenuServiceImpl implements RoleMenuService {
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<RoleMenuDTO> opt = repository.findById(id).map(roleMenuStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             RoleMenuDTO dto = opt.get();

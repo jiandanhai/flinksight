@@ -15,8 +15,9 @@ import java.util.Optional;
 public interface JobMetricService extends SoftDeleteService<JobMetricDTO, Long>  {
     JobMetricDTO createMetric(JobMetricDTO metric);
     Optional<JobMetricDTO> getMetricById(Long id);
-    PageResult<JobMetricDTO> getMetricsByJob(Long jobId, LocalDateTime start, LocalDateTime end,int page, int size);
-    PageResult<JobMetricDTO> getMetricsByTenantAndMetric(Long tenantId, String metricKey, LocalDateTime start, LocalDateTime end,int page, int size);
+    MetricSeriesDTO getSeries(String metricKey, LocalDateTime from, LocalDateTime to);
 
-    MetricSeriesDTO getSeries(Long tenantId, String metricKey, LocalDateTime from, LocalDateTime to);
+    PageResult<JobMetricDTO> list(Long jobId, String metricKey,
+                                       LocalDateTime start, LocalDateTime end,
+                                       int page, int size);
 }

@@ -1,4 +1,7 @@
-import json, datetime, random
+import datetime
+import json
+import random
+
 
 def gen_data(batch=10000, outfile="metric_data.json"):
     now = datetime.datetime.now()

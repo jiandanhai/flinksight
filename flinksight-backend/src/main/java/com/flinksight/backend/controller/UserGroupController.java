@@ -34,20 +34,13 @@ public class UserGroupController {
         return service.removeGroupFromUser(userId, groupId);
     }
 
-    @Operation(summary = "", description = "",operationId = "getUserGroupsByUser")
-    @GetMapping("/user/{userId}")
-    public ApiResponse<PageResult<UserGroupDTO>> findByUser(@PathVariable Long userId,
-                                         @RequestParam(defaultValue = "0") int page,
-                                         @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByUserId(userId,page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getUserGroupsByGroup")
-    @GetMapping("/group/{groupId}")
-    public ApiResponse<PageResult<UserGroupDTO>> findByGroup(@PathVariable Long groupId,
+    @Operation(summary = "", description = "",operationId = "listUserGroups")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<UserGroupDTO>> findByGroup(@RequestParam Long userId,
+                                                            @RequestParam Long groupId,
                                                             @RequestParam(defaultValue = "0") int page,
                                                             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByGroupId(groupId,page,size));
+        return ApiResponse.ok(service.list(userId,groupId,page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "getUserGroup")
@@ -61,6 +54,6 @@ public class UserGroupController {
     @Operation(summary = "", description = "",operationId = "deleteUserGroup")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

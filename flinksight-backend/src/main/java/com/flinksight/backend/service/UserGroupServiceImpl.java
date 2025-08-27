@@ -1,5 +1,6 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.UserGroup;
 import com.flinksight.backend.mapper.UserGroupStructMapper;
 import com.flinksight.backend.repository.UserGroupRepository;
@@ -10,7 +11,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -47,17 +47,10 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     @Override
-    public PageResult<UserGroupDTO> findByUserId(Long userId,int page, int size) {
-        Page<UserGroup> result = repository.findByUserIdAndIsDeleted(userId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<UserGroupDTO> dtoPage = result.map(userGroupStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
-
-    @Override
-    public PageResult<UserGroupDTO> findByGroupId(Long groupId,int page, int size) {
-        Page<UserGroup> result = repository.findByGroupIdAndIsDeleted(groupId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<UserGroupDTO> dtoPage = result.map(userGroupStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<UserGroupDTO> list(Long userId, Long groupId, int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, UserGroup.class); // 统一 1→0
+        Page<UserGroup> result = repository.pageQuery(userId, groupId, pr);
+        return PageHelpers.toPageResult(result, userGroupStructMapper::toDTO, true); //
     }
 
     @Override
@@ -66,7 +59,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<UserGroupDTO> opt = repository.findById(id).map(userGroupStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             UserGroupDTO dto = opt.get();

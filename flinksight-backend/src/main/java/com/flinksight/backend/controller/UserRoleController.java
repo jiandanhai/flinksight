@@ -24,8 +24,8 @@ public class UserRoleController {
 
     @Operation(summary = "用户分配角色", description = "",operationId = "assignUserRole")
     @PostMapping("/assign")
-    public ApiResponse<UserRoleDTO> assign(@RequestParam Long userId, @RequestParam Long roleId, @RequestParam(required = false) Long tenantId) {
-        return ApiResponse.ok(service.assignRoleToUser(userId, roleId, tenantId));
+    public ApiResponse<UserRoleDTO> assign(@RequestParam Long userId, @RequestParam Long roleId) {
+        return ApiResponse.ok(service.assignRoleToUser(userId, roleId));
     }
 
     @Operation(summary = "用户移除角色", description = "",operationId = "removeUserRole")
@@ -34,29 +34,13 @@ public class UserRoleController {
         return service.removeRoleFromUser(userId, roleId);
     }
 
-    @Operation(summary = "获取用户所有角色", description = "",operationId = "getUserRolesByUser")
-    @GetMapping("/by-user/{userId}")
-    public ApiResponse<PageResult<UserRoleDTO>> findRolesByUser(@PathVariable Long userId,
-                                                               @RequestParam(defaultValue = "0") int page,
-                                                               @RequestParam(defaultValue = "20") int size) {
-
-        return ApiResponse.ok(service.findRolesByUserId(userId,page,size));
-    }
-
-    @Operation(summary = "获取角色下所有用户", description = "",operationId = "getUserRolesByRole")
-    @GetMapping("/by-role/{roleId}")
-    public ApiResponse<PageResult<UserRoleDTO>> findUsersByRole(@PathVariable Long roleId,
-                                             @RequestParam(defaultValue = "0") int page,
-                                             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findUsersByRoleId(roleId,page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getUserRolesByTenant")
-    @GetMapping("/by_tenant/{tenantId}")
-    public ApiResponse<PageResult<UserRoleDTO>> findByTenantId(@PathVariable Long tenantId,
-                                            @RequestParam(defaultValue = "0") int page,
-                                            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
+    @Operation(summary = "获取角色下所有用户", description = "",operationId = "listUserRoles")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<UserRoleDTO>> findUsersByRole(@RequestParam Long userId,
+                                                                @RequestParam Long roleId,
+                                                                @RequestParam(defaultValue = "0") int page,
+                                                                @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.list(userId,roleId,page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "getUserRole")
@@ -70,6 +54,6 @@ public class UserRoleController {
     @Operation(summary = "", description = "",operationId = "deleteUserRole")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

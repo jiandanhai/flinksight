@@ -1,8 +1,10 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.ApiAccessLog;
 import com.flinksight.backend.mapper.ApiAccessLogStructMapper;
 import com.flinksight.backend.repository.ApiAccessLogRepository;
+import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.common.dto.ApiAccessLogDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ApiAccessLogService;
@@ -10,7 +12,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -36,21 +37,15 @@ public class ApiAccessLogServiceImpl implements ApiAccessLogService {
     }
 
     @Override
-    public PageResult<ApiAccessLogDTO> findByTenantId(Long tenantId,int page, int size) {
-        Page<ApiAccessLog> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<ApiAccessLogDTO> dtoPage = result.map(apiAccessLogStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<ApiAccessLogDTO> list(int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, ApiAccessLog.class); // 统一 1→0
+        Page<ApiAccessLog> result = repository.findByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(),0,pr);
+        return PageHelpers.toPageResult(result, apiAccessLogStructMapper::toDTO, true); // 返回 1-based
     }
 
-    @Override
-    public PageResult<ApiAccessLogDTO> getAll(int page, int size) {
-        Page<ApiAccessLog> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<ApiAccessLogDTO> dtoPage = result.map(apiAccessLogStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<ApiAccessLogDTO> opt = repository.findById(id).map(apiAccessLogStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             ApiAccessLogDTO dto = opt.get();

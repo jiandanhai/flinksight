@@ -19,7 +19,7 @@ public interface UserService extends SoftDeleteService<UserDTO, Long>  {
      */
     UserDTO getCurrentUserProfile();
 
-    Optional<UserDTO> findByAccount(String account);
+    UserDTO findByAccount(String account);
 
     UserDTO register(UserDTO user);
 
@@ -41,12 +41,11 @@ public interface UserService extends SoftDeleteService<UserDTO, Long>  {
 
     /**
      * 分页查询用户
-     * @param tenantId 租户ID
      * @param page 页码
      * @param size 每页条数
      * @return 用户列表
      */
-    PageResult<UserDTO> getUsersByTenant(Long tenantId, int page, int size);
+    PageResult<UserDTO> list(int page, int size);
 
 
     /**

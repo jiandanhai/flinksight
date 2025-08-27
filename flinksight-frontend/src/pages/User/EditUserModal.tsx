@@ -4,7 +4,7 @@
  */
 import React, {useEffect} from 'react';
 import {Form, Input, message, Modal, Select, Switch} from 'antd';
-import api from '@/api/api-compat';
+import { getUser, updateUser, createUser,changePassword } from '@/api/modules';
 
 import type {UserDTO} from '@/api/dto';
 
@@ -22,7 +22,7 @@ const EditUserModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
 
   useEffect(() => {
     if (id) {
-      api.getUser(id).then(res => form.setFieldsValue(res.data));
+      getUser(id).then(res => form.setFieldsValue(res.data));
     } else {
       form.resetFields();
     }
@@ -32,10 +32,10 @@ const EditUserModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
   const handleSubmit = async () => {
     const values = await form.validateFields();
     if (id) {
-      await api.updateUser(id, values as UserDTO);
+      await updateUser(id, values as UserDTO);
       message.success('编辑成功');
     } else {
-      await api.createUser(values as UserDTO);
+      await createUser(values as UserDTO);
       message.success('新建成功');
     }
     onOk();
@@ -45,7 +45,7 @@ const EditUserModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
   // 重置密码（仅编辑时可见）
   const handleResetPwd = async () => {
     if (!id) return;
-    await api.resetUserPassword(id);
+    await changePassword(id);
     message.success('已重置密码（新密码请通过通知渠道获取）');
   };
 

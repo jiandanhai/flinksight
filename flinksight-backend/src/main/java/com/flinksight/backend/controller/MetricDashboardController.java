@@ -37,21 +37,12 @@ public class MetricDashboardController {
         return service.getById(id);
     }
 
-    @Operation(summary = "", description = "",operationId = "getAllMetricDashboards")
-    @GetMapping
-    public ApiResponse<PageResult<MetricDashboardDTO>> getAll(
+    @Operation(summary = "", description = "",operationId = "listMetricDashboards")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<MetricDashboardDTO>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.getAll(page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getMetricDashboardsByTenant")
-    @GetMapping("/tenant/{tenantId}")
-    public ApiResponse<PageResult<MetricDashboardDTO>> findByTenantId(
-            @PathVariable Long tenantId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
+        return ApiResponse.ok(service.list(page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "updateMetricDashboard")
@@ -63,6 +54,6 @@ public class MetricDashboardController {
     @Operation(summary = "", description = "",operationId = "deleteMetricDashboard")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

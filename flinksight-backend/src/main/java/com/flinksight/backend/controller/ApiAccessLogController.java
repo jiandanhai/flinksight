@@ -37,21 +37,13 @@ public class ApiAccessLogController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "", operationId = "getAllApiAccessLogs")
-    @GetMapping("/list")
-    public ApiResponse<PageResult<ApiAccessLogDTO>> getAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.getAll(page,size));
-    }
 
-    @Operation(summary = "", operationId = "getApiAccessLogsByTenant")
-    @GetMapping("/tenant/{tenantId}")
-    public ApiResponse<PageResult<ApiAccessLogDTO>> findByTenantId(
-            @PathVariable Long tenantId,
+    @Operation(summary = "", operationId = "listApiAccessLogs")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<ApiAccessLogDTO>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
+        return ApiResponse.ok(service.list(page,size));
     }
 
     @Operation(summary = "", operationId = "updateApiAccessLog")
@@ -63,6 +55,6 @@ public class ApiAccessLogController {
     @Operation(summary = "", operationId = "deleteApiAccessLog")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

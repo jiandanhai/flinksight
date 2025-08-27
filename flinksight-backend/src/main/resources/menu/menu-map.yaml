@@ -23,12 +23,6 @@ tops:
         path: /cluster/list
         order: 10
         perm: CLUSTER_VIEW
-      - code: cluster.node
-        titleZh: 节点状态
-        titleEn: Node Status
-        path: /cluster/node
-        order: 20
-        perm: CLUSTER_VIEW
 
   - code: job
     titleZh: 作业运维
@@ -54,7 +48,7 @@ tops:
     perm: ALERT_VIEW
     children:
       - code: alerts.list
-        titleZh: 报警流水
+        titleZh: 报警管理
         titleEn: Alerts List
         path: /alerts/list
         order: 10
@@ -72,14 +66,8 @@ tops:
     path: /metrics
     icon: AreaChartOutlined
     order: 70
-    perm: METRICS_VIEW
-    children:
-      - code: metrics.dashboard
-        titleZh: 指标大屏
-        titleEn: Metric Dashboard
-        path: /metrics/dashboard
-        order: 10
-        perm: METRICS_VIEW
+    perm: METRIC_VIEW
+    children: []
 
   - code: ops
     titleZh: 运营大屏
@@ -96,32 +84,7 @@ tops:
         order: 10
         perm: OPS_VIEW
 
-  - code: files
-    titleZh: 文件中心
-    titleEn: Files
-    path: /files
-    icon: CloudOutlined
-    order: 50
-    perm: FILE_VIEW
-    children: [ ]
-
-  # 个人中心（仅当前登录用户）
-  - code: profile
-    titleZh: 个人中心
-    titleEn: Profile
-    path: /profile
-    icon: UserOutlined
-    order: 90
-    perm: USER_VIEW
-    children:
-      - code: profile.center
-        titleZh: 我的资料
-        titleEn: My Profile
-        path: /profile/center
-        order: 10
-        perm: USER_VIEW
-
-  # 系统设置（集中放 RBAC / 租户）
+  # 系统设置（统一入口：/settings/user 的 index.tsx 内置 Tab：用户/角色/个人资料）
   - code: settings
     titleZh: 系统设置
     titleEn: Settings
@@ -136,15 +99,18 @@ tops:
         path: /settings/user
         order: 10
         perm: USER_VIEW
-      - code: settings.role
-        titleZh: 角色管理
-        titleEn: Roles
-        path: /settings/role
-        order: 20
-        perm: ROLE_VIEW
       - code: settings.tenant
         titleZh: 租户管理
         titleEn: Tenant
         path: /settings/tenant
         order: 30
         perm: TENANT_VIEW
+
+  - code: files
+    titleZh: 文件中心
+    titleEn: Files
+    path: /files
+    icon: CloudOutlined
+    order: 50
+    perm: FILE_VIEW
+    children: [ ]

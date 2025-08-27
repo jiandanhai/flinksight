@@ -10,9 +10,13 @@ import java.util.Map;
 @Getter
 @AllArgsConstructor
 public enum AlertLevelEnum {
-    HIGH("high", "高"),
-    MEDIUM("medium", "中"),
-    LOW("low", "低");
+    FATAL("0", "致命"),
+    HIGH("1", "高"),
+    MEDIUM("2", "中"),
+    LOW("3", "低"),
+    UNKNOWN("4", "未知");
+
+
 
     private final String code;
     private final String desc;

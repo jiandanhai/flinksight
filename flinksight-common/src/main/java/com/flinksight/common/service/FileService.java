@@ -8,6 +8,5 @@ import java.util.Optional;
 public interface FileService extends SoftDeleteService<FileDTO, Long> {
     FileDTO createOrUpdate(FileDTO entity);
     Optional<FileDTO> getById(Long id);
-    PageResult<FileDTO> findByTenantId(Long tenantId,int page, int size);
-    PageResult<FileDTO> getAll(int page, int size);
+    PageResult<FileDTO> list(int page, int size);
 }

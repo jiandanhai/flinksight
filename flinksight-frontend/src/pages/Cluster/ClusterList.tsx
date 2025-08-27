@@ -4,12 +4,11 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Input, message, Modal, Space, Table, Tag} from 'antd';
-import api from '@/api/api-compat';
-
 import type {ClusterDTO} from '@/api/dto';
 import EditClusterModal from './EditClusterModal';
 import ClusterDetail from './ClusterDetail';
 import {useUser} from '../../store/user';
+import { listClusters,deleteCluster,enableBatch } from "@/api/modules";
 
 const { Search } = Input;
 
@@ -19,7 +18,7 @@ const ClusterList: React.FC = () => {
   const [size, setSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState<DTO.ClusterDTO>({});
+  const [query, setQuery] = useState<ClusterDTO>({});
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -32,9 +31,27 @@ const ClusterList: React.FC = () => {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await api.getAllClusters({ ...query, page, size });
-      setList(res.data?.records || []);
-      setTotal(res.data?.total || 0);
+      const resp = await listClusters({ ...query, page, size });
+      // 兼容三种返回：已解包的数组 / 包一层 / 包两层
+      const payload = resp?.data?.data ?? resp?.data ?? resp;
+
+      const rows = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.data)   ? payload.data
+        : Array.isArray(payload?.records)? payload.records
+        : Array.isArray(payload?.list)   ? payload.list
+        : [];
+
+      const totalNum = typeof payload?.total === 'number' ? payload.total : rows.length;
+
+      console.log('[probe:new] rows.length =', rows.length, ' total =', totalNum);
+
+      setList(rows);
+      setTotal(Number(totalNum) || 0);
+    } catch (e: any) {
+      message.error(e?.message || '加载失败');
+      setList([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -63,7 +80,7 @@ const ClusterList: React.FC = () => {
     Modal.confirm({
       title: '确认删除该集群？',
       onOk: async () => {
-        await api.deleteCluster(id);
+        await deleteCluster(id);
         message.success('已删除');
         fetch();
       }
@@ -72,7 +89,7 @@ const ClusterList: React.FC = () => {
 
   // 批量启用/停用
   async function handleBatchEnable(enable: boolean) {
-    await api.batchEnableClusters(selectedRowKeys, enable);
+    await enableBatch(selectedRowKeys, enable);
     message.success(enable ? '已启用' : '已停用');
     setSelectedRowKeys([]);
     fetch();
@@ -107,7 +124,7 @@ const ClusterList: React.FC = () => {
           {
             title: '集群名',
             dataIndex: 'name',
-            render: (_: any, t: Cluster) =>
+            render: (_: any, t: ClusterDTO) =>
               <span className="text-blue-600 cursor-pointer" onClick={() => setDetailId(t.id)}>{t.name}</span>
           },
           { title: '类型', dataIndex: 'type', render: v => <Tag>{v}</Tag> },
@@ -118,11 +135,13 @@ const ClusterList: React.FC = () => {
               {v === 'healthy' ? '健康' : v === 'warning' ? '预警' : '异常'}
             </Tag>
           },
-          { title: '创建时间', dataIndex: 'createTime', render: (v: string) => new Date(v).toLocaleString() },
+          { title: '创建时间', dataIndex: 'createdAt', render: (v: string) => new Date(v).toLocaleString() },
           {
             title: '操作',
-            render: (_: any, t: Cluster) => (
+            render: (_: any, t: ClusterDTO) => (
               <Space>
+                  {/* ⬇️ 新增：节点状态入口（直达详情页的“节点状态”Tab） */}
+                <Button type="link" size="small" onClick={() => navigate(`/cluster/detail/${t.id}?tab=status`)}>节点状态</Button>
                 <Button type="link" size="small" onClick={() => openModal(t.id)} disabled={!canEdit}>编辑</Button>
                 <Button type="link" size="small" danger onClick={() => handleDelete(t.id)} disabled={!canEdit}>删除</Button>
               </Space>

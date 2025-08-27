@@ -1,5 +1,6 @@
 package com.flinksight.backend.domain;
 
+import com.flinksight.common.service.DefaultSort;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,13 +28,16 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Schema(description = "报警规则表")
 @SQLRestriction("is_deleted=0") // ⚡ 替代 Hibernate 6.3 的 @Where
+@DefaultSort(fields = {"createdAt", "id"})
 public class AlertRule implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Schema(description = "主键ID")
     private Long id;
-
+    @Column(name = "name", length = 128)
+    @Schema(description = "规则名称")
+    private String name;
     @Column(name = "tenant_id", nullable = false)
     @Schema(description = "租户ID")
     private Long tenantId;

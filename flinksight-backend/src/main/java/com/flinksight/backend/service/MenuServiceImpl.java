@@ -5,6 +5,7 @@ import com.flinksight.backend.domain.Menu;
 import com.flinksight.backend.mapper.MenuStructMapper;
 import com.flinksight.backend.repository.MenuRepository;
 import com.flinksight.backend.repository.PermissionRepository; // 若你把查询方法放这里就保留
+import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.common.dto.MenuNodeDTO;
 import com.flinksight.common.service.MenuService;
 import lombok.RequiredArgsConstructor;
@@ -35,12 +36,12 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<MenuNodeDTO> getMenuTreeForUser(Long userId, Long tenantId, Locale locale) {
+    public List<MenuNodeDTO> getMenuTreeForUser(Locale locale) {
         // 1) 拉取用户权限码（一次 SQL，distinct）
-        final Set<String> codes = new HashSet<>(permQueryRepo.findCodesByUser(userId, tenantId));
+        final Set<String> codes = new HashSet<>(permQueryRepo.findCodesByUser(SecurityUtil.getCurrentUserId(), SecurityUtil.getCurrentTenantId()));
         if (log.isDebugEnabled()) {
             log.debug("[menu] userId={}, tenantId={}, codes(size={}): {}",
-                    userId, tenantId, codes.size(), codes);
+                    SecurityUtil.getCurrentUserId(), SecurityUtil.getCurrentTenantId(), codes.size(), codes);
         }
 
         // 2) 拉取全部有效菜单（未删除，按 order_num,id 排序）
@@ -64,7 +65,7 @@ public class MenuServiceImpl implements MenuService {
         // 5) 兜底日志：前端空白时方便定位
         if (tree.isEmpty()) {
             log.warn("[menu] filtered tree is empty. userId={}, tenantId={}, userCodes={}",
-                    userId, tenantId, codes);
+                    SecurityUtil.getCurrentUserId(), SecurityUtil.getCurrentTenantId(), codes);
             // 打印最多 10 条菜单 requiredCode 统计，帮助排查“权限码对不齐”
             all.stream().limit(10).forEach(m ->
                     log.warn("  - menuKey={}, path={}, requiredCode={}",

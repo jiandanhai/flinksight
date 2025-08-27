@@ -22,21 +22,13 @@ public class JobDiagnosticController {
 
     private final JobDiagnosticService service;
 
-    @Operation(summary = "", description = "",operationId = "getJobDiagnosticLogsByJob")
-    @GetMapping("/logs/{jobId}")
-    public ApiResponse<PageResult<JobDiagnosticLogDTO>> getByJob(
-            @PathVariable Long jobId,
+    @Operation(summary = "", description = "",operationId = "listJobDiagnosticLogs")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<JobDiagnosticLogDTO>> list(
+            @RequestParam Long jobId,
+            @RequestParam String level,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.getLogsByJob(jobId,page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getJobDiagnosticLogsByLevel")
-    @GetMapping("/logs-level/{level}")
-    public ApiResponse<PageResult<JobDiagnosticLogDTO>> getLogsByLevel(
-            @PathVariable String level,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.getLogsByLevel(level,page,size));
+        return ApiResponse.ok(service.list(jobId,level,page,size));
     }
 }

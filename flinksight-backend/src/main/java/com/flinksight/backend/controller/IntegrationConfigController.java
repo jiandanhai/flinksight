@@ -37,21 +37,13 @@ public class IntegrationConfigController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "", description = "",operationId = "getAllIntegrationConfigs")
-    @GetMapping("/list")
-    public ApiResponse<PageResult<IntegrationConfigDTO>> getAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.getAll(page,size));
-    }
 
-    @Operation(summary = "", description = "",operationId = "getIntegrationConfigsByTenant")
-    @GetMapping("/tenant/{tenantId}")
-    public ApiResponse<PageResult<IntegrationConfigDTO>> findByTenantId(
-            @PathVariable Long tenantId,
+    @Operation(summary = "", description = "",operationId = "listIntegrationConfigs")
+    @GetMapping("/tenant")
+    public ApiResponse<PageResult<IntegrationConfigDTO>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
+        return ApiResponse.ok(service.list(page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "updateIntegrationConfig")
@@ -63,6 +55,6 @@ public class IntegrationConfigController {
     @Operation(summary = "", description = "",operationId = "deleteIntegrationConfig")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

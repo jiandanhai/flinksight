@@ -1,7 +1,6 @@
 // src/pages/Dashboard/AlertTrend.tsx
 import React, { useEffect, useRef, useState } from "react";
 import * as echarts from "echarts";
-import { getTenantId } from "@/utils/tenant";
 import dayjs from "dayjs";
 import { Card, Spin, Empty } from "antd";
 import { dashboardStatisticsAlertTrend } from "../../api/modules";
@@ -23,13 +22,11 @@ const AlertTrend: React.FC = () => {
   const fetchTrend = async () => {
     setLoading(true);
     try {
-      const tenantId = getTenantId();
-
       // 最近 7 天时间范围
       const to = dayjs().endOf("day").toISOString();
       const from = dayjs().subtract(6, "day").startOf("day").toISOString();
 
-      const res = await dashboardStatisticsAlertTrend({ tenantId, from, to });
+      const res = await dashboardStatisticsAlertTrend({from, to });
       const d = res.data || { times: [], total: [], fatal: [], warn: [] };
 
       const total = (d.total || []).reduce((a, b) => a + b, 0);

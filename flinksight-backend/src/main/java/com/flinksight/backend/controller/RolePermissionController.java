@@ -34,21 +34,13 @@ public class RolePermissionController {
         return service.removePermissionFromRole(roleId, permissionCode);
     }
 
-    @Operation(summary = "", description = "",operationId = "getRolePermissionsByRole")
-    @GetMapping("/role/{roleId}")
-    public ApiResponse<PageResult<RolePermissionDTO>> findByRoleId(@PathVariable Long roleId,
-                                                                  @RequestParam(defaultValue = "0") int page,
-                                                                  @RequestParam(defaultValue = "20") int size) {
-
-        return ApiResponse.ok(service.findByRoleId(roleId,page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getRolePermissionsByPermission")
-    @GetMapping("/permission/{permissionCode}")
-    public ApiResponse<PageResult<RolePermissionDTO>> findByPermissionId(@PathVariable String permissionCode,
-                                                      @RequestParam(defaultValue = "0") int page,
-                                                      @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByPermissionCode(permissionCode,page,size));
+    @Operation(summary = "", description = "",operationId = "listRolePermissions")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<RolePermissionDTO>> list(@RequestParam Long roleId,
+                                                                         @RequestParam String permissionCode,
+                                                                         @RequestParam(defaultValue = "0") int page,
+                                                                         @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.list(roleId,permissionCode,page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "getRolePermission")
@@ -62,6 +54,6 @@ public class RolePermissionController {
     @Operation(summary = "", description = "",operationId = "deleteRolePermission")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

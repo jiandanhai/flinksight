@@ -1,8 +1,10 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.NodeHealth;
 import com.flinksight.backend.mapper.NodeHealthStructMapper;
 import com.flinksight.backend.repository.NodeHealthRepository;
+import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.common.dto.NodeHealthDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NodeHealthService;
@@ -10,7 +12,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -38,25 +39,20 @@ public class NodeHealthServiceImpl implements NodeHealthService {
 
     @Override
     public Optional<NodeHealthDTO> getLatestByNodeId(Long nodeId) {
-        return repository.findTopByNodeIdAndIsDeletedOrderByCheckTimeDesc(nodeId,0).map(nodeHealthStructMapper::toDTO);
+        return repository.findTopByTenantIdAndNodeIdAndIsDeleted(SecurityUtil.getCurrentTenantId(),nodeId,0).map(nodeHealthStructMapper::toDTO);
     }
 
     @Override
-    public PageResult<NodeHealthDTO> getByTenantId(Long tenantId,int page, int size) {
-        Page<NodeHealth> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<NodeHealthDTO> dtoPage = result.map(nodeHealthStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<NodeHealthDTO> list(Long nodeId,int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, NodeHealth.class); // 统一 1→0
+        Page<NodeHealth> result = (nodeId == null)
+                ? repository.findByTenantIdAndIsDeleted(SecurityUtil.getCurrentUserId(), 0, pr)
+                : repository.findByTenantIdAndNodeIdAndIsDeleted(SecurityUtil.getCurrentUserId(), nodeId,0, pr);
+        return PageHelpers.toPageResult(result, nodeHealthStructMapper::toDTO, true); // 返回
     }
 
     @Override
-    public PageResult<NodeHealthDTO> getByNodeId(Long nodeId,int page, int size) {
-        Page<NodeHealth> result = repository.findByNodeIdAndIsDeleted(nodeId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<NodeHealthDTO> dtoPage = result.map(nodeHealthStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
-
-    @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<NodeHealthDTO> opt = repository.findById(id).map(nodeHealthStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             NodeHealthDTO  dto = opt.get();
@@ -69,7 +65,7 @@ public class NodeHealthServiceImpl implements NodeHealthService {
 
     @Override
     public boolean batchSoftDelete(List<Long> ids) {
-        List<NodeHealthDTO> list = nodeHealthStructMapper.toDTOList(repository.findByIdInAndIsDeleted(ids, 0));
+        List<NodeHealthDTO> list = nodeHealthStructMapper.toDTOList(repository.findByTenantIdAndIdInAndIsDeleted(SecurityUtil.getCurrentTenantId(),ids, 0));
         List<NodeHealth> nhList = new ArrayList<>();
         for (NodeHealthDTO nh : list) {
             NodeHealth entity = nodeHealthStructMapper.toEntity(nh);

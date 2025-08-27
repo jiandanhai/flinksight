@@ -8,9 +8,7 @@ import java.util.Optional;
 public interface LoginHistoryService extends SoftDeleteService<LoginHistoryDTO, Long> {
     LoginHistoryDTO create(LoginHistoryDTO entity);
     Optional<LoginHistoryDTO> getById(Long id);
-    PageResult<LoginHistoryDTO> findByUserId(Long userId,int page, int size);
-
-    PageResult<LoginHistoryDTO> findByTenantId(Long tenantId,int page,int size);
+    PageResult<LoginHistoryDTO> list(Long userId,int page, int size);
 
     long countUserSuccessLogin(Long userId);
 }

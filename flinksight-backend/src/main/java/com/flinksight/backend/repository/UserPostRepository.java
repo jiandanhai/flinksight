@@ -22,4 +22,15 @@ public interface UserPostRepository extends JpaRepository<UserPost, Long> {
     // 根据用户ID查找所有角色ID
     @Query("select ur.roleId from UserRole ur where ur.userId = :userId and ur.isDeleted = 0")
     Page<Long> findRoleIdsByUserId(@Param("userId") Long userId, Pageable pageable);
+
+
+    @Query("""
+    SELECT up FROM UserPost up
+     WHERE up.isDeleted = 0
+       AND (:userId IS NULL OR up.userId = :userId)
+       AND (:postId IS NULL OR up.postId = :postId)
+  """)
+    Page<UserPost> pageQuery(@Param("userId") Long userId,
+                             @Param("postId") Long postId,
+                             Pageable pageable);
 }

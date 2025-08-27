@@ -13,6 +13,7 @@ import java.util.Optional;
 public interface JobLogService extends SoftDeleteService<JobLogDTO, Long>   {
     JobLogDTO createJobLog(JobLogDTO log);
     Optional<JobLogDTO> getJobLogById(Long id);
-    PageResult<JobLogDTO> getLogsByJob(Long jobId, LocalDateTime start, LocalDateTime end,int page, int size);
-    PageResult<JobLogDTO> getLogsByTenantAndLevel(Long tenantId, String level, LocalDateTime start, LocalDateTime end,int page, int size);
+    PageResult<JobLogDTO> list(Long jobId, String level,
+                                    LocalDateTime start, LocalDateTime end,
+                                    int page, int size);
 }

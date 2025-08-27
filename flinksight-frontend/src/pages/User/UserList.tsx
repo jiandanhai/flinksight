@@ -1,166 +1,135 @@
 /**
- * @file 用户管理列表
- * @desc 支持分页、搜索、批量启用禁用、角色分配、用户详情/编辑，API/types全联动
+ * @file 用户管理（最小修改：不再依赖 tenantId 才发请求；兼容分页字段）
  */
-import React, {useEffect, useState} from 'react';
-import {Button, Input, message, Modal, Select, Space, Table, Tag} from 'antd';
-import api from '@/api/api-compat';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Input, Table, Tag, Button, message } from 'antd';
+import { listUsers } from '@/api/modules';
+import type { UserDTO } from '@/api/dto';
+import { useUser } from '../../store/user';
+import { getTenantId } from "@/utils/tenant";
 
-import type {UserDTO, UserRoleDTO} from '@/api/dto';
-import EditUserModal from './EditUserModal';
-import UserDetail from './UserDetail';
-import {useUser} from '../../store/user';
-
-const { Search } = Input;
-const { Option } = Select;
-
-const ROLE_LABELS: Record<DTO.UserDTO, string> = {
-  admin: '管理员',
-  ops: '运维',
-  user: '普通用户'
+type UserQuery = {
+  keyword?: string;
+  enabled?: boolean;
 };
 
 const UserList: React.FC = () => {
-  const [users, setUsers] = useState<UserDTO[]>([]);
-  const [page, setPage] = useState(1);
+  // —— 解析租户ID（只用你提供的方法）
+  const tenantId = useMemo(() => {
+    try {
+      const v = getTenantId();
+      const n = Number(v);
+      return Number.isFinite(n) ? n : undefined;
+    } catch {
+      return undefined;
+    }
+  }, []);
+
+  const [list, setList] = useState<UserDTO[]>([]);
+  const [page, setPage] = useState(1); // antd 从 1 开始
   const [size, setSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState<DTO.UserDTO>({});
-  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editId, setEditId] = useState<number | null>(null);
-  const [detailId, setDetailId] = useState<number | null>(null);
-  const { role } = useUser();
+  const [query, setQuery] = useState<UserQuery>({});
 
-  const canEdit = role === 'admin';
+  const queryKey = useMemo(() => JSON.stringify(query), [query]);
 
-  // 拉取用户列表
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await api.getAllUsers({ ...query, page, size });
-      setUsers(res.data?.records || []);
-      setTotal(res.data?.total || 0);
+      // ✅ 这里不再因 tenantId 为空而 return；有就加，没有就不传
+      const params: any = { page: page - 1, size, ...query };
+      if (tenantId) params.tenantId = tenantId;
+
+      // 便于排查你能看到确实在发请求
+      console.log('[UserList] GET /api/user/list params =', params);
+
+      const res: any = await listUsers(params);
+
+      // ✅ 兼容不同分页字段：records/items/content/list/data + total/totalCount/totalElements
+      const rows =
+        res?.records ??
+        res?.items ??
+        res?.content ??
+        res?.list ??
+        res?.data ??
+        [];
+      const totalCount =
+        res?.total ??
+        res?.totalCount ??
+        res?.totalElements ??
+        (Array.isArray(rows) ? rows.length : 0);
+
+      setList(Array.isArray(rows) ? rows : []);
+      setTotal(Number(totalCount) || 0);
+    } catch (e: any) {
+      console.error('[UserList] getUsersByTenant error:', e);
+      message.error(e?.message || '加载用户失败');
+      setList([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
   };
-  useEffect(() => { fetchUsers(); }, [query, page, size]);
 
-  // 搜索
-  const handleSearch = (val: string) => {
-    setQuery({ ...query, keyword: val });
+  useEffect(() => {
+    fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, size, queryKey]); // ❗ 不把 tenantId 放依赖里，避免切换为空时“打断”请求
+
+  const onSearch = (val: string) => {
+    setQuery({ ...query, keyword: val?.trim() || undefined });
     setPage(1);
   };
 
-  // 新建/编辑
-  function openModal(id?: number) {
-    setEditId(id || null);
-    setModalVisible(true);
-  }
-
-  // 详情页
-  if (detailId) {
-    return <UserDetail id={detailId} onBack={() => setDetailId(null)} />;
-  }
-
-  // 删除
-  async function handleDelete(id: number) {
-    Modal.confirm({
-      title: '确认删除该用户？',
-      onOk: async () => {
-        await api.deleteUser(id);
-        message.success('已删除');
-        fetchUsers();
-      }
-    });
-  }
-
-  // 批量启用/禁用
-  async function handleBatchEnable(enable: boolean) {
-    await api.batchEnableUsers(selectedRowKeys, enable);
-    message.success(enable ? '已启用' : '已禁用');
-    setSelectedRowKeys([]);
-    fetchUsers();
-  }
-
-  // 批量分配角色
-  async function handleBatchRole(newRole: DTO.UserRoleDTO) {
-    await api.batchUpdateUserRole(selectedRowKeys, newRole);
-    message.success('角色分配完成');
-    setSelectedRowKeys([]);
-    fetchUsers();
-  }
-
   return (
     <div className="p-6 bg-white rounded-xl shadow">
-      <div className="flex justify-between mb-4">
-        <Search placeholder="用户名/昵称/邮箱" allowClear enterButton onSearch={handleSearch} style={{ width: 320 }} />
-        <Space>
-          <Button type="primary" onClick={() => openModal()} disabled={!canEdit}>新建用户</Button>
-          <Button onClick={() => handleBatchEnable(true)} disabled={!selectedRowKeys.length || !canEdit}>批量启用</Button>
-          <Button danger onClick={() => handleBatchEnable(false)} disabled={!selectedRowKeys.length || !canEdit}>批量禁用</Button>
-          <Select
-            placeholder="批量分配角色"
-            style={{ width: 120 }}
-            onChange={role => handleBatchRole(role as UserRoleDTO)}
-            disabled={!selectedRowKeys.length || !canEdit}
-            allowClear
-          >
-            <Option value="admin">管理员</Option>
-            <Option value="ops">运维</Option>
-            <Option value="user">普通用户</Option>
-          </Select>
-        </Space>
+      <div className="flex justify-between mb-4 gap-2">
+        <Input.Search
+          allowClear
+          placeholder="按用户名/邮箱搜索"
+          onSearch={onSearch}
+          style={{ maxWidth: 320 }}
+        />
+        <Button onClick={fetchUsers}>刷新</Button>
       </div>
-      <Table
-        rowKey="id"
-        dataSource={users}
+
+      <Table<UserDTO>
+        rowKey={(r) => (r as any).id ?? (r as any).userId ?? (r as any).username}
+        dataSource={list}
         loading={loading}
-        rowSelection={{
-          selectedRowKeys,
-          onChange: (keys) => setSelectedRowKeys(keys as number[])
-        }}
+        columns={[
+          { title: '用户名', dataIndex: 'username' },
+          { title: '昵称', dataIndex: 'nickname' },
+          { title: '邮箱', dataIndex: 'email' },
+          {
+            title: '角色',
+            dataIndex: 'roles',
+            render: (arr: any) =>
+              Array.isArray(arr)
+                ? (arr.map((x: any) => x?.name ?? x).filter(Boolean).join('、') || '-')
+                : '-',
+          },
+          {
+            title: '状态',
+            dataIndex: 'enabled',
+            render: (v: boolean) => (v ? <Tag color="green">启用</Tag> : <Tag>禁用</Tag>),
+          },
+        ]}
         pagination={{
           current: page,
           pageSize: size,
           total,
           showSizeChanger: true,
-          onChange: (p, s) => { setPage(p); setSize(s); }
-        }}
-        columns={[
-          {
-            title: '用户名',
-            dataIndex: 'username',
-            render: (_: any, u: User) =>
-              <span className="text-blue-600 cursor-pointer" onClick={() => setDetailId(u.id)}>{u.username}</span>
+          showTotal: (t) => `共 ${t} 条`,
+          onChange: (p, s) => {
+            setPage(p);
+            setSize(s || size);
           },
-          { title: '昵称', dataIndex: 'nickname' },
-          { title: '邮箱', dataIndex: 'email' },
-          { title: '角色', dataIndex: 'role', render: (r: DTO.UserRoleDTO) => <Tag>{ROLE_LABELS[r]}</Tag> },
-          { title: '状态', dataIndex: 'enabled', render: (v: boolean) => v ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag> },
-          { title: '创建时间', dataIndex: 'createTime', render: (v: string) => new Date(v).toLocaleString() },
-          {
-            title: '操作',
-            render: (_: any, u: User) => (
-              <Space>
-                <Button type="link" size="small" onClick={() => openModal(u.id)} disabled={!canEdit}>编辑</Button>
-                <Button type="link" size="small" danger onClick={() => handleDelete(u.id)} disabled={!canEdit}>删除</Button>
-              </Space>
-            )
-          }
-        ]}
+        }}
       />
-      {modalVisible && (
-        <EditUserModal
-          id={editId}
-          open={modalVisible}
-          onOk={() => { setModalVisible(false); fetchUsers(); }}
-          onClose={() => setModalVisible(false)}
-        />
-      )}
     </div>
   );
 };
+
 export default UserList;

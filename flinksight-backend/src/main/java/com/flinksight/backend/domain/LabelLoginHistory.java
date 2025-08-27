@@ -1,5 +1,6 @@
 package com.flinksight.backend.domain;
 
+import com.flinksight.common.service.DefaultSort;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,6 +28,7 @@ import java.time.LocalDateTime;
 )
 @Schema(description = "标签登录历史表")
 @SQLRestriction("is_deleted=0") // ⚡ 替代 Hibernate 6.3 的 @Where
+@DefaultSort(fields = {"loginTime", "id"})
 public class LabelLoginHistory implements Serializable {
 
     @Id

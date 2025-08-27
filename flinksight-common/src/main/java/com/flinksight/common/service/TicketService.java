@@ -12,6 +12,6 @@ import java.util.Optional;
 public interface TicketService extends SoftDeleteService<TicketDTO, Long> {
     TicketDTO createTicket(TicketDTO ticket);
     Optional<TicketDTO> getTicketById(Long id);
-    PageResult<TicketDTO> getTicketsByTenantAndStatus(Long tenantId, Integer status,int page, int size);
+    PageResult<TicketDTO> list(Integer status,int page, int size);
     TicketDTO updateTicket(TicketDTO ticket);
 }

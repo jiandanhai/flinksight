@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as echarts from "echarts";
-import { getTenantId } from "@/utils/tenant";
 import { Card, Col, Row, Statistic } from "antd";
 import dayjs from "dayjs";
 import { dashboardStatisticsClusterHealthMetrics,dashboardClusterTrend } from "../../api/modules";
@@ -31,7 +30,7 @@ const ClusterStatus: React.FC = () => {
 
   // 获取静态指标
   const fetchMetrics = async () => {
-    const res = await dashboardStatisticsClusterHealthMetrics({ tenantId: getTenantId() });
+    const res = await dashboardStatisticsClusterHealthMetrics();
     setMetrics(res.data);
     if (res.data && pieChartRef.current) {
       if (!pieInstance.current) {
@@ -59,7 +58,6 @@ const ClusterStatus: React.FC = () => {
   // 获取24小时趋势
   const fetchTrend = async () => {
     const res = await dashboardClusterTrend({
-      tenantId: getTenantId(),
       from: dayjs().subtract(3, "day").toISOString(),
       to: dayjs().endOf("day").toISOString(),
     });

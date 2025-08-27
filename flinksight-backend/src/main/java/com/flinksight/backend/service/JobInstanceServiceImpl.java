@@ -1,8 +1,10 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.JobInstance;
 import com.flinksight.backend.mapper.JobInstanceStructMapper;
 import com.flinksight.backend.repository.JobInstanceRepository;
+import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.common.dto.JobInstanceDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.JobInstanceService;
@@ -10,7 +12,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -48,17 +49,15 @@ public class JobInstanceServiceImpl implements JobInstanceService {
     }
 
     @Override
-    public PageResult<JobInstanceDTO> listByTenant(Long tenantId,int page, int size) {
-        Page<JobInstance> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<JobInstanceDTO> dtoPage = result.map(jobInstanceStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
-
-    @Override
-    public PageResult<JobInstanceDTO> listByStatus(Integer status,int page, int size) {
-        Page<JobInstance> result = repository.findByStatusAndIsDeleted(status,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<JobInstanceDTO> dtoPage = result.map(jobInstanceStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<JobInstanceDTO> list(Integer status,int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, JobInstance.class); // 统一 1→0
+        Page<JobInstance> result;
+        if(status==-1){
+            result = repository.findByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(),0,pr);
+        } else {
+            result = repository.findByTenantIdAndStatusAndIsDeleted(SecurityUtil.getCurrentTenantId(),status,0,pr);
+        }
+        return PageHelpers.toPageResult(result, jobInstanceStructMapper::toDTO, true); // 返回 1-b
     }
 
     @Override
@@ -67,15 +66,8 @@ public class JobInstanceServiceImpl implements JobInstanceService {
     }
 
     @Override
-    public PageResult<JobInstanceDTO> findByTenantIdAndIsDeleted(Long tenantId, int page, int size) {
-        Page<JobInstance> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<JobInstanceDTO> dtoPage = result.map(jobInstanceStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
-
-    @Override
-    public Map<Integer, Long> countStatusByTenantId(Long tenantId) {
-        List<Object[]> results = repository.countStatusByTenantId(tenantId);
+    public Map<Integer, Long> countStatusByTenantId() {
+        List<Object[]> results = repository.countStatusByTenantId(SecurityUtil.getCurrentTenantId());
         Map<Integer, Long> map = new HashMap<>();
         for (Object[] row : results) {
             map.put((Integer) row[0], (Long) row[1]);
@@ -84,7 +76,7 @@ public class JobInstanceServiceImpl implements JobInstanceService {
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<JobInstanceDTO> opt = repository.findById(id).map(jobInstanceStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             JobInstanceDTO dto = opt.get();

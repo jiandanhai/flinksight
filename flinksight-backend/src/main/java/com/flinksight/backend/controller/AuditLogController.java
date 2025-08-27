@@ -2,6 +2,7 @@ package com.flinksight.backend.controller;
 
 import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.AuditLogDTO;
+import com.flinksight.common.dto.AuditLogQueryDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.AuditLogService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,14 +39,11 @@ public class AuditLogController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "", operationId = "getAuditLogsByTenant")
-    @GetMapping("/tenant/{tenantId}")
-    public ApiResponse<PageResult<AuditLogDTO>> findByTenantId(
-            @PathVariable Long tenantId,
-            @RequestParam Long userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.getLogsByTenantAndUser(tenantId,userId,page,size));
+
+    @Operation(summary = "操作日志分页查询（通用）",operationId = "list")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<AuditLogDTO>> list(@Validated AuditLogQueryDTO q) {
+        return ApiResponse.ok(service.list(q));
     }
 
     @Operation(summary = "", operationId = "updateAuditLog")
@@ -58,6 +56,6 @@ public class AuditLogController {
     @Operation(summary = "", operationId = "deleteAuditLog")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

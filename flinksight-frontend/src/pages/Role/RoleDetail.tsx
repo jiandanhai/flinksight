@@ -4,7 +4,7 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Card, Descriptions, Spin, Tag} from 'antd';
-import api from '@/api/api-compat';
+import { getRole} from '@/api/modules';
 
 import type {RoleDTO} from '@/api/dto';
 
@@ -19,7 +19,7 @@ const RoleDetail: React.FC<Props> = ({ id, onBack }) => {
 
   useEffect(() => {
     setLoading(true);
-    api.getRole(id).then(res => setData(res.data)).finally(() => setLoading(false));
+    getRole(id).then(res => setData(res.data)).finally(() => setLoading(false));
   }, [id]);
 
   if (loading || !data) return <Spin tip="加载中..." />;

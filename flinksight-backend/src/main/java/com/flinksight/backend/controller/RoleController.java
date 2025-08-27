@@ -39,21 +39,13 @@ public class RoleController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "查询所有角色", description = "Get all roles",operationId = "getAllRoles")
+    @Operation(summary = "分页查询角色",operationId = "listRoles")
     @GetMapping("/list")
-    public ApiResponse<PageResult<RoleDTO>> getAllRoles(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(roleService.getAllRoles(page,size));
-    }
-
-    @Operation(summary = "分页查询角色",operationId = "getRolesByName")
-    @GetMapping("/page")
-    public ApiResponse<PageResult<RoleDTO>> pageList(
+    public ApiResponse<PageResult<RoleDTO>> list(
             @RequestParam(required = false) String name,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(roleService.pageList(name, page, size));
+        return ApiResponse.ok(roleService.list(name, page, size));
     }
 
     @Operation(summary = "编辑角色",operationId = "updateRole")
@@ -65,7 +57,7 @@ public class RoleController {
     @Operation(summary = "删除角色", description = "Delete role by ID",operationId = "deleteRole")
     @DeleteMapping("/delete/{id}")
     public ApiResponse<Void> deleteRole(@PathVariable Long id) {
-        roleService.softDelete(id);
+        roleService.sDelete(id);
         return ApiResponse.ok(null);
     }
 }

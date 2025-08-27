@@ -1,5 +1,6 @@
 package com.flinksight.backend.domain;
 
+import com.flinksight.common.service.DefaultSort;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
@@ -24,6 +25,7 @@ import java.time.LocalDateTime;
 )
 @Schema(description = "作业报警日志表")
 @SQLRestriction("is_deleted=0") // ⚡ 替代 Hibernate 6.3 的 @Where
+@DefaultSort(fields = {"alertTime", "id"})
 public class JobAlertLog implements Serializable {
 
     @Id

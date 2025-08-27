@@ -8,11 +8,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LoginHistoryRepository extends JpaRepository<LoginHistory, Long> {
-    Page<LoginHistory> findByUserIdAndIsDeleted(Long userId, Integer isDeleted, Pageable pageable);
-
-    Page<LoginHistory> findByUserIdAndIsDeletedOrderByLoginTimeDesc(Long userId, Integer isDeleted, Pageable pageable);
+    Page<LoginHistory> findByTenantIdAndUserIdAndIsDeleted(Long tenantId,Long userId, Integer isDeleted, Pageable pageable);
 
     Page<LoginHistory> findByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted,Pageable pageable);
 
-    long countByUserIdAndSuccessFlagAndIsDeleted(Long userId, Integer successFlag, Integer isDeleted);
+    long countByTenantIdAndUserIdAndSuccessFlagAndIsDeleted(Long tenantId,Long userId, Integer successFlag, Integer isDeleted);
 }

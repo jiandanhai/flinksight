@@ -38,12 +38,12 @@ public class SysParamController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "", description = "",operationId = "getAllSysParams")
+    @Operation(summary = "", description = "",operationId = "listSysParams")
     @GetMapping("/list")
-    public ApiResponse<PageResult<SysParamDTO>> getAll(
+    public ApiResponse<PageResult<SysParamDTO>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.getAll(page,size));
+        return ApiResponse.ok(service.list(page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "updateSysParam")
@@ -55,6 +55,6 @@ public class SysParamController {
     @Operation(summary = "", description = "",operationId = "deleteSysParam")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

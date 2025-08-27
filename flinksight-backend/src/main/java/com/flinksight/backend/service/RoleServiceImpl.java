@@ -1,8 +1,10 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.Role;
 import com.flinksight.backend.mapper.RoleStructMapper;
 import com.flinksight.backend.repository.RoleRepository;
+import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.backend.security.tenant.TenantRequired;
 import com.flinksight.common.dto.RoleDTO;
 import com.flinksight.common.model.PageResult;
@@ -11,12 +13,10 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * 角色业务实现
@@ -46,14 +46,7 @@ public class RoleServiceImpl implements RoleService  {
 
     @Override
     public Optional<RoleDTO> getRoleByCode(String code) {
-        return repository.findByCode(code).map(roleStructMapper::toDTO);
-    }
-
-    @Override
-    public PageResult<RoleDTO> getAllRoles(int page, int size) {
-        Page<Role> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<RoleDTO> dtoPage = result.map(roleStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+        return repository.findByTenantIdAndCode(SecurityUtil.getCurrentTenantId(),code).map(roleStructMapper::toDTO);
     }
 
     @Override
@@ -67,18 +60,15 @@ public class RoleServiceImpl implements RoleService  {
     }
 
     @Override
-    public PageResult<RoleDTO> pageList(String name, int page, int size) {
-        Page<Role> pg = repository.findByNameAndIsDeleted(
-                name == null ? "" : name, 0, PageRequest.of(page, size)
-        );
-        return new PageResult<>(
-                pg.getContent().stream().map(roleStructMapper::toDTO).collect(Collectors.toList()),
-                pg.getTotalElements(), page, size
-        );
+    public PageResult<RoleDTO> list(String name, int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, Role.class); // 统一 1→0
+        Page<Role> result = repository.findByTenantIdAndNameAndIsDeleted(SecurityUtil.getCurrentTenantId(),
+                name == null ? "" : name, 0, pr);
+        return PageHelpers.toPageResult(result, roleStructMapper::toDTO, true); //
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<RoleDTO> opt = repository.findById(id).map(roleStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             RoleDTO dto = opt.get();

@@ -2,6 +2,7 @@ package com.flinksight.backend.controller;
 
 import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.backend.security.tenant.TenantRequired;
+import com.flinksight.common.dto.JobBatchUpdateStatusRequestDTO;
 import com.flinksight.common.dto.JobDTO;
 import com.flinksight.common.dto.JobInfoDTO;
 import com.flinksight.common.dto.JobRegisterRequestDTO;
@@ -42,32 +43,14 @@ public class    JobController {
                 .map(ApiResponse::ok)
                 .orElse(ApiResponse.ok(null));
     }
-    @Operation(summary = "", operationId = "getAllJobs")
-    @GetMapping("/list")
-    public ApiResponse<PageResult<JobDTO>> getAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(jobService.getAll(page,size));
-    }
 
-
-    @Operation(summary = "查询租户下所有任务", description = "Get jobs by tenant",operationId = "getJobsByTenant")
-    @GetMapping("/tenant/list")
-    public ApiResponse<PageResult<JobDTO>> getJobsByTenant(
-            @RequestParam Long tenantId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(jobService.getJobsByTenant(tenantId,page,size));
-    }
-
-    @Operation(summary = "查询集群下所有任务", description = "Get jobs by tenant and cluster",operationId = "getJobsByTenantAndCluster")
+    @Operation(summary = "查询集群下所有任务", description = "Get jobs by tenant and cluster",operationId = "listJobs")
     @GetMapping("/listByCluster")
-    public ApiResponse<PageResult<JobDTO>> getJobsByTenantAndCluster(
-            @RequestParam Long tenantId,
+    public ApiResponse<PageResult<JobDTO>> list(
             @RequestParam Long clusterId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(jobService.getJobsByTenantAndCluster(tenantId,clusterId,page,size));
+        return ApiResponse.ok(jobService.list(clusterId,page,size));
     }
 
     @Operation(summary = "更新任务信息", description = "Update job info",operationId = "updateJob")
@@ -76,10 +59,17 @@ public class    JobController {
         return ApiResponse.ok(jobService.updateJob(dto));
     }
 
+    @Operation(summary = "批量更新任务状态")
+    @PostMapping("/status-batch")
+    public ApiResponse<Integer> batchUpdateStatus(@RequestBody @Valid JobBatchUpdateStatusRequestDTO req) {
+        int updated = jobService.batchUpdateJobStatus(req);
+        return ApiResponse.ok(updated);
+    }
+
     @Operation(summary = "删除任务（软删）", description = "Soft delete job",operationId = "deleteJob")
     @DeleteMapping("/delete/{id}")
     public ApiResponse<Void> deleteJob(@PathVariable Long id) {
-        jobService.softDelete(id);
+        jobService.sDelete(id);
         return ApiResponse.ok(null);
     }
 

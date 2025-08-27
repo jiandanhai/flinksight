@@ -33,7 +33,7 @@ public interface TenantConfigRepository extends JpaRepository<TenantConfig, Long
     /**
      * 支持批量根据ID查找有效配置
      */
-    List<TenantConfig> findByIdInAndIsDeleted(List<Long> ids, Integer isDeleted);
+    List<TenantConfig> findByTenantIdAndIdInAndIsDeleted(Long tenantId,List<Long> ids, Integer isDeleted);
 
     /**
      * 统计某租户有效配置数

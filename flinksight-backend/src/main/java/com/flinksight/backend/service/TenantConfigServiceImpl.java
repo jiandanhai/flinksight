@@ -1,5 +1,6 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.TenantConfig;
 import com.flinksight.backend.mapper.TenantConfigStructMapper;
 import com.flinksight.backend.repository.TenantConfigRepository;
@@ -10,7 +11,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -47,14 +47,14 @@ public class TenantConfigServiceImpl implements TenantConfigService {
     }
 
     @Override
-    public PageResult<TenantConfigDTO> listByTenantId(Long tenantId,int page, int size) {
-        Page<TenantConfig> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<TenantConfigDTO> dtoPage = result.map(tenantConfigStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<TenantConfigDTO> list(Long tenantId,int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, TenantConfig.class); // 统一 1→0
+        Page<TenantConfig> result = repository.findByTenantIdAndIsDeleted(tenantId,0, pr);
+        return PageHelpers.toPageResult(result, tenantConfigStructMapper::toDTO, true); // 返
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<TenantConfigDTO> opt = repository.findById(id).map(tenantConfigStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             TenantConfigDTO dto = opt.get();
@@ -66,8 +66,8 @@ public class TenantConfigServiceImpl implements TenantConfigService {
     }
 
     @Override
-    public boolean batchSoftDelete(List<Long> ids) {
-        List<TenantConfig> configs = repository.findByIdInAndIsDeleted(ids, 0);
+    public boolean batchSoftDelete(Long tenantId,List<Long> ids) {
+        List<TenantConfig> configs = repository.findByTenantIdAndIdInAndIsDeleted(tenantId,ids, 0);
         for (TenantConfig config : configs) {
             config.setIsDeleted(1);
             config.setUpdateTime(LocalDateTime.now());

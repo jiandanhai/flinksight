@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -37,5 +38,22 @@ public interface AlertRepository extends JpaRepository<Alert, Long> , SoftDelete
     List<Alert> findTrend(Long tenantId, LocalDateTime from, LocalDateTime to);
 
     List<Alert> findByTenantIdAndIsDeletedFalse(Long tenantId);
+
+    Page<Alert> findByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted, Pageable pageable);
+
+
+    @Query("""
+    SELECT a FROM Alert a
+     WHERE a.isDeleted = 0
+       AND (:tenantId IS NULL OR a.tenantId = :tenantId)
+       AND (:jobId    IS NULL OR a.jobId    = :jobId)
+       AND (:level    IS NULL OR a.level    = :level)
+       AND (:status   IS NULL OR :status = -1 OR a.status = :status)
+  """)
+    Page<Alert> pageQuery(@Param("tenantId") Long tenantId,
+                          @Param("jobId")    Long jobId,
+                          @Param("level")    String level,
+                          @Param("status")   Integer status,
+                          Pageable pageable);
 }
 

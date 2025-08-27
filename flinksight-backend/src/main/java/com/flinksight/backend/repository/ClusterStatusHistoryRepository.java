@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ClusterStatusHistoryRepository extends JpaRepository<ClusterStatusHistory, Long> {
@@ -39,4 +40,14 @@ public interface ClusterStatusHistoryRepository extends JpaRepository<ClusterSta
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to
     );
+
+    List<ClusterStatusHistory> findAllByClusterIdAndCollectTimeBetweenOrderByCollectTime(
+            Long clusterId, LocalDateTime from, LocalDateTime to);
+
+    Optional<ClusterStatusHistory> findTopByClusterIdOrderByCollectTimeDesc(Long clusterId);
+
+    Optional<ClusterStatusHistory> findTopByClusterIdAndIsDeletedOrderByCollectTimeDesc(Long clusterId, Integer isDeleted);
+
+    List<ClusterStatusHistory> findByClusterIdAndCollectTimeBetweenAndIsDeleted(
+            Long clusterId, LocalDateTime start, LocalDateTime end, Integer isDeleted);
 }

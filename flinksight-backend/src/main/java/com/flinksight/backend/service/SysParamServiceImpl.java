@@ -1,5 +1,6 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.SysParam;
 import com.flinksight.backend.mapper.SysParamStructMapper;
 import com.flinksight.backend.repository.SysParamRepository;
@@ -10,7 +11,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -35,14 +35,14 @@ public class SysParamServiceImpl implements SysParamService {
     }
 
     @Override
-    public PageResult<SysParamDTO> getAll(int page, int size) {
-        Page<SysParam> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<SysParamDTO> dtoPage = result.map(sysParamStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<SysParamDTO> list(int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, SysParam.class); // 统一 1→0
+        Page<SysParam> result = repository.findByIsDeleted(0, pr);
+        return PageHelpers.toPageResult(result, sysParamStructMapper::toDTO, true); // 返
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<SysParamDTO> opt = repository.findById(id).map(sysParamStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             SysParamDTO dto = opt.get();

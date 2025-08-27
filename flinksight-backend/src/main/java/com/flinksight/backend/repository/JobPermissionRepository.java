@@ -18,23 +18,23 @@ public interface JobPermissionRepository extends JpaRepository<JobPermission, Lo
     /**
      * 查询某作业下的全部权限分配记录
      */
-    Page<JobPermission> findByJobIdAndIsDeleted(Long jobId, Integer isDeleted,Pageable pageable);
+    Page<JobPermission> findByTenantIdAndJobIdAndIsDeleted(Long tenantId,Long jobId, Integer isDeleted,Pageable pageable);
 
-    Page<JobPermission> findByJobIdAndUserIdAndIsDeleted(Long jobId,String userId, Integer isDeleted,Pageable pageable);
+    Page<JobPermission> findByTenantIdAndJobIdAndUserIdAndIsDeleted(Long tenantId,Long jobId,String userId, Integer isDeleted,Pageable pageable);
 
     /**
      * 检查某用户对某作业是否已拥有指定权限（幂等校验）
      */
-    boolean existsByJobIdAndUserIdAndPermissionCode(Long jobId, String userId, String permissionCode);
+    boolean existsByTenantIdAndJobIdAndUserIdAndPermissionCode(Long tenantId,Long jobId, String userId, String permissionCode);
 
     /**
      * 删除某用户对某作业的指定权限（回收权限）
      */
-    void deleteByJobIdAndUserIdAndPermissionCode(Long jobId, String userId, String permissionCode);
+    void deleteByTenantIdAndJobIdAndUserIdAndPermissionCode(Long tenantId,Long jobId, String userId, String permissionCode);
 
     /**
      * 只要有一条关联即认为有权限（可根据具体角色/权限进一步细化）
      */
-    Boolean existsByJobIdAndUserIdAndIsDeleted(Long jobId, String userId, Integer isDeleted);
+    Boolean existsByTenantIdAndJobIdAndUserIdAndIsDeleted(Long tenantId,Long jobId, String userId, Integer isDeleted);
 
 }

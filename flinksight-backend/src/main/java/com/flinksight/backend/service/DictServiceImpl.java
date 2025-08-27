@@ -1,5 +1,6 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.Dict;
 import com.flinksight.backend.mapper.DictStructMapper;
 import com.flinksight.backend.repository.DictRepository;
@@ -10,7 +11,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -36,15 +36,15 @@ public class DictServiceImpl implements DictService {
     }
 
     @Override
-    public PageResult<DictDTO> findByDictType(String dictType,int page, int size) {
-        Page<Dict> result = repository.findByDictTypeAndIsDeleted( dictType,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<DictDTO> dtoPage = result.map(dictStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<DictDTO> list(String dictType,int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, Dict.class); // 统一 1→0
+        Page<Dict> result = repository.findByDictTypeAndIsDeleted( dictType,0, pr);
+        return PageHelpers.toPageResult(result, dictStructMapper::toDTO, true); // 返回 1-ba
     }
 
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<DictDTO> opt = repository.findById(id).map(dictStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             DictDTO dto = opt.get();

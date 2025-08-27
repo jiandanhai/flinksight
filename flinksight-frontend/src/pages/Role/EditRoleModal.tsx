@@ -4,7 +4,7 @@
  */
 import React, {useEffect} from 'react';
 import {Form, Input, message, Modal, Select} from 'antd';
-import api from '@/api/api-compat';
+import { getRole ,updateRole,createRole} from '@/api/modules';
 
 import type {RoleDTO} from '@/api/dto';
 
@@ -28,7 +28,7 @@ const EditRoleModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
 
   useEffect(() => {
     if (id) {
-      api.getRole(id).then(res => form.setFieldsValue(res.data));
+      getRole(id).then(res => form.setFieldsValue(res.data));
     } else {
       form.resetFields();
     }
@@ -37,10 +37,10 @@ const EditRoleModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
   const handleSubmit = async () => {
     const values = await form.validateFields();
     if (id) {
-      await api.updateRole(id, values as RoleDTO);
+      await updateRole(id, values as RoleDTO);
       message.success('编辑成功');
     } else {
-      await api.createRole(values as RoleDTO);
+      await createRole(values as RoleDTO);
       message.success('新建成功');
     }
     onOk();

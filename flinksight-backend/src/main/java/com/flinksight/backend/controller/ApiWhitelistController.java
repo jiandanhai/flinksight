@@ -46,6 +46,6 @@ public class ApiWhitelistController {
     @Operation(summary = "", operationId = "deleteApiWhitelist")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

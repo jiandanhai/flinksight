@@ -8,6 +8,5 @@ import java.util.Optional;
 public interface ResourceGroupService extends SoftDeleteService<ResourceGroupDTO, Long> {
     ResourceGroupDTO createOrUpdate(ResourceGroupDTO group);
     Optional<ResourceGroupDTO> getById(Long id);
-    PageResult<ResourceGroupDTO> getAll(int page, int size);
-    PageResult<ResourceGroupDTO> findByTenantId(Long tenantId,int page, int size);
+    PageResult<ResourceGroupDTO> list(int page, int size);
 }

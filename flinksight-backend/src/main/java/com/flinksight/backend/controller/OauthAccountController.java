@@ -38,7 +38,7 @@ public class OauthAccountController {
         return ApiResponse.ok(null);
     }
 
-    @Operation(summary = "查询当前用户所有已绑定账号",operationId = "getSsoOauthAccountsByUser")
+    @Operation(summary = "查询当前用户所有已绑定账号",operationId = "listSsoOauthAccounts")
     @GetMapping("/list")
     public ApiResponse<PageResult<OauthAccountDTO>> list(@RequestParam Long userId,
                                                          @RequestParam(defaultValue = "0") int page,

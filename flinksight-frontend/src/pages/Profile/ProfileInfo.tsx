@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import api from '@/api/api-compat';
-
+import { getMyProfile ,updateProfile} from '@/api/modules';
 import type {ProfileDTO} from '@/api/dto';
 import {Avatar, Button, Form, Input, message} from 'antd';
 
@@ -13,17 +12,17 @@ const ProfileInfo: React.FC = () => {
   const [form] = Form.useForm();
 
   useEffect(() => {
-    api.getProfileByUserId().then(res => {
+    getMyProfile().then(res => {
       setProfile(res.data);
       form.setFieldsValue(res.data);
     });
   }, [form]);
 
   const handleSubmit = async (values: DTO.ProfileDTO) => {
-    await api.updateProfile(values);
+    await updateProfile(values);
     message.success('资料已更新');
     setEditing(false);
-    api.getProfile().then(res => setProfile(res.data));
+    getMyProfile().then(res => setProfile(res.data));
   };
 
   if (!profile) return <div>加载中...</div>;

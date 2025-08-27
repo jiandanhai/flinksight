@@ -18,6 +18,8 @@ public class LoginHistoryDTO implements Serializable {
     private Long id;
     @Schema(description = "用户ID")
     private Long userId;
+    @Schema(description = "租户ID")
+    private Long tenantId;
     @Schema(description = "IP")
     private String ipAddress;
     @Schema(description = "登录类型")

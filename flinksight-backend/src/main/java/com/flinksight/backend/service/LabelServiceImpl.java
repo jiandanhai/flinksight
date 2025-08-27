@@ -1,8 +1,10 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.Label;
 import com.flinksight.backend.mapper.LabelStructMapper;
 import com.flinksight.backend.repository.LabelRepository;
+import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.common.dto.LabelDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.LabelService;
@@ -10,7 +12,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -36,14 +37,14 @@ public class LabelServiceImpl implements LabelService {
     }
 
     @Override
-    public PageResult<LabelDTO> findByTenantId(Long tenantId,int page, int size) {
-        Page<Label> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<LabelDTO> dtoPage = result.map(labelStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<LabelDTO> list(int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, Label.class); // 统一 1→0
+        Page<Label> result = repository.findByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(),0, pr);
+        return PageHelpers.toPageResult(result, labelStructMapper::toDTO, true); // 返回
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<LabelDTO> opt = repository.findById(id).map(labelStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             LabelDTO dto = opt.get();

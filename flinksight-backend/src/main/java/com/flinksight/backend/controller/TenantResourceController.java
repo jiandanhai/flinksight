@@ -34,22 +34,14 @@ public class TenantResourceController {
         return service.removeResourceFromTenant(tenantId, resourceId);
     }
 
-    @Operation(summary = "删除租户", description = "Delete tenant",operationId = "getTenantResourcesByTenant")
-    @GetMapping("/tenant/{tenantId}")
-    public ApiResponse<PageResult<TenantResourceDTO>> findByTenant(
-            @PathVariable Long tenantId,
+    @Operation(summary = "删除租户", description = "Delete tenant",operationId = "listTenantResources")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<TenantResourceDTO>> list(
+            @RequestParam Long tenantId,
+            @RequestParam Long resourceId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
-    }
-
-    @Operation(summary = "删除租户", description = "Delete tenant",operationId = "getTenantResourcesByResource")
-    @GetMapping("/resource/{resourceId}")
-    public ApiResponse<PageResult<TenantResourceDTO>> findByResource(
-            @PathVariable Long resourceId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByResourceId(resourceId,page,size));
+        return ApiResponse.ok(service.list(tenantId,resourceId,page,size));
     }
 
     @Operation(summary = "删除租户", description = "Delete tenant",operationId = "getTenantResource")
@@ -63,6 +55,6 @@ public class TenantResourceController {
     @Operation(summary = "删除租户", description = "Delete tenant",operationId = "deleteTenantResource")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

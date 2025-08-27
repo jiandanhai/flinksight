@@ -10,6 +10,6 @@ public interface OrgNodeService extends SoftDeleteService<OrgNodeDTO, Long>{
     OrgNodeDTO update(OrgNodeDTO dto);
     void delete(Long id);
     OrgNodeDTO getById(Long id);
-    PageResult<OrgNodeDTO> listByTenant(Long tenantId, int page, int size);
-    List<OrgNodeDTO> getOrgTree(Long tenantId);
+    PageResult<OrgNodeDTO> list(int page, int size);
+    List<OrgNodeDTO> getOrgTree();
 }

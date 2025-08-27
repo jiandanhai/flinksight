@@ -38,21 +38,13 @@ public class AlertHistoryController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "分页获取所有报警历史记录", operationId = "getAllAlertHistorys")
-    @GetMapping("/list")
-    public ApiResponse<PageResult<AlertHistoryDTO>> getAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.getAll(page,size));
-    }
-
     @Operation(summary = "分页获取所有报警历史记录", operationId = "getAlertHistorysByTenant")
     @GetMapping("/tenant/{tenantId}")
     public ApiResponse<PageResult<AlertHistoryDTO>> findByTenantId(
             @PathVariable Long tenantId ,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByTenantId(tenantId, page,size));
+        return ApiResponse.ok(service.list(page,size));
     }
 
     @Operation(summary = "更新报警历史记录", operationId = "updateAlertHistory")
@@ -65,6 +57,6 @@ public class AlertHistoryController {
     @Operation(summary = "更新报警历史记录", operationId = "deleteAlertHistory")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

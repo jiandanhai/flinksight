@@ -41,33 +41,22 @@ public class JobLogController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "查询任务日志", description = "Get logs by job",operationId = "getJobLogsByJob")
-    @GetMapping("/listByJob")
-    public ApiResponse<PageResult<JobLogDTO>> getLogsByJob(
-            @RequestParam Long jobId,
-            @RequestParam String start,
-            @RequestParam String end,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(jobLogService.getLogsByJob(jobId,LocalDateTime.parse(start),LocalDateTime.parse(end),page,size));
-    }
-
-    @Operation(summary = "按级别查询租户日志", description = "Get logs by tenant and level",operationId = "getJobLogsByTenantAndLevel")
-    @GetMapping("/listByTenantLevel")
+    @Operation(summary = "按级别查询租户日志", description = "Get logs by tenant and level",operationId = "listJobLogs")
+    @GetMapping("/list")
     public ApiResponse<PageResult<JobLogDTO>> getLogsByTenantAndLevel(
-            @RequestParam Long tenantId,
+            @RequestParam Long jobId,
             @RequestParam String level,
             @RequestParam String start,
             @RequestParam String end,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(jobLogService.getLogsByTenantAndLevel(tenantId,level,LocalDateTime.parse(start),LocalDateTime.parse(end),page,size));
+        return ApiResponse.ok(jobLogService.list(jobId,level,LocalDateTime.parse(start),LocalDateTime.parse(end),page,size));
     }
 
     @Operation(summary = "删除日志（软删）", description = "Soft delete job log",operationId = "deleteJobLog")
     @DeleteMapping("/delete/{id}")
     public ApiResponse<Void> deleteJobLog(@PathVariable Long id) {
-        jobLogService.softDelete(id);
+        jobLogService.sDelete(id);
         return ApiResponse.ok(null);
     }
 }

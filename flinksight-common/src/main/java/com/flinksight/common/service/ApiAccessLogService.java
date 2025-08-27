@@ -8,6 +8,5 @@ import java.util.Optional;
 public interface ApiAccessLogService extends SoftDeleteService<ApiAccessLogDTO, Long>  {
     ApiAccessLogDTO createOrUpdate(ApiAccessLogDTO log);
     Optional<ApiAccessLogDTO> getById(Long id);
-    PageResult<ApiAccessLogDTO> findByTenantId(Long tenantId,int page, int size);
-    PageResult<ApiAccessLogDTO> getAll(int page, int size);
+    PageResult<ApiAccessLogDTO> list(int page, int size);
 }

@@ -10,7 +10,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "gen-api": "npx tsx ./scripts/swagger-openapi-to-axios.ts --swagger=../flinksight-backend/build/openapi.json --outdir=./src/api --baseURL=\"import.meta.env.VITE_API_BASE_URL || '/api'\" --emitStatic=auto --verbose=true",
+    "gen-api": "npx tsx ./scripts/swagger-openapi-to-axios.ts --swagger=../flinksight-backend/src/main/resources/build/openapi.json --outdir=./src/api --baseURL=\"import.meta.env.VITE_API_BASE_URL || '/api'\" --emitStatic=auto --verbose=true",
     "prebuild": "npm run gen-api"
   },
   "dependencies": {

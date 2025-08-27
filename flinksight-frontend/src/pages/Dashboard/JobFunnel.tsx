@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Spin, Empty, Pagination, Row } from "antd";
 import { Bar } from "@ant-design/plots";
-import { getTenantId } from "@/utils/tenant";
 import { dashboardStatisticsJobFunnels } from "../../api/modules";
 interface JobStatusDTO {
   status: string;
@@ -29,7 +28,6 @@ const JobFunnel: React.FC = () => {
     setLoading(true);
     try {
       const res = await dashboardStatisticsJobFunnels({
-        tenantId: getTenantId(),
         page,
         size: PAGE_SIZE,
       });
@@ -49,7 +47,7 @@ const JobFunnel: React.FC = () => {
     xField: "count",
     yField: "status",
     seriesField: "status",
-    color: ({ status }: DTO.JobStatusDTO) => colorMap[status] || "#999",
+    color: ({ status }: JobStatusDTO) => colorMap[status] || "#999",
     legend: false,
     label: {
       position: "right",

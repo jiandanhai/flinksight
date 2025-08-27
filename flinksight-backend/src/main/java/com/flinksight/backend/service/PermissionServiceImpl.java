@@ -1,5 +1,6 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.Permission;
 import com.flinksight.backend.mapper.PermissionStructMapper;
 import com.flinksight.backend.repository.PermissionRepository;
@@ -9,7 +10,6 @@ import com.flinksight.common.service.PermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -44,10 +44,10 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
-    public PageResult<PermissionDTO> getAllPermissions(int page, int size) {
-        Page<Permission> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<PermissionDTO> dtoPage = result.map(permissionStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<PermissionDTO> list(int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, Permission.class); // 统一 1→0
+        Page<Permission> result = repository.findByIsDeleted(0, pr);
+        return PageHelpers.toPageResult(result, permissionStructMapper::toDTO, true); // 返回
     }
 
     @Override
@@ -66,7 +66,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<PermissionDTO> opt = repository.findById(id).map(permissionStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             PermissionDTO dto = opt.get();

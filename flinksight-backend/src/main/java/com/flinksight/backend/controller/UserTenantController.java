@@ -36,20 +36,12 @@ public class UserTenantController {
         return service.removeTenantFromUser(userId, tenantId);
     }
 
-    @Operation(summary = "", description = "",operationId = "getUserTenantsByUser")
-    @GetMapping("/user/{userId}")
-    public ApiResponse<PageResult<UserTenantDTO>> findByUserId(@PathVariable Long userId,
-                                                              @RequestParam(defaultValue = "0") int page,
-                                                              @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByUserId(userId,page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getUserTenantsByTenant")
-    @GetMapping("/tenant/{tenantId}")
-    public ApiResponse<PageResult<UserTenantDTO>> findByTenantId(@PathVariable Long tenantId,
+    @Operation(summary = "", description = "",operationId = "listUserTenants")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<UserTenantDTO>> list(@RequestParam Long userId,@RequestParam Long tenantId,
                                               @RequestParam(defaultValue = "0") int page,
                                               @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
+        return ApiResponse.ok(service.list(userId,tenantId,page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "getUserTenant")
@@ -63,6 +55,6 @@ public class UserTenantController {
     @Operation(summary = "", description = "",operationId = "deleteUserTenant")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

@@ -13,7 +13,7 @@ public interface TenantConfigService extends SoftDeleteService<TenantConfigDTO, 
 
     Optional<TenantConfigDTO> getByTenantIdAndConfigKey(Long tenantId, String configKey);
 
-    PageResult<TenantConfigDTO> listByTenantId(Long tenantId,int page, int size);
+    PageResult<TenantConfigDTO> list(Long tenantId,int page, int size);
 
-    boolean batchSoftDelete(List<Long> ids);
+    boolean batchSoftDelete(Long tenantId,List<Long> ids);
 }

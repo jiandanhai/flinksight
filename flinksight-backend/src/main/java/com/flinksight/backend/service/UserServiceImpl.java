@@ -1,11 +1,13 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.User;
 import com.flinksight.backend.domain.UserTokenState;
 import com.flinksight.backend.exception.BusinessException;
 import com.flinksight.backend.mapper.UserStructMapper;
 import com.flinksight.backend.repository.*;
 import com.flinksight.backend.security.SecurityUser;
+import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.backend.security.tenant.TenantRequired;
 import com.flinksight.common.dto.UserDTO;
 import com.flinksight.common.dto.UserTokenStateDTO;
@@ -19,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -51,14 +52,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public UserDTO getCurrentUserProfile() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         SecurityUser currentUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return userStructMapper.toDTO(currentUser.getUser());
     }
 
     @Override
-    public Optional<UserDTO> findByAccount(String account) {
-        return userRepository.findByUsernameAndIsDeleted(account, 0).map(userStructMapper::toDTO);
+    public UserDTO findByAccount(String account) {
+        User user = userRepository.findByTenantIdAndUsernameAndIsDeleted(SecurityUtil.getCurrentTenantId(), account, 0);
+        return userStructMapper.toDTO(user);
     }
 
     @Override
@@ -96,10 +97,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public PageResult<UserDTO> getUsersByTenant(Long tenantId, int page, int size) {
-        Page<User> result = userRepository.findAllByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<UserDTO> dtoPage = result.map(userStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<UserDTO> list(int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, User.class); // 统一 1→0
+        Page<User> result = userRepository.findAllByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(),0, pr);
+        return PageHelpers.toPageResult(result, userStructMapper::toDTO, true); //
     }
 
     @Override
@@ -109,11 +110,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         User entity = userStructMapper.toEntity(userDTO);
         if(oldOpt.isPresent()) {
             UserDTO ud = oldOpt.get();
-            entity.setEmail(ud.getEmail());
-            entity.setPhone(ud.getPhone());
-            entity.setStatus(ud.getStatus());
-            entity.setIsDeleted(0);
-            // ...其它字段
+            userStructMapper.mergeIgnoreNullAndBlank(ud,entity);
             return userStructMapper.toDTO(userRepository.save(entity));
         }
         throw new BusinessException(ErrorCode.NOT_FOUND, "用户不存在");
@@ -130,7 +127,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      */
     @Override
     public List<String> getAuthorities(Long userId,Long tenantId) {
-        final Set<String> authorities = new HashSet<>(permRepo.findCodesByUser(userId, tenantId));
+        final Set<String> authorities = new HashSet<>(permRepo.findCodesByUser(userId,tenantId));
         // 也可以在这里顺便 union 用户直赋的 permission（如果有 user_permission 表）
         //authorities.addAll(userPermissionRepository.findCodesByUserIdAndTenantId(userId, tenantId));
 
@@ -141,7 +138,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<UserDTO> opt = userRepository.findById(id).map(userStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             UserDTO dto = opt.get();
@@ -156,9 +153,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // 这里可以加多租户ID逻辑
-        User user = userRepository.findByUsernameAndIsDeleted(username, 0)
-                .orElseThrow(() -> new UsernameNotFoundException("用户不存在: " + username));
-
+        User user = userRepository.findByTenantIdAndUsernameAndIsDeleted(SecurityUtil.getCurrentTenantId(),username, 0);
         // 构造UserDetails，填充权限等
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),

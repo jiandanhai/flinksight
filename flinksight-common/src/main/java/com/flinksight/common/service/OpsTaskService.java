@@ -1,7 +1,11 @@
 package com.flinksight.common.service;
 
+import com.flinksight.common.dto.FunnelResponseDTO;
+import com.flinksight.common.dto.KpiResponseDTO;
 import com.flinksight.common.dto.OpsTaskDTO;
 import com.flinksight.common.model.PageResult;
+
+import java.time.LocalDate;
 
 /**
  * 运维自动化任务业务接口
@@ -23,11 +27,6 @@ public interface OpsTaskService extends SoftDeleteService<OpsTaskDTO, Long>{
      */
     OpsTaskDTO update(OpsTaskDTO dto);
 
-    /**
-     * 逻辑删除运维任务
-     * @param id 任务ID
-     */
-    void delete(Long id);
 
     /**
      * 根据ID获取任务详情
@@ -37,18 +36,23 @@ public interface OpsTaskService extends SoftDeleteService<OpsTaskDTO, Long>{
     OpsTaskDTO getById(Long id);
 
     /**
-     * 查询租户下全部有效任务
-     * @param tenantId 租户ID
-     * @return 运维任务列表
-     */
-    PageResult<OpsTaskDTO> listByTenant(Long tenantId, int page, int size);
-
-    /**
      * 查询租户下某状态的全部任务
-     * @param tenantId 租户ID
      * @param status 任务状态
      * @return 运维任务列表
      */
-    PageResult<OpsTaskDTO> listByTenantAndStatus(Long tenantId, String status, int page, int size);
+    PageResult<OpsTaskDTO> list(String status, int page, int size);
+
+    KpiResponseDTO getKpi(LocalDate from, LocalDate to);
+
+    FunnelResponseDTO getFunnel( LocalDate dateOrNull);
+
+    OpsTaskDTO start(Long id);
+
+    // RUNNING
+    OpsTaskDTO complete(OpsTaskDTO req);     // SUCCESS
+
+    OpsTaskDTO fail(OpsTaskDTO req);         // FAILED
+
+    OpsTaskDTO cancel(OpsTaskDTO req);       // CANCELLED
 
 }

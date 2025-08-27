@@ -13,17 +13,17 @@ public interface JobPermissionService {
      * 注册新作业时分配默认权限给操作人/租户（如OWNER/ADMIN）
      * 典型实现：插入job_permission三元组
      */
-    void grantDefaultJobPermission(Long jobId, Long tenantId, String operatorUserId);
+    void grantDefaultJobPermission(Long jobId, String operatorUserId);
 
     /**
      * 查询某作业下所有授权用户
      */
-    PageResult<JobPermissionDTO> listJobPermissions(Long jobId,int page, int size);
+    PageResult<JobPermissionDTO> list(Long jobId,int page, int size);
 
     /**
      * 给指定用户分配作业权限
      */
-    void grantPermission(Long jobId, Long tenantId, String userId, String permissionCode);
+    void grantPermission(Long jobId, String userId, String permissionCode);
 
     /**
      * 回收用户的作业权限

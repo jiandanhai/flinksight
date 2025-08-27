@@ -1,5 +1,6 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.UserTenant;
 import com.flinksight.backend.mapper.UserTenantStructMapper;
 import com.flinksight.backend.repository.UserTenantRepository;
@@ -40,33 +41,20 @@ public class UserTenantServiceImpl implements UserTenantService {
     }
 
     @Override
-    public PageResult<UserTenantDTO> findByUserId(Long userId,int page, int size) {
-        Page<UserTenant> result = repository.findByUserIdAndIsDeleted(userId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<UserTenantDTO> dtoPage = result.map(userTenantStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
-
-    @Override
-    public PageResult<UserTenantDTO> findByTenantId(Long tenantId,int page, int size) {
-        Page<UserTenant> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<UserTenantDTO> dtoPage = result.map(userTenantStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
-
-    @Override
     public Optional<UserTenantDTO> getById(Long id) {
         return repository.findById(id).map(userTenantStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
+
     @Override
-    public PageResult<UserTenantDTO> findByUserAndTenant(Long userId, Long tenantId,int page, int size) {
-        Page<UserTenant> result = repository.findByUserIdAndTenantIdAndIsDeleted(userId, tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<UserTenantDTO> dtoPage = result.map(userTenantStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<UserTenantDTO> list(Long userId, Long tenantId, int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, UserTenant.class); // 统一 1→0
+        Page<UserTenant> result = repository.pageQuery(userId, tenantId, pr);
+        return PageHelpers.toPageResult(result, userTenantStructMapper::toDTO, true); //
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<UserTenantDTO> opt = repository.findById(id).map(userTenantStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             UserTenantDTO dto = opt.get();

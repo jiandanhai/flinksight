@@ -1,5 +1,6 @@
 package com.flinksight.backend.domain;
 
+import com.flinksight.common.service.DefaultSort;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
@@ -17,13 +18,15 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
         name = "profile",
-        uniqueConstraints = @UniqueConstraint(name = "uk_profile_user_id", columnNames = {"user_id"})
+        uniqueConstraints = @UniqueConstraint(name = "uk_tenant_user", columnNames = {"tenant_id","user_id"}),
+        indexes = { @Index(name = "idx_profile_tenant", columnList = "tenant_id") }
 )
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "用户个人信息表")
 @SQLRestriction("is_deleted=0") // 替代 Hibernate 6.3 的 @Where
+@DefaultSort(fields = {"createTime", "id"})
 public class Profile implements Serializable {
 
     @Id
@@ -34,6 +37,10 @@ public class Profile implements Serializable {
     @Column(name = "user_id", nullable = false, unique = true)
     @Schema(description = "用户ID")
     private Long userId;
+
+    @Column(name = "tenant_id", nullable = false)
+    @Schema(description = "租户ID")
+    private Long tenantId;
 
     @Column(name = "real_name", length = 64)
     @Schema(description = "真实姓名")

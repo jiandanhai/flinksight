@@ -1,5 +1,6 @@
 package com.flinksight.backend.domain;
 
+import com.flinksight.common.service.DefaultSort;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,6 +28,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Schema(description = "租户表")
 @SQLRestriction("is_deleted=0")
+@DefaultSort(fields = {"createTime", "id"})
 public class Tenant implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

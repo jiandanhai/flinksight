@@ -39,12 +39,12 @@ public class TenantController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "查询所有租户", description = "Get all tenants",operationId = "getAllTenants")
+    @Operation(summary = "查询所有租户", description = "Get all tenants",operationId = "listTenants")
     @GetMapping("/list")
     public ApiResponse<PageResult<TenantDTO>> getAllTenants(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(tenantService.getAllTenants(page,size));
+        return ApiResponse.ok(tenantService.list(page,size));
     }
 
     @Operation(summary = "更新租户信息", description = "Update tenant info",operationId = "updateTenant")
@@ -56,7 +56,7 @@ public class TenantController {
     @Operation(summary = "删除租户", description = "Delete tenant",operationId = "deleteTenant")
     @DeleteMapping("/delete/{id}")
     public ApiResponse<Void> deleteTenant(@PathVariable Long id) {
-        tenantService.softDelete(id);
+        tenantService.sDelete(id);
         return ApiResponse.ok(null);
     }
 }

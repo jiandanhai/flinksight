@@ -36,22 +36,13 @@ public class JobInstanceController {
         return service.updateJobStatus(id, status);
     }
 
-    @Operation(summary = "", description = "",operationId = "getJobInstancesByTenant")
-    @GetMapping("/tenant/{tenantId}")
-    public ApiResponse<PageResult<JobInstanceDTO>> listByTenant(
-            @PathVariable Long tenantId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.listByTenant(tenantId,page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getJobInstancesByStatus")
+    @Operation(summary = "", description = "",operationId = "listJobInstances")
     @GetMapping("/status/{status}")
-    public ApiResponse<PageResult<JobInstanceDTO>> listByStatus(
+    public ApiResponse<PageResult<JobInstanceDTO>> list(
             @PathVariable Integer status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.listByStatus(status,page,size));
+        return ApiResponse.ok(service.list(status,page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "getJobInstance")
@@ -65,6 +56,6 @@ public class JobInstanceController {
     @Operation(summary = "", description = "",operationId = "deleteJobInstance")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

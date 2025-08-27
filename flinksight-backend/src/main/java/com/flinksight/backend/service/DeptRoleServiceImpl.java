@@ -1,5 +1,6 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.DeptRole;
 import com.flinksight.backend.mapper.DeptRoleStructMapper;
 import com.flinksight.backend.repository.DeptRoleRepository;
@@ -10,7 +11,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -48,17 +48,10 @@ public class DeptRoleServiceImpl implements DeptRoleService {
     }
 
     @Override
-    public PageResult<DeptRoleDTO> findByDeptId(Long deptId,int page, int size) {
-        Page<DeptRole> result = repository.findByDeptIdAndIsDeleted( deptId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<DeptRoleDTO> dtoPage = result.map(deptRoleStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
-
-    @Override
-    public PageResult<DeptRoleDTO> findByRoleId(Long roleId,int page, int size) {
-        Page<DeptRole> result = repository.findByRoleIdAndIsDeleted( roleId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<DeptRoleDTO> dtoPage = result.map(deptRoleStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<DeptRoleDTO> list(Long deptId,Long roleId,int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, DeptRole.class); // 统一 1→0
+        Page<DeptRole> result = repository.pageQuery(deptId, roleId, pr);
+        return PageHelpers.toPageResult(result, deptRoleStructMapper::toDTO, true); // 返回 1-ba
     }
 
     @Override
@@ -67,7 +60,7 @@ public class DeptRoleServiceImpl implements DeptRoleService {
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<DeptRoleDTO> opt = repository.findById(id).map(deptRoleStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             DeptRoleDTO dto = opt.get();

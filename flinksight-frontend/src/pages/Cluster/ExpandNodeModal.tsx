@@ -5,10 +5,10 @@
 import React, { useState } from "react";
 import { Button, Form, Input, message, Modal, Switch, Upload, Tooltip } from "antd";
 import { UploadOutlined, InfoCircleOutlined } from "@ant-design/icons";
-import api from '@/api/api-compat';
 
 import type { NodeDTO } from '@/api/dto';
 import { useUser } from "../../store/user";
+import { createNode,batchCreateNode} from "@/api/modules";
 
 /**
  * Props:
@@ -38,7 +38,7 @@ const ExpandNodeModal: React.FC<Props> = ({ open, onOk, onClose, clusterId }) =>
     try {
       const values = await form.validateFields();
       if (clusterId) values.clusterId = clusterId;
-      await api.createNode(values as NodeDTO);
+      await createNode(values as NodeDTO);
       message.success("节点扩容成功");
       onOk && onOk({ success: 1, fail: 0 });
       onClose();
@@ -72,9 +72,9 @@ const ExpandNodeModal: React.FC<Props> = ({ open, onOk, onClose, clusterId }) =>
           return;
         }
         // 解析每个节点
-        const nodes: DTO.NodeDTO[] = lines.slice(1).map(line => {
+        const nodes: NodeDTO[] = lines.slice(1).map(line => {
           const arr = line.split(",");
-          const node: DTO.NodeDTO = {
+          const node: NodeDTO = {
             name: arr[idx('name')],
             ip: arr[idx('ip')],
             role: arr[idx('role')],
@@ -91,7 +91,7 @@ const ExpandNodeModal: React.FC<Props> = ({ open, onOk, onClose, clusterId }) =>
           return;
         }
         // 批量扩容
-        const result = await api.batchAddNodes(filteredNodes);
+        const result = await batchCreateNode(filteredNodes);
         message.success(`批量扩容完成，成功${result.data.success}台，失败${result.data.fail}台`);
         onOk && onOk(result.data);
         setUploading(false);

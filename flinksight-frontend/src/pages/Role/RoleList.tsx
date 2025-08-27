@@ -1,90 +1,148 @@
-import React, {useEffect, useState} from 'react';
-import api from '@/api/api-compat';
-
-import type {RoleDTO} from '@/api/dto';
-import EditRoleModal from './EditRoleModal';
-import PageTable from '../../components/PageTable';
-import Loading from '../../components/Loading';
-
-interface Props {
-  onSelect: (id: number) => void;
-}
-
 /**
- * 角色列表页面
- * - 支持新建、编辑、删除、详情
+ * @file 角色管理（统一为与租户/用户相同的 UI 风格）
+ * @desc 搜索 / 分页 / 新建 / 编辑 / 删除
  */
-const RoleList: React.FC<Props> = ({ onSelect }) => {
-  const [roles, setRoles] = useState<RoleDTO[]>([]);
+import React, { useEffect, useMemo, useState } from 'react';
+import { Button, Input, message, Modal, Space, Table } from 'antd';
+import { listRoles, deleteRole } from '@/api/modules';
+import type { RoleDTO } from '@/api/dto';
+import EditRoleModal from './EditRoleModal';
+
+type RoleQuery = { keyword?: string };
+
+// —— 兼容 openapi 客户端的多种响应包装
+const pickPayload = (r: any) => (r?.data?.data ?? r?.data ?? r);
+// —— 兼容多种分页字段命名
+const parsePage = (payload: any) => {
+  const rows =
+    (Array.isArray(payload?.records) && payload.records) ||
+    (Array.isArray(payload?.items) && payload.items) ||
+    (Array.isArray(payload?.content) && payload.content) ||
+    (Array.isArray(payload?.list) && payload.list) ||
+    (Array.isArray(payload?.data) && payload.data) ||
+    (Array.isArray(payload?.rows) && payload.rows) ||
+    (Array.isArray(payload) ? payload : []) ||
+    [];
+  const total =
+    payload?.total ??
+    payload?.totalCount ??
+    payload?.totalElements ??
+    payload?.count ??
+    rows.length;
+  return { rows: rows as RoleDTO[], total: Number(total) || 0 };
+};
+
+const RoleList: React.FC = () => {
+  const [list, setList] = useState<RoleDTO[]>([]);
+  const [page, setPage] = useState(1);   // Antd 1-based
+  const [size, setSize] = useState(20);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  const [query, setQuery] = useState<RoleQuery>({});
   const [modalVisible, setModalVisible] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
 
-  async function fetchRoles() {
+  const fetch = async () => {
     setLoading(true);
     try {
-      const data = await api.getAllRoles({});
-      setRoles(data);
+      const res = await listRoles({ page: page - 1, size, keyword: query.keyword });
+      const { rows, total } = parsePage(pickPayload(res));
+      setList(rows);
+      setTotal(total);
+    } catch (e: any) {
+      message.error(e?.message || '加载角色失败');
+      setList([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
-  }
-  useEffect(() => { fetchRoles(); }, []);
+  };
 
-  function openModal(id?: number) {
-    setEditId(id || null);
-    setModalVisible(true);
-  }
+  const qKey = useMemo(() => JSON.stringify(query), [query]);
+  useEffect(() => { fetch(); /* eslint-disable-next-line */ }, [page, size, qKey]);
 
-  async function handleDelete(role: DTO.RoleDTO) {
-    if (!window.confirm(`确认删除角色：${role.name}？`)) return;
-    setLoading(true);
-    try {
-      await api.deleteRole(role.id);
-      fetchRoles();
-    } finally {
-      setLoading(false);
-    }
-  }
+  const openModal = (id?: number) => { setEditId(id ?? null); setModalVisible(true); };
+
+  const handleDelete = (r: RoleDTO) => {
+    if (!r.id) return;
+    Modal.confirm({
+      title: `确认删除角色「${r.name ?? r.id}」？`,
+      onOk: async () => {
+        try {
+          await deleteRole(r.id!);
+          message.success('已删除');
+          fetch();
+        } catch (e: any) {
+          message.error(e?.message || '删除失败');
+        }
+      },
+    });
+  };
 
   return (
-    <div>
-      <div className="mb-4 flex justify-between">
-        <button className="btn-primary" onClick={() => openModal()}>新建角色</button>
-        <span>共{roles.length}个角色</span>
+    <div className="p-6 bg-white rounded-xl shadow">
+      {/* 顶部工具条：搜索 + 新建 */}
+      <div className="flex justify-between mb-4 gap-2">
+        <Input.Search
+          allowClear
+          placeholder="按角色名/标识搜索"
+          onSearch={(val) => {
+            setQuery({ keyword: val?.trim() || undefined });
+            setPage(1);
+          }}
+          style={{ maxWidth: 320 }}
+        />
+        <Button type="primary" onClick={() => openModal()}>新建角色</Button>
       </div>
-      <PageTable<DTO.RoleDTO>
-        columns={[
-          { key: 'name', title: '角色名', render: r => (
-            <span className="text-blue-600 cursor-pointer" onClick={() => onSelect(r.id)}>{r.name}</span>
-          ) },
-          { key: 'code', title: '标识' },
-          { key: 'desc', title: '描述' },
-          {
-            key: 'op', title: '操作', render: r => (
-              <div>
-                <button className="text-blue-600 mr-2" onClick={() => openModal(r.id)}>编辑</button>
-                <button className="text-red-500" onClick={() => handleDelete(r)}>删除</button>
-              </div>
-            )
-          }
-        ]}
-        data={roles}
+
+      <Table<RoleDTO>
+        rowKey="id"
+        dataSource={list}
         loading={loading}
-        page={1}
-        size={10}
-        total={roles.length}
+        columns={[
+          {
+            title: '角色名',
+            dataIndex: 'name',
+            render: (v: any) => v ?? '-',
+          },
+          { title: '标识', dataIndex: 'code', render: (v: any) => v ?? '-' },
+          {
+            title: '描述',
+            dataIndex: 'desc',
+            render: (_: any, r) => (r as any).desc ?? (r as any).description ?? '-',
+          },
+          {
+            title: '操作',
+            width: 200,
+            render: (_: any, r) => (
+              <Space>
+                <Button type="link" size="small" onClick={() => openModal(r.id!)}>编辑</Button>
+                <Button type="link" size="small" danger onClick={() => handleDelete(r)}>删除</Button>
+              </Space>
+            ),
+          },
+        ]}
+        pagination={{
+          current: page,
+          pageSize: size,
+          total,
+          showSizeChanger: true,
+          showTotal: (t) => `共 ${t} 条`,
+          onChange: (p, s) => { setPage(p); setSize(s || size); },
+        }}
       />
-      {/* 编辑弹窗 */}
+
       {modalVisible && (
         <EditRoleModal
           id={editId}
+          open={modalVisible}
+          onOk={() => { setModalVisible(false); fetch(); }}
           onClose={() => setModalVisible(false)}
-          onOk={fetchRoles}
         />
       )}
-      {loading && <Loading />}
     </div>
   );
 };
+
 export default RoleList;

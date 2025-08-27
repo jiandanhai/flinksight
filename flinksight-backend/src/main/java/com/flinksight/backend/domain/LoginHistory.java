@@ -1,5 +1,6 @@
 package com.flinksight.backend.domain;
 
+import com.flinksight.common.service.DefaultSort;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,6 +29,7 @@ import java.time.LocalDateTime;
 )
 @Schema(description = "登录历史表")
 @SQLRestriction("is_deleted=0") // 软删除
+@DefaultSort(fields = {"loginTime", "id"})
 public class LoginHistory implements Serializable {
 
     @Id

@@ -6,5 +6,5 @@ package com.flinksight.common.service;
  * @param <ID>
  */
 public interface SoftDeleteService<T, ID> {
-    boolean softDelete(ID id);
+    boolean sDelete(ID id);
 }

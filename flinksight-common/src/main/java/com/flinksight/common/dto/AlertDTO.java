@@ -18,12 +18,14 @@ public class AlertDTO implements Serializable {
     private Long id;
     private Long tenantId;
     private Long jobId;
-    private String level;
-    private String type;
+    private Long ruleId;        // 可能为空（未自动匹配到）
+    private String level;       // WARN/FATAL...
+    private String type;        // CPUHigh/MEMHigh/JobFailed...
     private String message;
-    private Integer status;
-    private Long handlerId;
+    private Integer status;     // 0=未处理 1=处理中 2=关闭
+    private Long handlerId;     // 指派/处理人
+    private Long clusterId;     // 可能为空
     private Integer isDeleted;
-    private LocalDateTime createTime;
-    private LocalDateTime updateTime;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

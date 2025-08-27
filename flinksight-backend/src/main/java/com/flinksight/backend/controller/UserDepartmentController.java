@@ -34,20 +34,13 @@ public class UserDepartmentController {
         return service.removeDepartmentFromUser(userId, departmentId);
     }
 
-    @Operation(summary = "", description = "",operationId = "getUserDepartmentsByUser")
-    @GetMapping("/user/{userId}")
-    public ApiResponse<PageResult<UserDepartmentDTO>> findByUser(@PathVariable Long userId,
-                                                                @RequestParam(defaultValue = "0") int page,
-                                                                @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByUserId(userId,page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getUserDepartmentsByDepartment")
-    @GetMapping("/department/{departmentId}")
-    public ApiResponse<PageResult<UserDepartmentDTO>> findByDepartment(@PathVariable Long departmentId,
-                                                    @RequestParam(defaultValue = "0") int page,
-                                                    @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByUserId(departmentId,page,size));
+    @Operation(summary = "", description = "",operationId = "listUserDepartments")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<UserDepartmentDTO>> list(@RequestParam Long userId,
+                                                                        @RequestParam Long departmentId,
+                                                                        @RequestParam(defaultValue = "0") int page,
+                                                                        @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.list(userId,departmentId,page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "getUserDepartment")
@@ -61,6 +54,6 @@ public class UserDepartmentController {
     @Operation(summary = "", description = "",operationId = "deleteUserDepartment")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

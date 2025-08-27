@@ -7,6 +7,7 @@ import com.flinksight.backend.repository.*;
 import com.flinksight.backend.repository.projection.ClusterStatusTrendProjection;
 import com.flinksight.backend.repository.projection.KeyCountMapper;
 import com.flinksight.backend.repository.projection.KeyCountView;
+import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.common.dto.*;
 import com.flinksight.common.enums.AlertLevelEnum;
 import com.flinksight.common.enums.ClusterHealthStatusEnum;
@@ -49,22 +50,21 @@ public class DashboardServiceImpl implements DashboardService {
 
     /**
      * 获取大盘核心统计数据
-     * @param tenantId 租户ID
      * @return 大盘核心统计DTO
      */
     @Override
     @Transactional(readOnly = true)
-    public KPIStatusSummaryDTO getDashboardSummary(Long tenantId) {
-        int clusterCount = clusterRepository.countByTenantIdAndIsDeleted(tenantId, 0);
-        int jobCount = jobRepository.countByTenantIdAndIsDeleted(tenantId, 0);
-        int alertCount = alertRepository.countByTenantIdAndIsDeleted(tenantId, 0);
+    public KPIStatusSummaryDTO getDashboardSummary() {
+        int clusterCount = clusterRepository.countByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(), 0);
+        int jobCount = jobRepository.countByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(), 0);
+        int alertCount = alertRepository.countByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(), 0);
         int activeJobCount = jobRepository.countByTenantIdAndStatusAndIsDeleted(
-                tenantId, JobStatusEnum.RUNNING.getCode(), 0);
-        long userCount = userRepository.countByTenantIdAndIsDeleted(tenantId,0);
+                SecurityUtil.getCurrentTenantId(), JobStatusEnum.RUNNING.getCode(), 0);
+        long userCount = userRepository.countByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(),0);
 
         // 业务自定义：如健康度为健康集群占比
         int healthyCount = clusterRepository.countByTenantIdAndStatusAndIsDeleted(
-                tenantId, ClusterHealthStatusEnum.HEALTHY.getCode(), 0);
+                SecurityUtil.getCurrentTenantId(), ClusterHealthStatusEnum.HEALTHY.getCode(), 0);
         int healthScore = clusterCount > 0 ? healthyCount * 100 / clusterCount : 100;
 
         String statTime = java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern(DateUtil.DEFAULT_FORMAT));
@@ -82,18 +82,17 @@ public class DashboardServiceImpl implements DashboardService {
 
     /**
      * 获取集群健康分布统计
-     * @param tenantId 租户ID
      * @return 集群健康分布DTO
      */
     @Override
     @Transactional(readOnly = true)
-    public HealthDistributionDTO getHealthDistribution(Long tenantId) {
+    public HealthDistributionDTO getHealthDistribution() {
         int healthyCount = clusterRepository.countByTenantIdAndStatusAndIsDeleted(
-                tenantId, ClusterHealthStatusEnum.HEALTHY.getCode(), 0);
+                SecurityUtil.getCurrentTenantId(), ClusterHealthStatusEnum.HEALTHY.getCode(), 0);
         int warningCount = clusterRepository.countByTenantIdAndStatusAndIsDeleted(
-                tenantId, ClusterHealthStatusEnum.WARNING.getCode(), 0);
+                SecurityUtil.getCurrentTenantId(), ClusterHealthStatusEnum.WARNING.getCode(), 0);
         int errorCount = clusterRepository.countByTenantIdAndStatusAndIsDeleted(
-                tenantId, ClusterHealthStatusEnum.ERROR.getCode(), 0);
+                SecurityUtil.getCurrentTenantId(), ClusterHealthStatusEnum.ERROR.getCode(), 0);
 
         String statTime = java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
@@ -107,12 +106,12 @@ public class DashboardServiceImpl implements DashboardService {
 
 
     @Override
-    public AlertTrendDTO getAlertTrend(Long tenantId, LocalDate from, LocalDate to) {
+    public AlertTrendDTO getAlertTrend(LocalDate from, LocalDate to) {
         // 归整为当天 00:00 - 当天 23:59:59
         LocalDateTime start = from.atStartOfDay();
         LocalDateTime end = to.atTime(LocalTime.MAX);
 
-        List<Alert> list = alertRepository.findTrend(tenantId, start, end);
+        List<Alert> list = alertRepository.findTrend(SecurityUtil.getCurrentTenantId(), start, end);
 
         // 分天聚合
         Map<LocalDate, List<Alert>> byDay = list.stream()
@@ -141,16 +140,15 @@ public class DashboardServiceImpl implements DashboardService {
 
     /**
      * 获取业务转化漏斗数据，支持分页
-     * @param tenantId 租户ID
      * @param page 当前页码（0起始）
      * @param size 每页大小
      * @return 分页的JobFunnelDTO结果
      */
     @Override
     @Transactional(readOnly = true)
-    public PageResult<JobFunnelDTO> getJobFunnel(Long tenantId, int page, int size) {
+    public PageResult<JobFunnelDTO> getJobFunnel(int page, int size) {
         // 1. 查询所有分组统计结果
-        List<KeyCountView> statList = jobRepository.countJobByStatusGroup(tenantId, 0);
+        List<KeyCountView> statList = jobRepository.countJobByStatusGroup(SecurityUtil.getCurrentTenantId(), 0);
         log.info("#[dashboard Job funnel] statList => {}", statList.toString());
 
         // 2. 组装JobFunnelDTO
@@ -186,50 +184,50 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public MonitorMetricsDTO getMonitorMetrics(Long tenantId) {
+    public MonitorMetricsDTO getMonitorMetrics() {
         LocalDateTime now = LocalDateTime.now();
-        long alertCount = alertRepository.countByTenantIdAndCreatedAtBetween(tenantId, now.minusDays(1), now);
-        long jobRunning = jobRepository.countByTenantIdAndStatusAndIsDeleted(tenantId, JobStatusEnum.RUNNING.getCode(),0);
-        long clusterHealthy = clusterRepository.countByTenantIdAndStatusAndIsDeleted(tenantId, ClusterHealthStatusEnum.HEALTHY.getCode(),0);
-        long userCount = userRepository.countByTenantIdAndIsDeleted(tenantId,0);
+        long alertCount = alertRepository.countByTenantIdAndCreatedAtBetween(SecurityUtil.getCurrentTenantId(), now.minusDays(1), now);
+        long jobRunning = jobRepository.countByTenantIdAndStatusAndIsDeleted(SecurityUtil.getCurrentTenantId(), JobStatusEnum.RUNNING.getCode(),0);
+        long clusterHealthy = clusterRepository.countByTenantIdAndStatusAndIsDeleted(SecurityUtil.getCurrentTenantId(), ClusterHealthStatusEnum.HEALTHY.getCode(),0);
+        long userCount = userRepository.countByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(),0);
         return new MonitorMetricsDTO(alertCount, jobRunning, clusterHealthy, userCount);
     }
 
     @Override
-    public MetricSeriesDTO getMetricSeries(Long tenantId, String metric, LocalDateTime from, LocalDateTime to) {
+    public MetricSeriesDTO getMetricSeries(String metric, LocalDateTime from, LocalDateTime to) {
         List<JobMetricDTO> points = jobMetricRepository
-                .findSeries(tenantId, metric, from, to);
+                .findSeries(SecurityUtil.getCurrentTenantId(), metric, from, to);
         List<String> times = points.stream().map(p -> p.getTs().toString()).toList();
         List<Double> values = points.stream().map(JobMetricDTO::getValue).toList();
         return new MetricSeriesDTO(times, values);
     }
 
     @Override
-    public List<Map<String, Object>> getAlertCountBySeverity(Long tenantId, LocalDateTime start, LocalDateTime end) {
-        return alertHistoryRepository.countByLevelBetween(tenantId, start, end);
+    public List<Map<String, Object>> getAlertCountBySeverity(LocalDateTime start, LocalDateTime end) {
+        return alertHistoryRepository.countByLevelBetween(SecurityUtil.getCurrentTenantId(), start, end);
     }
 
 
     @Override
-    public List<Map<String, Object>> getAlertCountByStatus(Long tenantId, LocalDateTime start, LocalDateTime end) {
-        return alertHistoryRepository.countByStatusBetween(tenantId, start, end);
+    public List<Map<String, Object>> getAlertCountByStatus(LocalDateTime start, LocalDateTime end) {
+        return alertHistoryRepository.countByStatusBetween(SecurityUtil.getCurrentTenantId(), start, end);
     }
 
 
     @Override
-    public Double getAverageResponseSeconds(Long tenantId) {
-        return alertHistoryRepository.averageResponseTimeSeconds(tenantId);
+    public Double getAverageResponseSeconds() {
+        return alertHistoryRepository.averageResponseTimeSeconds(SecurityUtil.getCurrentTenantId());
     }
 
     @Override
-    public List<Map<String, Object>> getFailedJobAlertTrend(Long tenantId, LocalDateTime start, LocalDateTime end) {
-        return jobAlertLogRepository.countFailedJobAlertTrend(tenantId, start, end);
+    public List<Map<String, Object>> getFailedJobAlertTrend(LocalDateTime start, LocalDateTime end) {
+        return jobAlertLogRepository.countFailedJobAlertTrend(SecurityUtil.getCurrentTenantId(), start, end);
     }
 
     @Override
-    public ClusterHealthMetricsDTO getClusterHealthMetrics(Long tenantId) {
+    public ClusterHealthMetricsDTO getClusterHealthMetrics() {
         // 查询集群
-        List<Cluster> clusters = clusterRepository.findByTenantIdAndIsDeleted(tenantId, 0);
+        List<Cluster> clusters = clusterRepository.findByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(), 0);
         int totalClusters = clusters.size();
 
         // 查询过去24小时的采集数据
@@ -259,9 +257,9 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public ClusterTrendDTO getClusterTrend(Long tenantId, LocalDateTime from, LocalDateTime to) {
+    public ClusterTrendDTO getClusterTrend(LocalDateTime from, LocalDateTime to) {
         List<ClusterStatusTrendProjection> rawData =
-                statusHistoryRepository.findClusterStatusTrend(tenantId, from, to);
+                statusHistoryRepository.findClusterStatusTrend(SecurityUtil.getCurrentTenantId(), from, to);
 
         // 初始化 Map：date → status → count
         Map<String, Map<String, Integer>> map = new TreeMap<>();

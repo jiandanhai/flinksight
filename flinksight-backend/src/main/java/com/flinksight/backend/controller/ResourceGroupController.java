@@ -37,21 +37,11 @@ public class ResourceGroupController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "", description = "",operationId = "getAllResourceGroups")
+    @Operation(summary = "", description = "",operationId = "listResourceGroups")
     @GetMapping("/list")
-    public ApiResponse<PageResult<ResourceGroupDTO>> getAll(
-            @RequestParam(defaultValue = "0") int page,
+    public ApiResponse<PageResult<ResourceGroupDTO>> list(@RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.getAll(page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getResourceGroupsByTenant")
-    @GetMapping("/tenant/{tenantId}")
-    public ApiResponse<PageResult<ResourceGroupDTO>> findByTenantId(
-            @PathVariable Long tenantId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
+        return ApiResponse.ok(service.list(page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "updateResourceGroup")
@@ -63,6 +53,6 @@ public class ResourceGroupController {
     @Operation(summary = "", description = "",operationId = "deleteResourceGroup")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

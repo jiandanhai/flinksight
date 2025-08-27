@@ -1,17 +1,18 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.AuditLog;
 import com.flinksight.backend.mapper.AuditLogStructMapper;
 import com.flinksight.backend.repository.AuditLogRepository;
 import com.flinksight.backend.security.tenant.TenantRequired;
 import com.flinksight.common.dto.AuditLogDTO;
+import com.flinksight.common.dto.AuditLogQueryDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.AuditLogService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -27,6 +28,7 @@ import java.util.Optional;
 @TenantRequired
 public class AuditLogServiceImpl implements AuditLogService{
 
+    private final ApplicationEventPublisher publisher;
     private final AuditLogRepository repository;
     private final AuditLogStructMapper auditLogStructMapper;
 
@@ -43,15 +45,17 @@ public class AuditLogServiceImpl implements AuditLogService{
         return repository.findById(id).map(auditLogStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
+
     @Override
-    public PageResult<AuditLogDTO> getLogsByTenantAndUser(Long tenantId, Long userId,int page, int size) {
-        Page<AuditLog> result = repository.findByTenantIdAndUserId(tenantId,userId, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<AuditLogDTO> dtoPage = result.map(auditLogStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<AuditLogDTO> list(AuditLogQueryDTO q) {
+        PageRequest pr = PageHelpers.pageRequest(q.getPage(), q.getSize(), null, AuditLog.class); // 统一 1→0
+        var pg   = repository.pageQuery(q.getTenantId(), q.getAction(), q.getTargetType(), q.getTargetId(),
+                q.getUserId(), q.getOperator(), q.getTraceId(), q.getFrom(), q.getTo(), pr);
+        return PageHelpers.toPageResult(pg, auditLogStructMapper::toDTO, true); // 输出 1-based
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<AuditLogDTO> opt = repository.findById(id).map(auditLogStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             AuditLogDTO dto = opt.get();
@@ -69,7 +73,7 @@ public class AuditLogServiceImpl implements AuditLogService{
                 .action("CONFIG_CHANGE")
                 .content(config)
                 .targetType(configType)
-                .targetId(Long.valueOf(dataId))
+                .targetId(dataId)
                 .tenantId(tenantId)
                 .operator(operator)
                 .traceId(traceId)

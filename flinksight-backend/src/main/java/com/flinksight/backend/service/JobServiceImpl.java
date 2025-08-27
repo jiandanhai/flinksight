@@ -1,20 +1,23 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.Job;
 import com.flinksight.backend.exception.BusinessException;
 import com.flinksight.backend.mapper.JobStructMapper;
 import com.flinksight.backend.repository.JobRepository;
+import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.backend.security.tenant.TenantRequired;
+import com.flinksight.common.dto.JobBatchUpdateStatusRequestDTO;
 import com.flinksight.common.dto.JobDTO;
 import com.flinksight.common.enums.ErrorCode;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.JobService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -22,6 +25,7 @@ import java.util.Optional;
  * 任务业务实现
  * Job Service Impl
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -45,24 +49,12 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public PageResult<JobDTO> getAll(int page, int size) {
-        Page<Job> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<JobDTO> dtoPage = result.map(jobStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
-
-    @Override
-    public PageResult<JobDTO> getJobsByTenant(Long tenantId,int page, int size) {
-        Page<Job> result = repository.findAllByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<JobDTO> dtoPage = result.map(jobStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
-
-    @Override
-    public PageResult<JobDTO> getJobsByTenantAndCluster(Long tenantId, Long clusterId,int page, int size) {
-        Page<Job> result = repository.findAllByTenantIdAndClusterIdAndIsDeleted(tenantId,clusterId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<JobDTO> dtoPage = result.map(jobStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<JobDTO> list(Long clusterId,int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, Job.class); // 统一 1→0
+        Page<Job> result = (clusterId == null)
+                ? repository.findByTenantIdAndIsDeleted(SecurityUtil.getCurrentUserId(), 0, pr)
+                : repository.findAllByTenantIdAndClusterIdAndIsDeleted(SecurityUtil.getCurrentUserId(), clusterId,0, pr);
+        return PageHelpers.toPageResult(result, jobStructMapper::toDTO, true); // 返回
     }
 
     @Override
@@ -85,7 +77,18 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public boolean softDelete(Long jobId) {
+    @Transactional(rollbackFor = Exception.class)
+    public int batchUpdateJobStatus(JobBatchUpdateStatusRequestDTO req) {
+        log.info("[Job] batchUpdateJobStatus tenantId={}, status={}, ids={}",
+                req.getTenantId(), req.getStatus(), req.getJobIds());
+
+        int updated = repository.batchUpdateStatus(req.getTenantId(), req.getJobIds(), req.getStatus());
+        log.info("[Job] batchUpdateJobStatus DONE updated={}", updated);
+        return updated;
+    }
+
+    @Override
+    public boolean sDelete(Long jobId) {
         Optional<JobDTO> opt = repository.findById(jobId).map(jobStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             JobDTO dto = opt.get();

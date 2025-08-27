@@ -38,21 +38,12 @@ public class DataSourceController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "", description = "Get clusters by tenant",operationId = "getAllDataSources")
+    @Operation(summary = "", description = "Get clusters by tenant",operationId = "listDataSources")
     @GetMapping("/list")
-    public ApiResponse<PageResult<DataSourceDTO>> getAll(
+    public ApiResponse<PageResult<DataSourceDTO>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.getAll(page,size));
-    }
-
-    @Operation(summary = "", description = "Get clusters by tenant",operationId = "getDataSourcesByTenant")
-    @GetMapping("/tenant/{tenantId}")
-    public ApiResponse<PageResult<DataSourceDTO>> findByTenantId(
-            @PathVariable Long tenantId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
+        return ApiResponse.ok(service.list(page,size));
     }
 
     @Operation(summary = "", description = "Get clusters by tenant",operationId = "updateDataSource")
@@ -65,6 +56,6 @@ public class DataSourceController {
     @Operation(summary = "", description = "Get clusters by tenant",operationId = "deleteDataSource")
     @DeleteMapping("/delete/id/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

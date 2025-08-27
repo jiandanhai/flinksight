@@ -4,7 +4,7 @@ import com.alibaba.nacos.api.NacosFactory;
 import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.flinksight.common.security.PermissionChecker;
-import com.flinksight.common.service.AuditLogService;
+import com.flinksight.common.service.AuditLogWriter;
 import com.flinksight.common.tenant.TenantContextHolder;
 import com.flinksight.common.utils.JsonUtil;
 import com.flinksight.common.utils.TraceUtil;
@@ -24,19 +24,19 @@ import java.util.concurrent.Executor;
 public class DynamicConfigService {
 
     private final ConfigService configService;
-    private final AuditLogService auditLogService; // ===============注入Bean，而非静态调用
+    private final AuditLogWriter auditLogWriter; // ===============注入Bean，而非静态调用
 
     /**
      * 构造函数，初始化 Nacos 配置服务（支持多环境、权限）
      * @param nacosServerAddr Nacos服务器地址
-     * @param auditLogService 注入审计服务Bean
+     * @param auditLogWriter 注入审计服务Bean
      */
     @Autowired
-    public DynamicConfigService(String nacosServerAddr, AuditLogService auditLogService) throws Exception {
+    public DynamicConfigService(String nacosServerAddr, AuditLogWriter auditLogWriter) throws Exception {
         Properties properties = new Properties();
         properties.put("serverAddr", nacosServerAddr);
         this.configService = NacosFactory.createConfigService(properties);
-        this.auditLogService = auditLogService;
+        this.auditLogWriter = auditLogWriter;
     }
 
     /**
@@ -90,7 +90,7 @@ public class DynamicConfigService {
                     }
 
                     // 审计日志埋点（对象建议存json）
-                    auditLogService.logConfigChange(
+                    auditLogWriter.logConfigChange(
                             configType, dataId, tenantId, operator, config, traceId
                     );
                     log.info("[Nacos] 配置热更新生效: dataId={}, group={}, 租户={}, traceId={}", dataId, group, tenantId, traceId);

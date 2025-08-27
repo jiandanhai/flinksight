@@ -77,7 +77,6 @@ public class SsoAuthController {
                 + "&code_challenge_method=S256"
                 + "&state=" + url(stateNonce);
 
-        System.out.println("[SSO Login] Redirecting to SSO server: {" + ssoUrl + "}");
         log.info("#[SSO Login] redirect => {}", ssoUrl);
         resp.sendRedirect(ssoUrl);
     }
@@ -136,7 +135,7 @@ public class SsoAuthController {
     @Operation(summary = "账号密码登录", operationId = "login")
     @PostMapping("/login")
     public ApiResponse<SsoAuthResponseDTO> login(@RequestBody @Valid SsoAuthLoginRequestDTO req) {
-        System.out.println("[account login  account=  {" + req.getAccount() + "}");
+        log.info("[account login  account=  {}", req.getAccount());
         return ApiResponse.ok(ssoAuthService.login(req));
     }
 

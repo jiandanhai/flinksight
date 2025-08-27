@@ -16,52 +16,47 @@ public interface DashboardService {
 
     /**
      * 查询大盘核心指标
-     * @param tenantId 租户ID
      * @return 大盘统计DTO
      */
-    KPIStatusSummaryDTO getDashboardSummary(Long tenantId);
+    KPIStatusSummaryDTO getDashboardSummary();
 
     /**
      * 查询集群健康分布
-     * @param tenantId 租户ID
      * @return 健康分布DTO
      */
-    HealthDistributionDTO getHealthDistribution(Long tenantId);
+    HealthDistributionDTO getHealthDistribution();
 
 
-    AlertTrendDTO getAlertTrend(Long tenantId, LocalDate from, LocalDate to);
+    AlertTrendDTO getAlertTrend(LocalDate from, LocalDate to);
 
     /**
      * 查询业务转化漏斗数据
-     * @param tenantId 租户ID
      * @return 漏斗统计DTO列表
      */
-    PageResult<JobFunnelDTO> getJobFunnel(Long tenantId, int page, int size);
+    PageResult<JobFunnelDTO> getJobFunnel(int page, int size);
 
     // 监控卡片四格
-    MonitorMetricsDTO getMonitorMetrics(Long tenantId);
+    MonitorMetricsDTO getMonitorMetrics();
 
     // 指标曲线
-    MetricSeriesDTO getMetricSeries(Long tenantId, String metric, LocalDateTime from, LocalDateTime to);
+    MetricSeriesDTO getMetricSeries(String metric, LocalDateTime from, LocalDateTime to);
 
-    List<Map<String, Object>> getAlertCountBySeverity(Long tenantId, LocalDateTime start, LocalDateTime end);
+    List<Map<String, Object>> getAlertCountBySeverity(LocalDateTime start, LocalDateTime end);
 
 
-    List<Map<String, Object>> getAlertCountByStatus(Long tenantId, LocalDateTime start, LocalDateTime end);
+    List<Map<String, Object>> getAlertCountByStatus(LocalDateTime start, LocalDateTime end);
 
-    Double getAverageResponseSeconds(Long tenantId);
+    Double getAverageResponseSeconds();
 
-    List<Map<String, Object>> getFailedJobAlertTrend(Long tenantId, LocalDateTime start, LocalDateTime end);
+    List<Map<String, Object>> getFailedJobAlertTrend(LocalDateTime start, LocalDateTime end);
 
 
     /**
      * 获取集群健康统计信息
-     *
-     * @param tenantId 租户ID
      * @return 集群健康指标
      */
-    ClusterHealthMetricsDTO getClusterHealthMetrics(Long tenantId);
+    ClusterHealthMetricsDTO getClusterHealthMetrics();
 
 
-    ClusterTrendDTO getClusterTrend(Long tenantId, LocalDateTime from, LocalDateTime to);
+    ClusterTrendDTO getClusterTrend(LocalDateTime from, LocalDateTime to);
 }

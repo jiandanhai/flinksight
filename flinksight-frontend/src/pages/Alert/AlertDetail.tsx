@@ -4,9 +4,9 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Card, Descriptions, Spin, Table, Tag} from 'antd';
-import api from '@/api/api-compat';
+import { getAlert,getAlertRules,getAlertHistory,getAlertOps} from "@/api/modules";
 
-import type {AlertDTO, AlertOpLogDTO, AlertRuleDTO} from '@/api/dto';
+import type {AlertDTO, AlertOpsDTO, AlertRuleDTO} from '@/api/dto';
 import {useUser} from '../../store/user';
 
 interface Props {
@@ -20,7 +20,7 @@ const AlertDetail: React.FC<Props> = ({ id, onBack }) => {
   const [data, setData] = useState<AlertDTO|null>(null);
   const [rules, setRules] = useState<AlertRuleDTO[]>([]);
   const [history, setHistory] = useState<AlertDTO[]>([]);
-  const [ops, setOps] = useState<AlertOpLogDTO[]>([]);
+  const [ops, setOps] = useState<AlertOpsDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const { role } = useUser();
 
@@ -28,10 +28,10 @@ const AlertDetail: React.FC<Props> = ({ id, onBack }) => {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      api.getAlert(id),
-      api.getAlertRules(id),
-      api.getAlertHistory(id),
-      api.getAlertOps(id)
+      getAlert(id),
+      getAlertRules(id),
+      getAlertHistory(id),
+      getAlertOps(id)
     ]).then(([res, rulesRes, histRes, opsRes]) => {
       setData(res.data);
       setRules(rulesRes.data || []);

@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Form, Input, message, Modal, Upload } from 'antd';
-import api from '@/api/api-compat';
+import { getMyProfile ,updateProfile,changePassword} from '@/api/modules';
 
 const ProfileCenter: React.FC = () => {
   const [info, setInfo] = useState<any>({});
@@ -12,7 +12,7 @@ const ProfileCenter: React.FC = () => {
   const [form] = Form.useForm();
 
   useEffect(() => {
-    api.profileControllerGetProfile().then(res => {
+      getMyProfile().then(res => {
       setInfo(res.data || {});
       form.setFieldsValue(res.data || {});
     });
@@ -21,7 +21,7 @@ const ProfileCenter: React.FC = () => {
 
   // 修改基本资料
   const handleSave = async (values: any) => {
-    await api.profileControllerUpdateProfile(values);
+    await updateProfile(values);
     message.success('资料已更新');
     setEdit(false);
     setInfo({ ...info, ...values });
@@ -36,7 +36,7 @@ const ProfileCenter: React.FC = () => {
           id="passwordForm"
           layout="vertical"
           onFinish={async (vals) => {
-            await api.profileControllerChangePassword(vals);
+            await changePassword(vals);
             message.success('密码已修改');
             Modal.destroyAll();
           }}

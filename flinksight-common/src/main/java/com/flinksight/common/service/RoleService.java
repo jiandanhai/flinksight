@@ -13,7 +13,6 @@ public interface RoleService extends SoftDeleteService<RoleDTO, Long> {
     RoleDTO createRole(RoleDTO role);
     Optional<RoleDTO> getRoleById(Long roleId);
     Optional<RoleDTO> getRoleByCode(String code);
-    PageResult<RoleDTO> getAllRoles(int page, int size);
     /**
      * 编辑角色
      */
@@ -21,6 +20,6 @@ public interface RoleService extends SoftDeleteService<RoleDTO, Long> {
     /**
      * 分页条件查询
      */
-    PageResult<RoleDTO> pageList(String name, int page, int size);
+    PageResult<RoleDTO> list(String name, int page, int size);
 
 }

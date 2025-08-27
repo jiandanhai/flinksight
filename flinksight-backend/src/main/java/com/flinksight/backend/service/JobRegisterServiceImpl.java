@@ -61,7 +61,7 @@ public class JobRegisterServiceImpl implements JobRegisterService {
             job = jobInfoRepository.save(job);
 
             // 权限联动：为注册人/租户自动分配默认作业管理权限
-            jobPermissionService.grantDefaultJobPermission(job.getId(), req.getTenantId(), req.getOperator());
+            jobPermissionService.grantDefaultJobPermission(job.getId(), req.getOperator());
         }
 
         // DTO返回

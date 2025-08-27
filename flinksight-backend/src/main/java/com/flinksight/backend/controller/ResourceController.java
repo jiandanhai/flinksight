@@ -38,33 +38,23 @@ public class ResourceController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "", description = "",operationId = "getAllResources")
+    @Operation(summary = "", description = "",operationId = "listResources")
     @GetMapping("/list")
-    public ApiResponse<PageResult<ResourceDTO>> getAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.getAll(page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getResourcesByTenant")
-    @GetMapping("/tenant/{tenantId}")
-    public ApiResponse<PageResult<ResourceDTO>> findByTenantId(
-            @PathVariable Long tenantId,
+    public ApiResponse<PageResult<ResourceDTO>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size){
-        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
+        return ApiResponse.ok(service.list(page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "updateResource")
     @PutMapping("/update")
     public ApiResponse<ResourceDTO> update(@RequestBody  @Valid  ResourceDTO dto) {
-
         return ApiResponse.ok(service.createOrUpdate(dto));
     }
 
     @Operation(summary = "", description = "",operationId = "deleteResource")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

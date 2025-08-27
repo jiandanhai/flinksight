@@ -4,7 +4,7 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, message, Modal, Space, Table, Tag, Upload} from 'antd';
-import api from '@/api/api-compat';
+import {listFiles } from "@/api/modules";
 
 import type {FileDTO} from '@/api/dto';
 
@@ -17,7 +17,7 @@ const FileManager: React.FC = () => {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await api.getAllFiles();
+      const res = await listFiles();
       setList(res.data || []);
     } finally {
       setLoading(false);

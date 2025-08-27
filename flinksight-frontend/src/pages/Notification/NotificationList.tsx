@@ -4,7 +4,7 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, message, Modal, Space, Table, Tag} from 'antd';
-import api from '@/api/api-compat';
+import { listNotifications ,updateNotification,deleteNotification} from '@/api/modules';
 
 import type {NotificationDTO} from '@/api/dto';
 import EditNotificationModal from './EditNotificationModal';
@@ -22,7 +22,7 @@ const NotificationList: React.FC = () => {
   const fetch = async () => {
     setLoading(true);
     try {
-      const res = await api.getAllNotifications();
+      const res = await listNotifications();
       setList(res.data || []);
     } finally {
       setLoading(false);
@@ -32,7 +32,7 @@ const NotificationList: React.FC = () => {
 
   // 启停
   async function handleEnable(n: DTO.NotificationDTO) {
-    await api.updateNotification(n.id, { enabled: !n.enabled });
+    await updateNotification(n.id, { enabled: !n.enabled });
     message.success(n.enabled ? '已停用' : '已启用');
     fetch();
   }
@@ -42,7 +42,7 @@ const NotificationList: React.FC = () => {
     Modal.confirm({
       title: '确认删除该通知渠道？',
       onOk: async () => {
-        await api.deleteNotification(id);
+        await deleteNotification(id);
         message.success('已删除');
         fetch();
       }

@@ -37,13 +37,11 @@ public class LabelController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "", description = "",operationId = "getLabelsByTenant")
-    @GetMapping("/tenant/{tenantId}")
-    public ApiResponse<PageResult<LabelDTO>> findByTenantId(
-            @PathVariable Long tenantId,
-            @RequestParam(defaultValue = "0") int page,
+    @Operation(summary = "", description = "",operationId = "listLabels")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<LabelDTO>> list(@RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
+        return ApiResponse.ok(service.list(page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "updateLabel")
@@ -55,6 +53,6 @@ public class LabelController {
     @Operation(summary = "", description = "",operationId = "deleteLabel")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

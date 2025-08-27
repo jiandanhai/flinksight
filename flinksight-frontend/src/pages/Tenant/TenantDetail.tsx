@@ -4,7 +4,7 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Card, Descriptions, Spin, Table} from 'antd';
-import api from '@/api/api-compat';
+import { getTenant, updateTenant,createTenant } from '@/api/modules';
 
 import type {TenantDTO, TenantOpLogDTO, TenantUserDTO} from '@/api/dto';
 
@@ -22,9 +22,9 @@ const TenantDetail: React.FC<Props> = ({ id, onBack }) => {
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      api.getTenant(id),
-      api.getTenantUsers(id),
-      api.getTenantOpLog(id)
+      getTenant(id),
+      getTenantUsers(id),
+      getTenantOpLog(id)
     ]).then(([res, usersRes, opsRes]) => {
       setData(res.data);
       setUsers(usersRes.data || []);

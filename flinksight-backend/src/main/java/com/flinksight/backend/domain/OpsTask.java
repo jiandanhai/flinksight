@@ -1,5 +1,6 @@
 package com.flinksight.backend.domain;
 
+import com.flinksight.common.service.DefaultSort;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "ops_task")
+@DefaultSort(fields = {"createdAt", "id"})
 public class OpsTask implements Serializable {
 
     /**
@@ -33,6 +35,12 @@ public class OpsTask implements Serializable {
      */
     @Column(name = "tenant_id", nullable = false)
     private Long tenantId;
+
+    /**
+     * 模板ID
+     */
+    @Column(name = "template_id", nullable = false)
+    private Long templateId;                     // 可选：从模板生成
 
     /**
      * 任务名称

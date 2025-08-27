@@ -8,7 +8,7 @@ import java.util.Optional;
 public interface UserDepartmentService extends SoftDeleteService<UserDepartmentDTO, Long> {
     UserDepartmentDTO assignDepartmentToUser(Long userId, Long departmentId);
     boolean removeDepartmentFromUser(Long userId, Long departmentId);
-    PageResult<UserDepartmentDTO> findByUserId(Long userId,int page, int size);
-    PageResult<UserDepartmentDTO> findByDepartmentId(Long departmentId,int page, int size);
     Optional<UserDepartmentDTO> getById(Long id);
+
+    PageResult<UserDepartmentDTO> list(Long userId, Long departmentId, int page, int size);
 }

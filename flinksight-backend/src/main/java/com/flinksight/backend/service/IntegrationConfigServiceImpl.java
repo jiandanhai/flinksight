@@ -1,8 +1,10 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.IntegrationConfig;
 import com.flinksight.backend.mapper.IntegrationConfigStructMapper;
 import com.flinksight.backend.repository.IntegrationConfigRepository;
+import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.common.dto.IntegrationConfigDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.IntegrationConfigService;
@@ -10,7 +12,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -35,21 +36,15 @@ public class IntegrationConfigServiceImpl implements IntegrationConfigService {
     }
 
     @Override
-    public PageResult<IntegrationConfigDTO> findByTenantId(Long tenantId,int page, int size) {
-        Page<IntegrationConfig> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<IntegrationConfigDTO> dtoPage = result.map(integrationConfigStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<IntegrationConfigDTO> list(int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, IntegrationConfig.class); // 统一 1→0
+        Page<IntegrationConfig> result = repository.findByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(),0, pr);
+        return PageHelpers.toPageResult(result, integrationConfigStructMapper::toDTO, true); // 返回 1-b
     }
 
-    @Override
-    public PageResult<IntegrationConfigDTO> getAll(int page, int size) {
-        Page<IntegrationConfig> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<IntegrationConfigDTO> dtoPage = result.map(integrationConfigStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<IntegrationConfigDTO> opt = repository.findById(id).map(integrationConfigStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             IntegrationConfigDTO dto = opt.get();

@@ -20,17 +20,17 @@ public interface RoleRepository extends JpaRepository<Role, Long>, SoftDeleteRep
      * @param code 角色编码
      * @return 角色对象
      */
-    Optional<Role> findByCode(String code);
+    Optional<Role> findByTenantIdAndCode(Long tenantId,String code);
 
-    Page<Role> findByIsDeleted(Integer isDeleted, Pageable pageable);
+    Page<Role> findByTenantIdAndIsDeleted(Long tenantId,Integer isDeleted, Pageable pageable);
 
     /**
      * 角色名称模糊分页
      */
-    Page<Role> findByNameAndIsDeleted(String name, Integer isDeleted, Pageable pageable);
+    Page<Role> findByTenantIdAndNameAndIsDeleted(Long tenantId,String name, Integer isDeleted, Pageable pageable);
 
     /**
      * 唯一校验
      */
-    boolean existsByNameAndIsDeleted(String name, Integer isDeleted);
+    boolean existsByTenantIdAndNameAndIsDeleted(Long tenantId,String name, Integer isDeleted);
 }

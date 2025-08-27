@@ -34,23 +34,15 @@ public class ResourceLabelController {
         return service.removeLabelFromResource(resourceId, labelId);
     }
 
-    @Operation(summary = "", description = "",operationId = "getResourceLabelsByResource")
-    @GetMapping("/resource/{resourceId}")
-    public ApiResponse<PageResult<ResourceLabelDTO>> findByResourceId(
-            @PathVariable Long resourceId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByResourceId(resourceId,page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getResourceLabelsByLabel")
-    @GetMapping("/label/{labelId}")
+    @Operation(summary = "", description = "",operationId = "listResourceLabels")
+    @GetMapping("/list")
     public ApiResponse<PageResult<ResourceLabelDTO>> findByLabelId(
-            @PathVariable Long labelId,
+            @RequestParam Long resourceId,
+            @RequestParam Long labelId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        return ApiResponse.ok(service.findByLabelId(labelId,page,size));
+        return ApiResponse.ok(service.list(resourceId,labelId,page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "getResourceLabel")
@@ -64,6 +56,6 @@ public class ResourceLabelController {
     @Operation(summary = "", description = "",operationId = "deleteResourceLabel")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

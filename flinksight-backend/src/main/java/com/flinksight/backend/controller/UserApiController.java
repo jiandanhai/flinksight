@@ -34,21 +34,14 @@ public class UserApiController {
         return service.removeApiFromUser(userId, apiId);
     }
 
-    @Operation(summary = "", description = "",operationId = "getUserApisByUser")
-    @GetMapping("/user/{userId}")
-    public ApiResponse<PageResult<UserApiDTO>> findByUser(@PathVariable Long userId,
+    @Operation(summary = "", description = "",operationId = "listUserApis")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<UserApiDTO>> list(@RequestParam Long userId,
+                                                    @RequestParam Long apiId,
                                                          @RequestParam(defaultValue = "0") int page,
                                                          @RequestParam(defaultValue = "20") int size) {
 
-        return ApiResponse.ok(service.findByUserId(userId,page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getUserApisByApi")
-    @GetMapping("/api/{apiId}")
-    public ApiResponse<PageResult<UserApiDTO>> findByApi(@PathVariable Long apiId,
-                                      @RequestParam(defaultValue = "0") int page,
-                                      @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByApiId(apiId,page,size));
+        return ApiResponse.ok(service.list(userId,apiId,page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "getUserApi")
@@ -62,6 +55,6 @@ public class UserApiController {
     @Operation(summary = "", description = "",operationId = "deleteUserApi")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

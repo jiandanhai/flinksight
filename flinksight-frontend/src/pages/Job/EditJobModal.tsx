@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import api from '@/api/api-compat';
+import { getJob,createJob,updateJob } from "../../api/modules";
 
 import type {JobDTO} from '@/api/dto';
 
@@ -24,7 +24,7 @@ const EditJobModal: React.FC<Props> = ({ id, onClose, onOk }) => {
   useEffect(() => {
     if (id) {
       setLoading(true);
-      api.getJob(id).then(data => {
+      getJob(id).then(data => {
         setForm({
           name: data.name, type: data.type, clusterId: data.clusterId, owner: data.owner,
           config: data.config || '', remark: data.remark || ''
@@ -41,9 +41,9 @@ const EditJobModal: React.FC<Props> = ({ id, onClose, onOk }) => {
     setLoading(true);
     try {
       if (id) {
-        await api.updateJob(id, form as JobDTO);
+        await updateJob(id, form as JobDTO);
       } else {
-        await api.createJob(form as JobDTO);
+        await createJob(form as JobDTO);
       }
       onClose();
       onOk();

@@ -1,5 +1,6 @@
 package com.flinksight.backend.domain;
 
+import com.flinksight.common.service.DefaultSort;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,6 +27,7 @@ import java.io.Serializable;
 )
 @Schema(description = "用户-岗位关联表")
 @SQLRestriction("is_deleted=0") // Hibernate 6.3 推荐软删除方式
+@DefaultSort(fields = {"id"})
 public class UserPost implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

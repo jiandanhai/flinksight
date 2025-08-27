@@ -1,6 +1,7 @@
 package com.flinksight.backend.service;
 
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.OauthAccount;
 import com.flinksight.backend.mapper.SsoOauthAccountMapper;
 import com.flinksight.backend.repository.SsoOauthAccountRepository;
@@ -11,7 +12,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -50,9 +50,9 @@ public class OauthAccountServiceImpl implements OauthAccountService {
 
     @Override
     public PageResult<OauthAccountDTO> findByUserId(Long userId, int page, int size) {
-        Page<OauthAccount> result = repository.findByUserIdAndIsDeleted(userId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<OauthAccountDTO> dtoPage = result.map(ssoOauthAccountMapper::toDTO);
-        return new PageResult<>(dtoPage);
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, OauthAccount.class); // 统一 1→0
+        Page<OauthAccount> result = repository.findByUserIdAndIsDeleted(userId,0, pr);
+        return PageHelpers.toPageResult(result, ssoOauthAccountMapper::toDTO, true); // 返回
     }
 
     @Override

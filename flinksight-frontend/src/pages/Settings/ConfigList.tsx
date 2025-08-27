@@ -4,12 +4,10 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Button, Form, Input, message, Modal, Switch, Table } from 'antd';
-import api from '@/api/api-compat';
+import { } from '@/api/modules';
 
 // 建议后端openapi生成ConfigItemDTO类型
 // interface ConfigItem { ... }
-
-const api = new Api();
 
 const ConfigList: React.FC = () => {
   const [list, setList] = useState<any[]>([]);
@@ -23,7 +21,7 @@ const ConfigList: React.FC = () => {
     setLoading(true);
     try {
       // 根据后端接口命名（举例configControllerList）
-      const res = await api.configControllerList();
+      const res = await listConfigs();
       setList(res.data || []);
     } finally {
       setLoading(false);
@@ -36,11 +34,11 @@ const ConfigList: React.FC = () => {
   const handleAddOrEdit = async (values: any) => {
     if (editing) {
       // 编辑：假设接口为 configControllerUpdate
-      await api.configControllerUpdate({ id: editing.id, ...values });
+      await configUpdate({ id: editing.id, ...values });
       message.success('修改成功');
     } else {
       // 新增：假设接口为 configControllerCreate
-      await api.configControllerCreate(values);
+      await configCreate(values);
       message.success('添加成功');
     }
     setModalVisible(false);
@@ -51,7 +49,7 @@ const ConfigList: React.FC = () => {
 
   // 开关切换
   const handleSwitch = async (checked: boolean, record: any) => {
-    await api.configControllerUpdate({ id: record.id, enable: checked });
+    await configUpdate({ id: record.id, enable: checked });
     fetchList();
   };
 

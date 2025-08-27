@@ -38,13 +38,13 @@ public class DictController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "", description = "",operationId = "getDictsByDictType")
-    @GetMapping("/type/{dictType}")
-    public ApiResponse<PageResult<DictDTO>> findByDictType(
-            @PathVariable String dictType,
+    @Operation(summary = "", description = "",operationId = "listDicts")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<DictDTO>> list(
+            @RequestParam String dictType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByDictType(dictType,page,size));
+        return ApiResponse.ok(service.list(dictType,page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "updateDict")
@@ -57,6 +57,6 @@ public class DictController {
     @Operation(summary = "", description = "",operationId = "deleteDict")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

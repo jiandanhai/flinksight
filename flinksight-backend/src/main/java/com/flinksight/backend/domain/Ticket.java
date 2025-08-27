@@ -1,5 +1,6 @@
 package com.flinksight.backend.domain;
 
+import com.flinksight.common.service.DefaultSort;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,6 +27,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Schema(description = "工单表")
 @SQLRestriction("is_deleted=0") // 替代 Hibernate 6.3 的 @Where
+@DefaultSort(fields = {"createTime", "id"})
 public class Ticket implements Serializable {
 
     @Id

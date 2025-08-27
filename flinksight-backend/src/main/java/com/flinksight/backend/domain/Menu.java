@@ -1,5 +1,6 @@
   package com.flinksight.backend.domain;
 
+  import com.flinksight.common.service.DefaultSort;
   import io.swagger.v3.oas.annotations.media.Schema;
   import jakarta.persistence.*;
   import lombok.*;
@@ -21,6 +22,7 @@
   @AllArgsConstructor
   @Entity
   @Table(name = "menu")
+  @DefaultSort(fields = {"createdAt", "id"})
   public class Menu implements Serializable {
 
     @Id

@@ -26,13 +26,13 @@ public class JobPermissionController {
     /**
      * 查询某作业的所有权限分配记录
      */
-    @Operation(summary = "", description = "",operationId = "getJobPermissionsByJob")
+    @Operation(summary = "", description = "",operationId = "listJobPermissions")
     @GetMapping("/list")
-    public ApiResponse<PageResult<JobPermissionDTO>> listJobPermissions(
+    public ApiResponse<PageResult<JobPermissionDTO>> list(
             @RequestParam Long jobId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(jobPermissionService.listJobPermissions(jobId,page,size));
+        return ApiResponse.ok(jobPermissionService.list(jobId,page,size));
     }
 
     /**
@@ -43,10 +43,9 @@ public class JobPermissionController {
     public ApiResponse<Void> grantPermission(
             @RequestParam Long jobId,
             @RequestParam String userId,
-            @RequestParam String permissionCode,
-            @RequestParam Long tenantId
+            @RequestParam String permissionCode
     ) {
-        jobPermissionService.grantPermission(jobId, tenantId, userId, permissionCode);
+        jobPermissionService.grantPermission(jobId,userId, permissionCode);
         return ApiResponse.ok(null);
     }
 

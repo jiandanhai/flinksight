@@ -34,22 +34,14 @@ public class DeptRoleController {
         return service.removeRoleFromDept(deptId, roleId);
     }
 
-    @Operation(summary = "", description = "",operationId = "getDeptRolesByDept")
-    @GetMapping("/dept/{deptId}")
-    public ApiResponse<PageResult<DeptRoleDTO>> findByDept(
-            @PathVariable Long deptId,
+    @Operation(summary = "", description = "",operationId = "listDeptRoles")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<DeptRoleDTO>> list(
+            @RequestParam Long deptId,
+            @RequestParam Long roleId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByDeptId(deptId,page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getDeptRolesByRole")
-    @GetMapping("/role/{roleId}")
-    public ApiResponse<PageResult<DeptRoleDTO>> findByRole(
-            @PathVariable Long roleId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByRoleId(roleId,page,size));
+        return ApiResponse.ok(service.list(deptId,roleId,page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "getDeptRole")
@@ -63,6 +55,6 @@ public class DeptRoleController {
     @Operation(summary = "", description = "",operationId = "deleteDeptRole")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

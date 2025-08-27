@@ -6,8 +6,23 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface OperationTemplateRepository extends JpaRepository<OperationTemplate, Long> {
+    Optional<OperationTemplate> findByIdAndTenantId(Long id, Long tenantId);
+
     Page<OperationTemplate> findByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted, Pageable pageable);
-    Page<OperationTemplate> findByIsDeleted(Integer isDeleted, Pageable pageable);
+
+
+    Page<OperationTemplate> findByTenantIdAndIsDeletedAndTypeContainingAndNameContaining(
+            Long tenantId, Integer isDeleted, String type, String name, Pageable pageable);
+
+    Optional<OperationTemplate> findByTenantIdAndTypeAndNameAndIsDeleted(Long tenantId, String type, String name, Integer isDeleted);
+
+    boolean existsByTenantIdAndTypeAndNameAndIsDeleted(Long tenantId, String type, String name, Integer isDeleted);
+
+    /** 更新时做唯一性校验（排除自己） */
+    Optional<OperationTemplate> findByTenantIdAndTypeAndNameAndIsDeletedAndIdNot(
+            Long tenantId, String type, String name, Integer isDeleted, Long id);
 }

@@ -23,7 +23,7 @@ public class NodeDTO  implements Serializable {
     private String type;
     private String ip;
     private Long clusterId;
-    private Integer status;
+    private Integer status;  /** 1=启用,0=禁用...（你的语义为准） */
     private Integer isDeleted;
     private LocalDateTime createTime;
 }

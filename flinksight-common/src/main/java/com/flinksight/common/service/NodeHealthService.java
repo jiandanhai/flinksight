@@ -11,9 +11,7 @@ public interface NodeHealthService extends SoftDeleteService<NodeHealthDTO, Long
 
     Optional<NodeHealthDTO> getLatestByNodeId(Long nodeId);
 
-    PageResult<NodeHealthDTO> getByTenantId(Long tenantId,int page, int size);
-
-    PageResult<NodeHealthDTO> getByNodeId(Long nodeId,int page, int size);
+    PageResult<NodeHealthDTO> list(Long nodeId,int page, int size);
 
     boolean batchSoftDelete(List<Long> ids);
 }

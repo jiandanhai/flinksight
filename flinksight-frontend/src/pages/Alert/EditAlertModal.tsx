@@ -4,7 +4,7 @@
  */
 import React, {useEffect} from 'react';
 import {Form, Input, message, Modal, Select} from 'antd';
-import api from '@/api/api-compat';
+import { getAlert,getAlertsByTenantAndStatus,createAlert,deleteAlert,deleteBatch,updateAlert,exportAlerts} from "@/api/modules";
 
 import type {AlertDTO} from '@/api/dto';
 
@@ -30,7 +30,7 @@ const EditAlertModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
   // 拉取详情填充
   useEffect(() => {
     if (id) {
-      api.getAlert(id).then(res => {
+      getAlert(id).then(res => {
         form.setFieldsValue(res.data);
       });
     } else {
@@ -41,13 +41,9 @@ const EditAlertModal: React.FC<Props> = ({ id, open, onOk, onClose }) => {
   // 提交
   const handleSubmit = async () => {
     const values = await form.validateFields();
-    if (id) {
-      await api.updateAlert(id, values as AlertDTO);
-      message.success('编辑成功');
-    } else {
-      await api.createAlert(values as AlertDTO);
-      message.success('新建成功');
-    }
+    await updateAlert(id, values as AlertDTO);
+    message.success('编辑成功');
+
     onOk();
     onClose();
   };

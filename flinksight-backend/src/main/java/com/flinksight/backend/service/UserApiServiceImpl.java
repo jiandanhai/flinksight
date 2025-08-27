@@ -1,5 +1,6 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.UserApi;
 import com.flinksight.backend.mapper.UserApiStructMapper;
 import com.flinksight.backend.repository.UserApiRepository;
@@ -10,7 +11,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -47,17 +47,10 @@ public class UserApiServiceImpl implements UserApiService {
     }
 
     @Override
-    public PageResult<UserApiDTO> findByUserId(Long userId,int page, int size) {
-        Page<UserApi> result = repository.findByUserIdAndIsDeleted(userId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<UserApiDTO> dtoPage = result.map(userApiStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
-
-    @Override
-    public PageResult<UserApiDTO> findByApiId(Long apiId,int page, int size) {
-        Page<UserApi> result = repository.findByApiIdAndIsDeleted(apiId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<UserApiDTO> dtoPage = result.map(userApiStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<UserApiDTO> list(Long userId, Long apiId, int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, UserApi.class); // 统一 1→0
+        Page<UserApi> result = repository.pageQuery(userId, apiId, pr);
+        return PageHelpers.toPageResult(result, userApiStructMapper::toDTO, true); //
     }
 
     @Override
@@ -66,7 +59,7 @@ public class UserApiServiceImpl implements UserApiService {
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<UserApiDTO> opt = repository.findById(id).map(userApiStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             UserApiDTO dto = opt.get();

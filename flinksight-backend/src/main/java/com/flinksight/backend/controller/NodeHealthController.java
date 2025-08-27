@@ -30,18 +30,18 @@ public class NodeHealthController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "", description = "",operationId = "getNodeHealthsByNode")
-    @GetMapping("/node/{nodeId}")
-    public ApiResponse<PageResult<NodeHealthDTO>> findByNodeId(
+    @Operation(summary = "", description = "",operationId = "listNodeHealths")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<NodeHealthDTO>> list(
             @PathVariable Long nodeId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.getByNodeId(nodeId,page,size));
+        return ApiResponse.ok(service.list(nodeId,page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "deleteNodeHealth")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

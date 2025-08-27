@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import api from '@/api/api-compat';
+import { getJob} from "../../api/modules";
 
 import type {JobDTO} from '@/api/dto';
 import Loading from '../../components/Loading';
@@ -19,7 +19,7 @@ const JobDetail: React.FC<Props> = ({ id, onBack }) => {
 
   useEffect(() => {
     setLoading(true);
-    api.getJob(id).then(data => setJob(data)).finally(() => setLoading(false));
+    getJob(id).then(data => setJob(data)).finally(() => setLoading(false));
   }, [id]);
 
   if (loading || !job) return <Loading />;

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -38,12 +39,12 @@ public class TenantConfigController {
         return service.getById(id);
     }
 
-    @Operation(summary = "", description = "",operationId = "getTenantConfigsByTenant")
-    @GetMapping("/tenant/{tenantId}")
-    public ApiResponse<PageResult<TenantConfigDTO>> findByTenantId(@PathVariable Long tenantId,
+    @Operation(summary = "", description = "",operationId = "listTenantConfigs")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<TenantConfigDTO>> list(@RequestParam Long tenantId,
                                                                   @RequestParam(defaultValue = "0") int page,
                                                                   @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.listByTenantId(tenantId,page,size));
+        return ApiResponse.ok(service.list(tenantId,page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "updateTenantConfig")
@@ -56,6 +57,12 @@ public class TenantConfigController {
     @Operation(summary = "", description = "",operationId = "deleteTenantConfig")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
+    }
+
+    @Operation(summary = "", description = "",operationId = "deleteTenantConfig")
+    @DeleteMapping("/delete/batch")
+    public boolean deleteBatch(@RequestParam Long tenantId,@RequestBody List<Long> ids) {
+        return service.batchSoftDelete(tenantId,ids);
     }
 }

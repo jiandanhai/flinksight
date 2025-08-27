@@ -11,14 +11,10 @@ public interface JobInstanceService  extends SoftDeleteService<JobInstanceDTO, L
 
     boolean updateJobStatus(Long id, Integer status);
 
-    PageResult<JobInstanceDTO> listByTenant(Long tenantId,int page, int size);
-
-    PageResult<JobInstanceDTO> listByStatus(Integer status,int page, int size);
+    PageResult<JobInstanceDTO> list(Integer status,int page, int size);
 
     Optional<JobInstanceDTO> getById(Long id);
 
-    PageResult<JobInstanceDTO> findByTenantIdAndIsDeleted(Long tenantId, int page, int size);
-
-    Map<Integer, Long> countStatusByTenantId(Long tenantId);
+    Map<Integer, Long> countStatusByTenantId();
 
 }

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Col, Row, Statistic, Spin } from "antd";
 import { AlertOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
-import { getTenantId } from "@/utils/tenant";
 import { dashboardKpiStatisticsSummary } from "../../api/modules";
 interface KPIData {
   todayAlerts: number;
@@ -18,7 +17,7 @@ const KPIStats: React.FC = () => {
   const fetchKPI = async () => {
     try {
       setLoading(true);
-      const res = await dashboardKpiStatisticsSummary({ tenantId: getTenantId() }); // 对应后端接口 /api/dashboard/kpi
+      const res = await dashboardKpiStatisticsSummary(); // 对应后端接口 /api/dashboard/kpi
       if (res?.data) {
         setData(res.data);
       }

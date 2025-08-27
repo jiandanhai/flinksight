@@ -34,21 +34,13 @@ public class RoleMenuController {
         return service.removeMenuFromRole(roleId, menuId);
     }
 
-    @Operation(summary = "", description = "",operationId = "getRoleMenusByRole")
-    @GetMapping("/role/{roleId}")
-    public ApiResponse<PageResult<RoleMenuDTO>> findByRole(@PathVariable Long roleId,
-                                                          @RequestParam(defaultValue = "0") int page,
-                                                          @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByRoleId(roleId,page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getRoleMenusByMenu")
-    @GetMapping("/menu/{menuId}")
-    public ApiResponse<PageResult<RoleMenuDTO>> findByMenu(@PathVariable Long menuId,
-                                        @RequestParam(defaultValue = "0") int page,
-                                        @RequestParam(defaultValue = "20") int size) {
-
-        return ApiResponse.ok(service.findByMenuId(menuId,page,size));
+    @Operation(summary = "", description = "",operationId = "listRoleMenus")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<RoleMenuDTO>> list(@RequestParam Long roleId,
+                                                     @RequestParam Long menuId,
+                                                     @RequestParam(defaultValue = "0") int page,
+                                                     @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.list(roleId,menuId,page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "getRoleMenu")
@@ -62,6 +54,6 @@ public class RoleMenuController {
     @Operation(summary = "", description = "",operationId = "deleteRoleMenu")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

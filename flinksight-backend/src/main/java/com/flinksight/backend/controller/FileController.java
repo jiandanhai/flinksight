@@ -37,21 +37,12 @@ public class FileController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "", description = "",operationId = "getAllFiles")
-    @GetMapping("/list")
-    public ApiResponse<PageResult<FileDTO>> getAll(
+    @Operation(summary = "", description = "",operationId = "listFiles")
+    @GetMapping("/tenant")
+    public ApiResponse<PageResult<FileDTO>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.getAll(page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getFilesByTenant")
-    @GetMapping("/tenant/{tenantId}")
-    public ApiResponse<PageResult<FileDTO>> findByTenantId(
-            @PathVariable Long tenantId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByTenantId(tenantId,page,size));
+        return ApiResponse.ok(service.list(page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "updateFile")
@@ -64,6 +55,6 @@ public class FileController {
     @Operation(summary = "", description = "",operationId = "deleteFile")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

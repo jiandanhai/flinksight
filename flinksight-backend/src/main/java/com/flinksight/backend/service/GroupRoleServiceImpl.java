@@ -1,5 +1,6 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.GroupRole;
 import com.flinksight.backend.mapper.GroupRoleStructMapper;
 import com.flinksight.backend.repository.GroupRoleRepository;
@@ -10,7 +11,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -48,17 +48,10 @@ public class GroupRoleServiceImpl implements GroupRoleService {
     }
 
     @Override
-    public PageResult<GroupRoleDTO> findByGroupId(Long groupId,int page, int size) {
-        Page<GroupRole> result = repository.findByGroupIdAndIsDeleted(groupId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<GroupRoleDTO> dtoPage = result.map(groupRoleStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
-    }
-
-    @Override
-    public PageResult<GroupRoleDTO> findByRoleId(Long roleId,int page, int size) {
-        Page<GroupRole> result = repository.findByRoleIdAndIsDeleted(roleId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<GroupRoleDTO> dtoPage = result.map(groupRoleStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<GroupRoleDTO> list(Long groupId,Long roleId,int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, GroupRole.class); // 统一 1→0
+        Page<GroupRole> result = repository.pageQuery(groupId,roleId, pr);
+        return PageHelpers.toPageResult(result, groupRoleStructMapper::toDTO, true); // 返回 1-b
     }
 
     @Override
@@ -67,7 +60,7 @@ public class GroupRoleServiceImpl implements GroupRoleService {
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<GroupRoleDTO> opt = repository.findById(id).map(groupRoleStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             GroupRoleDTO dto = opt.get();

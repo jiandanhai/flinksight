@@ -19,11 +19,27 @@ import java.util.List;
 @Repository
 public interface JobMetricRepository extends JpaRepository<JobMetric, Long>, SoftDeleteRepository<JobMetric, Long>  {
 
-    Page<JobMetric> findByJobIdAndMetricTimeBetweenAndIsDeleted(Long jobId, LocalDateTime start, LocalDateTime end, Integer isDeleted, Pageable pageable);
+    Page<JobMetric> findByJobIdAndMetricTimeBetweenAndIsDeleted(Long tenantId, Long jobId, LocalDateTime start, LocalDateTime end, Integer isDeleted, Pageable pageable);
 
     Page<JobMetric> findByTenantIdAndMetricKeyAndMetricTimeBetweenAndIsDeleted(Long tenantId, String metricKey, LocalDateTime start, LocalDateTime end, Integer isDeleted, Pageable pageable);
 
     Page<JobMetric> findByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted, Pageable pageable);
+
+    @Query("""
+    SELECT jm FROM JobMetric jm
+     WHERE jm.isDeleted = 0
+       AND jm.tenantId = :tenantId
+       AND (:jobId     IS NULL OR jm.jobId     = :jobId)
+       AND (:metricKey IS NULL OR jm.metricKey = :metricKey)
+       AND (:start     IS NULL OR jm.metricTime >= :start)
+       AND (:end       IS NULL OR jm.metricTime <= :end)
+  """)
+    Page<JobMetric> pageQuery(@Param("tenantId") Long tenantId,
+                              @Param("jobId") Long jobId,
+                              @Param("metricKey") String metricKey,
+                              @Param("start") LocalDateTime start,
+                              @Param("end") LocalDateTime end,
+                              Pageable pageable);
 
     @Query(value = """
         SELECT 

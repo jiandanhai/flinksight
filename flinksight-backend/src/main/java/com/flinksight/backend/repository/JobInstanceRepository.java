@@ -15,9 +15,9 @@ import java.util.List;
 public interface JobInstanceRepository extends JpaRepository<JobInstance, Long> {
     Page<JobInstance> findByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted, Pageable pageable);
 
-    Page<JobInstance> findByStatusAndIsDeleted(Integer status, Integer isDeleted, Pageable pageable);
+    Page<JobInstance> findByTenantIdAndStatusAndIsDeleted(Long tenantId, Integer status, Integer isDeleted, Pageable pageable);
 
-    Page<JobInstance> findByEngineTypeAndIsDeleted(String engineType, Integer isDeleted, Pageable pageable);
+    Page<JobInstance> findByEngineTypeAndIsDeleted(Long tenantId, String engineType, Integer isDeleted, Pageable pageable);
 
     @Query("SELECT j.status, COUNT(j.id) FROM JobInstance j WHERE j.tenantId = :tenantId AND j.isDeleted = 0 GROUP BY j.status")
     List<Object[]> countStatusByTenantId(@Param("tenantId") Long tenantId);

@@ -34,22 +34,14 @@ public class GroupRoleController {
         return service.removeRoleFromGroup(groupId, roleId);
     }
 
-    @Operation(summary = "", description = "",operationId = "getGroupRolesByGroup")
-    @GetMapping("/group/{groupId}")
-    public ApiResponse<PageResult<GroupRoleDTO>> findByGroup(
-            @PathVariable Long groupId,
+    @Operation(summary = "", description = "",operationId = "listGroupRoles")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<GroupRoleDTO>> list(
+            @RequestParam Long groupId,
+            @RequestParam Long roleId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByGroupId(groupId,page,size));
-    }
-
-    @Operation(summary = "", description = "",operationId = "getGroupRolesByRole")
-    @GetMapping("/role/{roleId}")
-    public ApiResponse<PageResult<GroupRoleDTO>> findByRole(
-            @PathVariable Long roleId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.findByRoleId(roleId,page,size));
+        return ApiResponse.ok(service.list(groupId,roleId,page,size));
     }
 
     @Operation(summary = "", description = "",operationId = "getGroupRole")
@@ -63,6 +55,6 @@ public class GroupRoleController {
     @Operation(summary = "", description = "",operationId = "deleteGroupRole")
     @DeleteMapping("/delete/{id}")
     public boolean delete(@PathVariable Long id) {
-        return service.softDelete(id);
+        return service.sDelete(id);
     }
 }

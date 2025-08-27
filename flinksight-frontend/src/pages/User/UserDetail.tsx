@@ -4,9 +4,9 @@
  */
 import React, {useEffect, useState} from 'react';
 import {Button, Card, Descriptions, Spin, Table, Tag} from 'antd';
-import api from '@/api/api-compat';
+import { getUser, getLoginHistorysByUser } from '@/api/modules';
 
-import type {UserDTO, UserLoginHistoryDTO, UserOpLogDTO} from '@/api/dto';
+import type {UserDTO, LoginHistoryDTO, UserOpLogDTO} from '@/api/dto';
 
 interface Props {
   id: number;
@@ -21,16 +21,16 @@ const ROLE_LABELS: Record<string, string> = {
 
 const UserDetail: React.FC<Props> = ({ id, onBack }) => {
   const [data, setData] = useState<UserDTO|null>(null);
-  const [loginHistory, setLoginHistory] = useState<UserLoginHistoryDTO[]>([]);
+  const [loginHistory, setLoginHistory] = useState<LoginHistoryDTO[]>([]);
   const [opLogs, setOpLogs] = useState<UserOpLogDTO[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
     Promise.all([
-      api.getUser(id),
-      api.getUserLoginHistory(id),
-      api.getUserOpLog(id)
+      getUser(id),
+      getLoginHistorysByUser(id),
+      getUserOpLog(id)
     ]).then(([res, logins, logs]) => {
       setData(res.data);
       setLoginHistory(logins.data || []);

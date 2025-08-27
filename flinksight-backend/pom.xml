@@ -106,6 +106,22 @@
             <version>0.11.5</version>
             <scope>runtime</scope>
         </dependency>
+        <!-- Fabric8 Kubernetes Client（用于 Operator 执行器） -->
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-client</artifactId>
+            <version>6.10.0</version>
+        </dependency>
+        <!-- 解析 YAML 必须要这个 -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+        </dependency>
+        <!-- Jackson（你们项目已有） -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
         <!-- MySQL 8 -->
         <dependency>
             <groupId>mysql</groupId>

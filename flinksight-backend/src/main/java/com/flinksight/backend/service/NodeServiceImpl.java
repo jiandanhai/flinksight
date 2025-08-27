@@ -1,18 +1,24 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.Node;
+import com.flinksight.backend.domain.NodeHealth;
 import com.flinksight.backend.mapper.NodeStructMapper;
+import com.flinksight.backend.repository.NodeHealthRepository;
 import com.flinksight.backend.repository.NodeRepository;
 import com.flinksight.common.dto.NodeDTO;
+import com.flinksight.common.dto.NodeHealthPointDTO;
+import com.flinksight.common.dto.NodeHealthResponseDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NodeService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -21,6 +27,7 @@ import java.util.Optional;
 public class NodeServiceImpl implements NodeService {
     private final NodeRepository repository;
     private final NodeStructMapper nodeStructMapper;
+    private final NodeHealthRepository nodeHealthRepository;
 
     @Override
     public NodeDTO createOrUpdate(NodeDTO nodeDTO) {
@@ -36,22 +43,32 @@ public class NodeServiceImpl implements NodeService {
     }
 
     @Override
-    public PageResult<NodeDTO> findByClusterId(Long clusterId,int page, int size) {
-        Page<Node> result = repository.findByClusterIdAndIsDeleted(clusterId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<NodeDTO> dtoPage = result.map(nodeStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<NodeDTO> list(Long clusterId,int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, Node.class); // 统一 1→0
+        Page<Node> result = repository.findByClusterIdAndIsDeleted(clusterId,0, pr);
+        return PageHelpers.toPageResult(result, nodeStructMapper::toDTO, true); // 返回
     }
 
     @Override
-    public PageResult<NodeDTO> getAll(int page, int size) {
-        Page<Node> result = repository.findByIsDeleted(0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<NodeDTO> dtoPage = result.map(nodeStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public NodeHealthResponseDTO getNodeHealth(Long tenantId, Long nodeId, LocalDateTime from, LocalDateTime to) {
+        List<NodeHealth> list = nodeHealthRepository
+                .findAllByTenantIdAndNodeIdAndCheckTimeBetweenOrderByCheckTime(tenantId, nodeId, from, to);
+
+        String latest = nodeHealthRepository
+                .findTopByTenantIdAndNodeIdOrderByCheckTimeDesc(tenantId, nodeId)
+                .map(NodeHealth::getHealthStatus).orElse("UNKNOWN");
+
+        return NodeHealthResponseDTO.builder()
+                .latestStatus(latest)
+                .items(list.stream()
+                        .map(n -> new NodeHealthPointDTO(n.getCheckTime(), n.getHealthStatus(), n.getMessage()))
+                        .toList())
+                .build();
     }
 
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<NodeDTO> opt = repository.findById(id).map(nodeStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             NodeDTO dto = opt.get();

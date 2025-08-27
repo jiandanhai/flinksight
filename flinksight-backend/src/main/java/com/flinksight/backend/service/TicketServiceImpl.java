@@ -1,9 +1,11 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.Ticket;
 import com.flinksight.backend.exception.BusinessException;
 import com.flinksight.backend.mapper.TicketStructMapper;
 import com.flinksight.backend.repository.TicketRepository;
+import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.backend.security.tenant.TenantRequired;
 import com.flinksight.common.dto.TicketDTO;
 import com.flinksight.common.enums.ErrorCode;
@@ -13,7 +15,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -45,10 +46,10 @@ public class TicketServiceImpl implements TicketService{
     }
 
     @Override
-    public PageResult<TicketDTO> getTicketsByTenantAndStatus(Long tenantId, Integer status,int page, int size) {
-        Page<Ticket> result = repository.findByTenantIdAndStatusAndIsDeleted(tenantId, status,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<TicketDTO> dtoPage = result.map(ticketStructMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<TicketDTO> list(Integer status,int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, Ticket.class); // 统一 1→0
+        Page<Ticket> result = repository.findByTenantIdAndStatusAndIsDeleted(SecurityUtil.getCurrentTenantId(), status,0, pr);
+        return PageHelpers.toPageResult(result, ticketStructMapper::toDTO, true); //
     }
 
     @Override
@@ -69,7 +70,7 @@ public class TicketServiceImpl implements TicketService{
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<TicketDTO> opt = repository.findById(id).map(ticketStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             TicketDTO dto = opt.get();

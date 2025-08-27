@@ -1,5 +1,6 @@
 package com.flinksight.backend.domain;
 
+import com.flinksight.common.service.DefaultSort;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
         @Index(name = "idx_unionid", columnList = "unionid"),
         @Index(name = "idx_openid", columnList = "openid")
 })
+@DefaultSort(fields = {"createTime", "id"})
 public class OauthAccount {
 
     @Id

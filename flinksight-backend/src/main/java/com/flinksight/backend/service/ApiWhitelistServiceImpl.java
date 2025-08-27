@@ -32,7 +32,7 @@ public class ApiWhitelistServiceImpl implements ApiWhitelistService {
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<ApiWhitelistDTO> opt = repository.findById(id).map(apiWhitelistStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             ApiWhitelistDTO dto = opt.get();

@@ -1,15 +1,16 @@
 package com.flinksight.backend.service;
 
+import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.OrgNode;
 import com.flinksight.backend.mapper.OrgNodeMapper;
 import com.flinksight.backend.repository.OrgNodeRepository;
+import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.common.dto.OrgNodeDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.OrgNodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,10 +66,10 @@ public class OrgNodeServiceImpl implements OrgNodeService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<OrgNodeDTO> listByTenant(Long tenantId, int page, int size) {
-        Page<OrgNode> result = repository.findByTenantIdAndIsDeleted(tenantId,0, PageRequest.of(page, size, Sort.by("id").descending()));
-        Page<OrgNodeDTO> dtoPage = result.map(orgNodeMapper::toDTO);
-        return new PageResult<>(dtoPage);
+    public PageResult<OrgNodeDTO> list(int page, int size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, OrgNode.class); // 统一 1→0
+        Page<OrgNode> result = repository.findByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(),0, pr);
+        return PageHelpers.toPageResult(result, orgNodeMapper::toDTO, true); // 返回
     }
 
     /**
@@ -76,9 +77,9 @@ public class OrgNodeServiceImpl implements OrgNodeService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<OrgNodeDTO> getOrgTree(Long tenantId) {
+    public List<OrgNodeDTO> getOrgTree() {
         // 1. 查flat list
-        List<OrgNode> entities = repository.findAllByTenantId(tenantId);
+        List<OrgNode> entities = repository.findAllByTenantId(SecurityUtil.getCurrentTenantId());
         List<OrgNodeDTO> flat = entities.stream().map(orgNodeMapper::toDTO).collect(Collectors.toList());
 
         // 2. 组装树结构
@@ -99,7 +100,7 @@ public class OrgNodeServiceImpl implements OrgNodeService {
     }
 
     @Override
-    public boolean softDelete(Long id) {
+    public boolean sDelete(Long id) {
         Optional<OrgNodeDTO> opt = repository.findById(id).map(orgNodeMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
         if (opt.isPresent()) {
             OrgNodeDTO dto = opt.get();
