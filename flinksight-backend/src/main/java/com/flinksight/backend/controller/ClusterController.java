@@ -112,7 +112,7 @@ public class ClusterController {
 
 
     @Operation(summary = "启停节点（单条，幂等）",operationId = "enableNode")
-    @PatchMapping("/nodes/enablement/{clusterId}")
+    @PatchMapping("/nodes/enablement/{nodeId}")
     public ApiResponse<NodeDTO> enableNode(@PathVariable Long nodeId, @RequestBody EnableReq body) {
         return ApiResponse.ok(clusterService.setNodeEnable(nodeId, body.getEnable()));
     }

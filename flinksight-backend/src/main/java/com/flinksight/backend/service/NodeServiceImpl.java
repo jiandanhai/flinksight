@@ -6,6 +6,7 @@ import com.flinksight.backend.domain.NodeHealth;
 import com.flinksight.backend.mapper.NodeStructMapper;
 import com.flinksight.backend.repository.NodeHealthRepository;
 import com.flinksight.backend.repository.NodeRepository;
+import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.common.dto.NodeDTO;
 import com.flinksight.common.dto.NodeHealthPointDTO;
 import com.flinksight.common.dto.NodeHealthResponseDTO;
@@ -50,12 +51,12 @@ public class NodeServiceImpl implements NodeService {
     }
 
     @Override
-    public NodeHealthResponseDTO getNodeHealth(Long tenantId, Long nodeId, LocalDateTime from, LocalDateTime to) {
+    public NodeHealthResponseDTO getNodeHealth(Long nodeId, LocalDateTime from, LocalDateTime to) {
         List<NodeHealth> list = nodeHealthRepository
-                .findAllByTenantIdAndNodeIdAndCheckTimeBetweenOrderByCheckTime(tenantId, nodeId, from, to);
+                .findAllByTenantIdAndNodeIdAndCheckTimeBetweenOrderByCheckTime(SecurityUtil.getCurrentTenantId(), nodeId, from, to);
 
         String latest = nodeHealthRepository
-                .findTopByTenantIdAndNodeIdOrderByCheckTimeDesc(tenantId, nodeId)
+                .findTopByTenantIdAndNodeIdOrderByCheckTimeDesc(SecurityUtil.getCurrentTenantId(), nodeId)
                 .map(NodeHealth::getHealthStatus).orElse("UNKNOWN");
 
         return NodeHealthResponseDTO.builder()

@@ -12,5 +12,5 @@ public interface NodeService extends SoftDeleteService<LabelDTO, Long> {
     NodeDTO createOrUpdate(NodeDTO node);
     Optional<NodeDTO> getById(Long id);
     PageResult<NodeDTO> list(Long clusterId,int page, int size);
-    NodeHealthResponseDTO getNodeHealth(Long tenantId, Long nodeId, LocalDateTime from, LocalDateTime to);
+    NodeHealthResponseDTO getNodeHealth(Long nodeId, LocalDateTime from, LocalDateTime to);
 }

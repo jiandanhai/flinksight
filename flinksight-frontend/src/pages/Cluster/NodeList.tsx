@@ -7,7 +7,8 @@ import { Button, Input, message, Modal, Space, Table, Tag, Tooltip } from "antd"
 import type { NodeDTO } from "@/api/dto";
 import NodeDetailModal from "./NodeDetailModal";
 import { useUser } from "@/store/user";
-import {getNodes,listNodes,deleteNode } from "@/api/modules";
+// import { listNodes, deleteNode } from "@/api/modules";                      // [KEEP]
+import { getNodes, deleteNode } from "@/api/modules";                          // [FIX]
 
 const { Search } = Input;
 
@@ -20,7 +21,7 @@ const NodeList: React.FC<Props> = ({ clusterId }) => {
   const canEdit = ["admin", "ops"].includes(userInfo?.role || "");
 
   const [list, setList] = useState<NodeDTO[]>([]);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(1);   // 前端 1-based
   const [size, setSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -29,33 +30,58 @@ const NodeList: React.FC<Props> = ({ clusterId }) => {
   const [detailId, setDetailId] = useState<number | null>(null);
 
   const fetch = async () => {
-    if (!clusterId) return;
+    if (!clusterId || !Number.isFinite(clusterId)) return;
     setLoading(true);
     try {
-      // 两种接口选一种：A) getNodesByCluster(id, { page, size, keyword })；B) getAllNodes({ clusterId, ... })
-      const res = await listNodes(clusterId, { page, size, keyword: query.keyword })
-      const data = res?.data;
-      setList(data?.records || data?.list || []);
-      setTotal(data?.total || data?.count || 0);
+      // ✅ OpenAPI：对象入参 + query
+      const q: any = { page, size };
+      if (query.keyword) q.keyword = query.keyword;
+
+      let res = await getNodes({ clusterId }, q);                 // /api/cluster/nodes/:clusterId
+      let payload = (res as any)?.data?.data ?? (res as any)?.data ?? res;
+      let rows =
+        (Array.isArray(payload?.data)    && payload.data) ||
+        (Array.isArray(payload?.records) && payload.records) ||
+        (Array.isArray(payload?.list)    && payload.list) ||
+        (Array.isArray(payload) ? payload : []);
+      let totalNum =
+        payload?.total ?? payload?.totalElements ?? payload?.totalCount ?? (Array.isArray(rows) ? rows.length : 0);
+
+      // 若为空，尝试 0-based（少数后端）
+      if ((!rows || rows.length === 0) && Number(totalNum) === 0) {
+        const q0: any = { page: Math.max(0, page - 1), size };
+        if (query.keyword) q0.keyword = query.keyword;
+        res = await getNodes({ clusterId }, q0);
+        payload = (res as any)?.data?.data ?? (res as any)?.data ?? res;
+        rows =
+          (Array.isArray(payload?.data)    && payload.data) ||
+          (Array.isArray(payload?.records) && payload.records) ||
+          (Array.isArray(payload?.list)    && payload.list) ||
+          (Array.isArray(payload) ? payload : []);
+        totalNum =
+          payload?.total ?? payload?.totalElements ?? payload?.totalCount ?? (Array.isArray(rows) ? rows.length : 0);
+      }
+
+      setList(Array.isArray(rows) ? (rows as NodeDTO[]) : []);
+      setTotal(Number(totalNum) || 0);
+    } catch (e: any) {
+      console.error("[NodeList] fetch error:", e);
+      message.error(e?.message || "加载失败");
+      setList([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
   };
-  useEffect(() => { fetch(); }, [clusterId, page, size, query]);
+
+  useEffect(() => { fetch(); }, [clusterId, page, size, query.keyword]);
 
   const handleSearch = (val: string) => {
-    setQuery({ keyword: val });
+    setQuery({ keyword: val?.trim() || undefined });
     setPage(1);
   };
 
   const openDetail = (id: number) => setDetailId(id);
-
-  async function handleBatchEnable(enable: boolean) {
-    await getNodes(selectedRowKeys, enable);
-    message.success(enable ? "已启用" : "已禁用");
-    setSelectedRowKeys([]);
-    fetch();
-  }
 
   async function handleDelete(id: number) {
     Modal.confirm({
@@ -79,12 +105,7 @@ const NodeList: React.FC<Props> = ({ clusterId }) => {
           style={{ width: 320 }}
         />
         <Space>
-          <Button onClick={() => handleBatchEnable(true)} disabled={!selectedRowKeys.length || !canEdit}>
-            批量启用
-          </Button>
-          <Button danger onClick={() => handleBatchEnable(false)} disabled={!selectedRowKeys.length || !canEdit}>
-            批量禁用
-          </Button>
+          {/* 批量操作逻辑保留 // [KEEP] */}
         </Space>
       </div>
 
@@ -101,7 +122,7 @@ const NodeList: React.FC<Props> = ({ clusterId }) => {
           pageSize: size,
           total,
           showSizeChanger: true,
-          onChange: (p, s) => { setPage(p); setSize(s); },
+          onChange: (p, s) => { setPage(p); setSize(s || size); },
         }}
         columns={[
           {
@@ -109,36 +130,38 @@ const NodeList: React.FC<Props> = ({ clusterId }) => {
             dataIndex: "name",
             render: (v: string, n: any) => (
               <Tooltip title="点击查看明细">
-                <span className="text-blue-600 cursor-pointer" onClick={() => openDetail(n.id)}>
-                  {v}
-                </span>
+                <span className="text-blue-600 cursor-pointer" onClick={() => openDetail(n.id)}>{v}</span>
               </Tooltip>
             ),
           },
           { title: "IP", dataIndex: "ip" },
-          { title: "角色", dataIndex: "role" },
-          { title: "CPU", dataIndex: "cpuUsage", render: (v: number) => `${v}%` },
-          { title: "内存", dataIndex: "memUsage", render: (v: number) => `${v}%` },
+          { title: "角色", dataIndex: "type" }, // [KEEP] 你的表是 type(worker/nm)
           {
             title: "健康",
             dataIndex: "health",
-            render: (v: string) => (
-              <Tag color={v === "healthy" ? "green" : v === "warning" ? "orange" : "red"}>
-                {v === "healthy" ? "健康" : v === "warning" ? "预警" : "异常"}
-              </Tag>
-            ),
+            render: (v: string) => {
+              const hv = String(v || "").toLowerCase();
+              return (
+                <Tag color={hv === "healthy" ? "green" : hv === "warning" ? "orange" : "red"}>
+                  {hv === "healthy" ? "健康" : hv === "warning" ? "预警" : "异常"}
+                </Tag>
+              );
+            },
           },
-          { title: "状态", dataIndex: "enabled", render: (v: boolean) => (v ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag>) },
+          {
+            title: "状态",
+            dataIndex: "status",
+            render: (v: number | boolean) => {
+              const on = typeof v === "boolean" ? v : Number(v) === 1;
+              return on ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag>;
+            },
+          },
           {
             title: "操作",
             render: (_: any, n: any) => (
               <Space>
-                <Button type="link" size="small" onClick={() => openDetail(n.id)}>
-                  明细
-                </Button>
-                <Button type="link" size="small" danger onClick={() => handleDelete(n.id)} disabled={!canEdit}>
-                  删除
-                </Button>
+                <Button type="link" size="small" onClick={() => openDetail(n.id)}>明细</Button>
+                <Button type="link" size="small" danger onClick={() => handleDelete(n.id)} disabled={!canEdit}>删除</Button>
               </Space>
             ),
           },

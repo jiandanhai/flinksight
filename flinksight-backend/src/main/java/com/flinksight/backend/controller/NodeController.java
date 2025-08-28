@@ -61,11 +61,10 @@ public class NodeController {
     @Operation(summary = "查询节点健康（时间区间）",operationId = "getNodeHealth")
     @GetMapping("/{nodeId}/health")
     public ApiResponse<NodeHealthResponseDTO> getNodeHealth(
-            @RequestHeader("X-Tenant-Id") Long tenantId,
             @PathVariable Long nodeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
-        return ApiResponse.ok(service.getNodeHealth(tenantId, nodeId, from, to));
+        return ApiResponse.ok(service.getNodeHealth(nodeId, from, to));
     }
 
     @Operation(summary = "", description = "",operationId = "deleteNode")
