@@ -13,6 +13,7 @@ import com.flinksight.common.dto.RuleTestRequestDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.AlertRuleService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
  * 报警规则业务实现
  * AlertRule Service Impl
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -56,18 +58,12 @@ public class AlertRuleServiceImpl implements AlertRuleService{
 
     @Override
     @Transactional
-    public PageResult<AlertRuleDTO> list(Long clusterId, Integer enable,int page, int size) {
+    public PageResult<AlertRuleDTO> list(Long clusterId, Integer enable,String keyword,int page, int size) {
         PageRequest pr = PageHelpers.pageRequest(page, size, null, AlertRule.class); // 统一 1→0
-        Page<AlertRule> result =
-                (enable == null)
-                        // 不按启用状态筛选
-                        ? (clusterId == null
-                        ? alertRuleRepository.findAllByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(), 0, pr)
-                        : alertRuleRepository.findAllByTenantIdAndClusterIdAndIsDeleted(SecurityUtil.getCurrentTenantId(), clusterId, 0, pr))
-                        // 按启用状态筛选
-                        : (clusterId == null
-                        ? alertRuleRepository.findAllByTenantIdAndEnableAndIsDeleted(SecurityUtil.getCurrentTenantId(), enable, 0, pr)
-                        : alertRuleRepository.findAllByTenantIdAndClusterIdAndEnableAndIsDeleted(SecurityUtil.getCurrentTenantId(), clusterId, enable, 0, pr));
+        Integer en = (enable != null && enable >= 0) ? enable : null;
+        log.info("[Service] about to call repo.pageQuery , clusterId={}, enable={}, kw={}", clusterId, en, keyword);
+        Page<AlertRule> result = alertRuleRepository.pageQuery(SecurityUtil.getCurrentTenantId(),clusterId, en, (keyword == null || keyword.isBlank()) ? null : keyword.trim(), pr);
+        log.info("[Service] about to call repo.pageQuery ,  result={}", result);
         return PageHelpers.toPageResult(result, alertRuleStructMapper::toDTO, true); // 返回 1-based
     }
 

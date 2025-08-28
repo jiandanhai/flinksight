@@ -19,7 +19,7 @@ public interface AlertRuleService  extends SoftDeleteService<AlertRuleDTO, Long>
     /**
      * 按租户与集群查询
      */
-    PageResult<AlertRuleDTO> list(Long clusterId, Integer enable,int page, int size);
+    PageResult<AlertRuleDTO> list(Long clusterId, Integer enable,String keyword,int page, int size);
 
 
     AlertRuleDTO updateAlertRule(Long id, AlertRuleDTO patch);

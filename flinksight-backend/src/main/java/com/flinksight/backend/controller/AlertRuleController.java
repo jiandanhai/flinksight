@@ -71,12 +71,13 @@ public class AlertRuleController {
     }
 
     @Operation(summary = "获取租户集群下所有报警规则", operationId = "listAlertRules")
-    @GetMapping("/listByTenantAndCluster")
-    public ApiResponse<PageResult<AlertRuleDTO>> list(@RequestParam Long clusterId,
-                                                      @RequestParam Integer enable,
+    @GetMapping("/listAlertRules")
+    public ApiResponse<PageResult<AlertRuleDTO>> list(@RequestParam(required = false) Long clusterId,
+                                                      @RequestParam(required = false) Integer enable,
+                                                      @RequestParam(required = false) String keyword,
                                                       @RequestParam(defaultValue = "0") int page,
                                                       @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(alertRuleService.list(clusterId, enable,page, size));
+        return ApiResponse.ok(alertRuleService.list(clusterId, enable,keyword,page, size));
     }
 
     // 告警：启停单条

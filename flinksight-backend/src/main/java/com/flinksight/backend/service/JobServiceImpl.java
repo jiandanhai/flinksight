@@ -51,9 +51,9 @@ public class JobServiceImpl implements JobService {
     @Override
     public PageResult<JobDTO> list(Long clusterId,int page, int size) {
         PageRequest pr = PageHelpers.pageRequest(page, size, null, Job.class); // 统一 1→0
-        Page<Job> result = (clusterId == null)
+        Page<Job> result = (clusterId == null || clusterId <= 0)
                 ? repository.findByTenantIdAndIsDeleted(SecurityUtil.getCurrentUserId(), 0, pr)
-                : repository.findAllByTenantIdAndClusterIdAndIsDeleted(SecurityUtil.getCurrentUserId(), clusterId,0, pr);
+                : repository.findAllByTenantIdAndClusterIdAndIsDeleted(SecurityUtil.getCurrentTenantId(), clusterId,0, pr);
         return PageHelpers.toPageResult(result, jobStructMapper::toDTO, true); // 返回
     }
 

@@ -22,6 +22,7 @@ import com.flinksight.common.enums.ErrorCode;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.AlertService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
  * 报警事件业务实现
  * Alert Service Impl
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -115,9 +117,11 @@ public class AlertServiceImpl implements AlertService{
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<AlertDTO> list(Long jobId, String level, Integer status, int page, int size) {
+    public PageResult<AlertDTO> list(Long jobId, Long clusterId,String level, Integer status, int page, int size) {
         PageRequest pr = PageHelpers.pageRequest(page, size, null, Alert.class); // 统一 1→0
-        Page<Alert> result = alertRepository.pageQuery(SecurityUtil.getCurrentTenantId(), jobId, level, status, pr);
+        log.info("[Service] about to call repo.pageQuery ,jobId={}， clusterId={}, level={}, status={}", jobId,clusterId, level, status);
+        Page<Alert> result = alertRepository.pageQuery(SecurityUtil.getCurrentTenantId(), jobId,clusterId, level, status, pr);
+        log.info("[Service] about to call repo.pageQuery ,result={}", result);
         return PageHelpers.toPageResult(result, alertStructMapper::toDTO, true); // 返回 1-based
     }
 

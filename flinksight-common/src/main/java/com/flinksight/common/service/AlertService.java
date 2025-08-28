@@ -18,7 +18,7 @@ public interface AlertService  extends SoftDeleteService<AlertDTO, Long> {
      * - 仅 level + status
      * - jobId + level + status 交集
      */
-    PageResult<AlertDTO> list(Long jobId, String level, Integer status, int page, int size);
+    PageResult<AlertDTO> list(Long jobId, Long clusterId, String level, Integer status, int page, int size);
 
     AlertDTO getAlert(Long id);
 

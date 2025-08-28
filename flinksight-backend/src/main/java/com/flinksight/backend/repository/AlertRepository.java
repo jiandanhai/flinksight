@@ -47,11 +47,13 @@ public interface AlertRepository extends JpaRepository<Alert, Long> , SoftDelete
      WHERE a.isDeleted = 0
        AND (:tenantId IS NULL OR a.tenantId = :tenantId)
        AND (:jobId    IS NULL OR a.jobId    = :jobId)
+       AND (:clusterId    IS NULL OR a.clusterId    = :clusterId)
        AND (:level    IS NULL OR a.level    = :level)
        AND (:status   IS NULL OR :status = -1 OR a.status = :status)
   """)
     Page<Alert> pageQuery(@Param("tenantId") Long tenantId,
                           @Param("jobId")    Long jobId,
+                          @Param("clusterId") Long clusterId,
                           @Param("level")    String level,
                           @Param("status")   Integer status,
                           Pageable pageable);

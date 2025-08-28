@@ -64,13 +64,15 @@ public class AlertController {
 
     @Operation(summary = "查询任务下报警事件", description = "Get alerts by job and status",operationId = "listAlerts")
     @GetMapping("/listAlerts")
-    public ApiResponse<PageResult<AlertDTO>> getAlertsByLevelAndStatus(
-            @RequestParam Long jobId,
-            @RequestParam String level,
-            @RequestParam Integer status,
+    public ApiResponse<PageResult<AlertDTO>> list(
+            @RequestParam(required = false) Long jobId,
+            @RequestParam(required = false) Long clusterId,
+            @RequestParam(required = false) String level,
+            @RequestParam(required = false) Integer status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(alertService.list(jobId,level, status, page,size));
+        Integer st = (status != null && status == -1) ? null : status;
+        return ApiResponse.ok(alertService.list(jobId,clusterId,level, st, page,size));
     }
 
     @OpAudit(action = "UPDATE", targetType = "ALERT", targetIdSpEL = "#id", contentSpEL = "'payload=' + T(com.flinksight.common.util.Jsons).toJson(#dto)")

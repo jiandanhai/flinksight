@@ -3,19 +3,19 @@
  * @desc 支持任务查询、分页、批量启停、详情、编辑弹窗，权限自动校验（兼容可选 clusterId）
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Button, Input, message, Modal, Space, Table, Tag } from 'antd';
+import { Button, Input, message, Modal, Space, Table, Tag, Empty } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { useSearchParams } from 'react-router-dom';
 import { listJobs, deleteJob, batchUpdateStatus } from '../../api/modules';
 
 import type { JobDTO } from '@/api/dto';
 import EditJobModal from './EditJobModal';
 import JobDetail from './JobDetail';
 import { useUser } from '../../store/user';
+import { useClusterId } from '@/hooks/useClusterId';   // ✅ 新增导入
 
 const { Search } = Input;
 
-/** 统一抽取分页：兼容“数组/包一层/包两层/records/list/totalElements/totalCount/total”等多种服务端包装 */
+/** 统一抽取分页（兼容多种后端包装） */
 function extractPage<T = any>(resp: any) {
   const payload = resp?.data?.data ?? resp?.data ?? resp;
   const list: T[] = Array.isArray(payload)
@@ -25,10 +25,7 @@ function extractPage<T = any>(resp: any) {
     : Array.isArray(payload?.list)    ? payload.list
     : [];
   const totalRaw =
-    payload?.total ??
-    payload?.totalElements ??
-    payload?.totalCount ??
-    (Array.isArray(list) ? list.length : 0);
+    payload?.total ?? payload?.totalElements ?? payload?.totalCount ?? (Array.isArray(list) ? list.length : 0);
   const total = Number(totalRaw) || 0;
   const page  = Number(payload?.page ?? 1) || 1;
   const size  = Number(payload?.size ?? payload?.pageSize ?? 20) || 20;
@@ -36,9 +33,8 @@ function extractPage<T = any>(resp: any) {
 }
 
 const JobList: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const clusterIdParam = searchParams.get('clusterId');
-  const clusterId = clusterIdParam ? Number(clusterIdParam) : undefined;
+  // ✅ 顶层调用 Hook，获得 clusterId（来自 URL 或全局上下文）
+  const clusterId = useClusterId();
 
   const [list, setList] = useState<JobDTO[]>([]);
   const [page, setPage] = useState(1);
@@ -58,13 +54,16 @@ const JobList: React.FC = () => {
   const reqSeqRef = useRef(0);
 
   const fetch = async () => {
+    // 若你的后端 /api/job/listByCluster 必须要 clusterId，这里缺参就不发请求
+    if (!clusterId) { setList([]); setTotal(0); return; }
+
     setLoading(true);
     const seq = ++reqSeqRef.current;
     try {
-      const params: any = { ...query, page, size };
-      if (Number.isFinite(clusterId)) params.clusterId = clusterId; // 有 clusterId 就一起传
+      console.log('[clusterId:]', clusterId);
+      const params: any = { ...query, page, size, clusterId }; // ✅ 这里直接用变量，不再调用 Hook
       const resp = await listJobs(params);
-      if (seq !== reqSeqRef.current) return; // 已过期的返回，忽略
+      if (seq !== reqSeqRef.current) return; // 已过期返回忽略
       const { list: rows, total, payload } = extractPage<JobDTO>(resp);
       console.log('[jobs] payload =', payload);
       console.log('[jobs] rows.length =', rows.length, ' total =', total);
@@ -74,17 +73,13 @@ const JobList: React.FC = () => {
       if (seq !== reqSeqRef.current) return;
       console.error('[jobs] fetch error:', e);
       message.error(e?.message || '加载失败');
-      setList([]);
-      setTotal(0);
+      setList([]); setTotal(0);
     } finally {
       if (seq === reqSeqRef.current) setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetch();
-    // 仅关心真正变化的依赖，避免 JSON.stringify 带来的不必要刷新
-  }, [page, size, clusterId, query.keyword]);
+  useEffect(() => { fetch(); }, [page, size, clusterId, query.keyword]);
 
   // 搜索
   const handleSearch = (val: string) => {
@@ -99,9 +94,7 @@ const JobList: React.FC = () => {
   }
 
   // 详情
-  if (detailId) {
-    return <JobDetail id={detailId} onBack={() => setDetailId(null)} />;
-  }
+  if (detailId) return <JobDetail id={detailId} onBack={() => setDetailId(null)} />;
 
   // 删除
   async function handleDelete(id: number) {
@@ -129,10 +122,7 @@ const JobList: React.FC = () => {
       title: '任务名',
       dataIndex: 'name',
       render: (v, t) => (
-        <span
-          className="text-blue-600 cursor-pointer"
-          onClick={() => setDetailId((t as any).id)}
-        >
+        <span className="text-blue-600 cursor-pointer" onClick={() => setDetailId((t as any).id)}>
           {v}
         </span>
       )
@@ -140,7 +130,6 @@ const JobList: React.FC = () => {
     { title: '负责人', dataIndex: 'owner', render: v => v ?? '-' },
     {
       title: '状态',
-      // 兼容 enabled / status（boolean / number）
       dataIndex: 'enabled',
       render: (_: any, t) => {
         const raw = (t as any).enabled ?? (t as any).status;
@@ -152,7 +141,6 @@ const JobList: React.FC = () => {
     {
       title: '上次运行',
       dataIndex: 'lastRun',
-      // 兼容 lastRun / lastRunTime
       render: (v: any, t) => {
         const ts = v ?? (t as any).lastRunTime;
         return ts ? new Date(ts).toLocaleString() : '-';
@@ -169,6 +157,15 @@ const JobList: React.FC = () => {
       )
     }
   ]), [canEdit]);
+
+  // 缺少 clusterId 时的兜底 UI（如果已接入头部切换器，这里会很快被填上）
+  if (!clusterId) {
+    return (
+      <div className="p-6 bg-white rounded-xl shadow flex items-center justify-center min-h-[320px]">
+        <Empty description="缺少 clusterId。请从集群列表进入，或在右上角选择集群。" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-white rounded-xl shadow">
@@ -189,7 +186,7 @@ const JobList: React.FC = () => {
       </div>
 
       <Table<JobDTO>
-        rowKey={(r) => Number((r as any).id)}           // 强制数值，避免字符串 id 造成选择异常
+        rowKey={(r) => Number((r as any).id)}
         dataSource={list}
         loading={loading}
         rowSelection={{

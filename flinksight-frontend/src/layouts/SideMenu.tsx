@@ -1,39 +1,37 @@
 /**
  * @file SideMenu.tsx
- * @desc 动态多级侧边菜单：支持递归、权限过滤、国际化、激活高亮、图标渲染
+ * @desc 动态多级侧边菜单，点击“作业列表”时自动补 clusterId。
  */
 import React from 'react';
-import { useLocation, NavLink } from 'react-router-dom';
+import { useLocation, NavLink, useNavigate } from 'react-router-dom';
 import { MENUS } from '@/constants/menus';
 import { useUser } from '@/store/user';
 import { useLocale } from '@/store/locale';
 import type { MenuItem } from '@/constants/menus';
+import { useCluster } from '@/context/ClusterContext';
 
-/**
- * SideMenu 侧边菜单组件
- */
 const SideMenu: React.FC = () => {
-  const { role } = useUser(); // 当前用户角色
-  const { locale } = useLocale ? useLocale() : { locale: 'zh' }; // 默认中文
+  const { role } = useUser();
+  const { locale } = useLocale ? useLocale() : { locale: 'zh' };
   const location = useLocation();
+  const nav = useNavigate();
+  const { id: currentClusterId } = useCluster();
 
-  /**
-   * 判断当前菜单项是否被激活
-   */
   const isMenuActive = (menu: MenuItem) => {
     const current = location.pathname;
     return current === menu.path || current.startsWith(menu.path + '/');
   };
 
-  /**
-   * 递归渲染菜单项
-   */
   const renderMenuItems = (menus: MenuItem[], depth = 0): React.ReactNode =>
     menus
-      .filter(menu => !menu.roles || menu.roles.includes(role)) // 权限过滤
+      .filter(menu => !menu.roles || menu.roles.includes(role))
       .map(menu => {
         const title = typeof menu.title === 'function' ? menu.title(locale) : menu.title;
         const active = isMenuActive(menu);
+        const to =
+          menu.path === '/job'
+            ? (currentClusterId ? `/job?clusterId=${currentClusterId}` : '/cluster')
+            : (menu.path || '#');
 
         return (
           <div
@@ -41,7 +39,13 @@ const SideMenu: React.FC = () => {
             className={depth ? 'pl-4 border-l border-gray-100 dark:border-gray-700' : ''}
           >
             <NavLink
-              to={menu.path || '#'}
+              to={to}
+              onClick={(e) => {
+                if (menu.path === '/job' && !currentClusterId) {
+                  e.preventDefault();
+                  nav('/cluster');
+                }
+              }}
               className={({ isActive }) =>
                 `flex items-center px-4 py-2 rounded transition group
                  ${active || isActive
@@ -53,7 +57,6 @@ const SideMenu: React.FC = () => {
               <span className="truncate">{title}</span>
             </NavLink>
 
-            {/* 渲染子菜单 */}
             {menu.children && menu.children.length > 0 && (
               <div className="ml-2 mt-1">
                 {renderMenuItems(menu.children, depth + 1)}

@@ -1,4 +1,3 @@
-// src/layouts/MainLayout.tsx
 import React, { useMemo, useState } from "react";
 import { Layout, Menu, Spin } from "antd";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -9,58 +8,53 @@ import type { MenuProps } from "antd";
 import type { MenuNodeDTO } from "@/api/dto";
 import { useUserMenus } from "@/hooks/useUserMenus";
 
+import { ClusterProvider, useCluster } from "@/context/ClusterContext";
+import ClusterSwitcher from "@/components/ClusterSwitcher";
+
 const { Header, Sider, Content } = Layout;
 type ItemType = Required<MenuProps>["items"][number];
 
-const MainLayout: React.FC = () => {
+const InnerLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { user } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
+  const { id: currentClusterId } = useCluster();
 
   const toggle = () => setCollapsed((v) => !v);
 
-  console.log("🎯 MainLayout 挂载");
-  console.log("👤 当前 user：", user);
-
-  // ⭐ 最优：用 Hook 统一处理 StrictMode 双执行、缓存、loading、异常
+  // ⭐ 统一处理菜单
   const { data: menuTree, loading, error } = useUserMenus(user?.id, user?.tenantId);
 
   const toAntdItems = (nodes?: MenuNodeDTO[] | null): ItemType[] => {
     if (!nodes || nodes.length === 0) return [];
     return nodes.map((n) => {
-      const key = n.path || n.key || String(n.id); // path 优先，其次 key，兜底 id
+      const key = n.path || n.key || String(n.id);
       return {
         key,
         label: n.title,
-        // 需要 icon 时，可在这里把后端 icon 名 -> 组件 做映射
         children: n.children && n.children.length ? toAntdItems(n.children) : undefined,
       };
     });
   };
 
-  const menuItems = useMemo(() => {
-    const items = toAntdItems(menuTree);
-    console.log("🧩 转换为 antd items：", items);
-    if (!items.length && !loading && !error) {
-      console.warn("⚠️ 菜单为空，请检查后端 required_code 与用户权限是否匹配。");
-    }
-    return items;
-  }, [menuTree, loading, error]);
-
+  const menuItems = useMemo(() => toAntdItems(menuTree), [menuTree]);
   const selectedKeys = useMemo(() => [location.pathname], [location.pathname]);
 
-  // 没有 user 信息时不去拉接口；Hook 已处理 loading=false，不会卡死
   const shouldShowSpinner = (!user || !user.id || !user.tenantId) || loading;
+  if (shouldShowSpinner) return <Spin fullscreen tip="正在加载主界面…" />;
+  if (error) console.error("❌ 获取菜单失败：", error);
 
-  if (shouldShowSpinner) {
-    console.log("⏳ loading 中…");
-    return <Spin fullscreen tip="正在加载主界面…" />;
-  }
-
-  if (error) {
-    console.error("❌ 获取菜单失败：", error);
-  }
+  // ⬇️ 导航：/job 需要自动补 clusterId；没有则送去 /cluster
+  const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
+    const path = String(key);
+    if (path === '/job') {
+      if (currentClusterId && currentClusterId > 0) navigate(`/job?clusterId=${currentClusterId}`);
+      else navigate('/cluster');
+    } else {
+      navigate(path);
+    }
+  };
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
@@ -72,16 +66,19 @@ const MainLayout: React.FC = () => {
           theme="dark"
           mode="inline"
           selectedKeys={selectedKeys}
-          onClick={({ key }) => navigate(String(key))}
+          onClick={handleMenuClick}
           items={menuItems}
         />
       </Sider>
 
       <Layout>
-        <Header style={{ background: "#fff", padding: 0 }}>
-          <span onClick={toggle} style={{ marginLeft: 16, cursor: "pointer" }}>
+        <Header style={{ background: "#fff", padding: "0 16px", display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span onClick={toggle} style={{ cursor: "pointer" }}>
             {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           </span>
+          <div style={{ flex: 1 }} />
+          {/* 右上角：集群切换器（写回 URL，持久化上下文） */}
+          <ClusterSwitcher />
         </Header>
         <Content style={{ margin: 24, background: "#fff" }}>
           <Outlet />
@@ -90,5 +87,12 @@ const MainLayout: React.FC = () => {
     </Layout>
   );
 };
+
+// 用 Provider 包一层，不用你改 App.tsx
+const MainLayout: React.FC = () => (
+  <ClusterProvider>
+    <InnerLayout />
+  </ClusterProvider>
+);
 
 export default MainLayout;

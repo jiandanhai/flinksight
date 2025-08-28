@@ -41,10 +41,9 @@ public final class PageHelpers {
   }
 
   /**
-   * ✅ 新增重载（推荐）：
-   * - 对传入 sort 的字段做“通用映射”：snake_case→camelCase、@Column(name)→属性名、大小写不敏感；
-   * - 仅保留实体真实存在的属性（不存在的丢弃，避免 PropertyReferenceException）；
-   * - 若传入排序无效/为空：只使用实体上的 @DefaultSort；没有注解则不排序。
+   * 当 sort==null 时，按实体上的 @DefaultSort 生成；
+   * 同时对传入 sort 做字段映射（snake→camel、@Column 映射、大小写不敏感匹配）。
+   * ⚠️ 不做 ignoreCase / nullsLast，以避免 lower(timestamp/number) 之类的问题。
    */
   public static PageRequest pageRequest(int pageOneBased, int size, Sort incomingSort, Class<?> entityClass) {
     int p = toZeroBased(pageOneBased);
@@ -150,7 +149,7 @@ public final class PageHelpers {
     return null;
   }
 
-  /** 规范化传入的 Sort：仅保留能映射到实体属性的字段；其余丢弃 */
+  /** 规范化传入的 Sort：仅保留能映射到实体属性的字段；其余丢弃（不做 ignoreCase/nullsLast） */
   private static Sort normalizeSort(Sort sort, Class<?> entityClass) {
     if (sort == null || sort.isUnsorted() || entityClass == null) return sort;
 
@@ -161,42 +160,37 @@ public final class PageHelpers {
       String raw = o.getProperty();
       String prop = mapToProperty(meta, raw);
       if (prop != null) {
-        normalized.add(new Sort.Order(o.getDirection(), prop).ignoreCase().nullsLast());
+        normalized.add(new Sort.Order(o.getDirection(), prop));
       }
     }
 
     return normalized.isEmpty() ? Sort.unsorted() : Sort.by(normalized);
   }
 
-  /** 读取实体上的 @DefaultSort 注解；无注解或无有效字段则返回 unsorted */
+  /** 读取实体上的 @DefaultSort 注解；无注解或无有效字段则返回 unsorted（不做 ignoreCase/nullsLast） */
   private static Sort defaultSortOf(Class<?> entityClass) {
     if (entityClass == null) return Sort.unsorted();
     DefaultSort ds = entityClass.getAnnotation(DefaultSort.class);
     if (ds == null || ds.fields().length == 0) return Sort.unsorted();
 
-    // 仅根据注解构造（不做任何字段名硬编码推断）
     List<Sort.Order> orders = new ArrayList<>();
     EntityMeta meta = collectEntityMeta(entityClass);
     for (String f : ds.fields()) {
       if (f == null || f.isBlank()) continue;
-      // 注解里必须写属性名；这里再校验一遍是否存在属性
       String prop = mapToProperty(meta, f.trim());
       if (prop != null) {
-        orders.add(new Sort.Order(ds.direction(), prop).ignoreCase().nullsLast());
+        orders.add(new Sort.Order(ds.direction(), prop));
       }
     }
     return orders.isEmpty() ? Sort.unsorted() : Sort.by(orders);
   }
 
-  // -------------------- 可选：从字符串构建 Sort（不做任何别名/硬编码） --------------------
+  // -------------------- 可选：从字符串构建 Sort（最终仍会在 pageRequest(..., entityClass) 中映射） --------------------
 
-  /**
-   * 可用于 Controller：把 ?sort=xxx&order=ASC|DESC 转为 Sort。
-   * 注意：本方法不做任何别名/推断；最终映射与校验在 pageRequest(..., entityClass) 中完成。
-   */
+  /** Controller 用：?sort=xxx&order=ASC|DESC → Sort（不做 ignoreCase/nullsLast） */
   public static Sort buildSort(String sortField, String order) {
     if (sortField == null || sortField.isBlank()) return Sort.unsorted();
     Sort.Direction dir = "ASC".equalsIgnoreCase(order) ? Sort.Direction.ASC : Sort.Direction.DESC;
-    return Sort.by(new Sort.Order(dir, sortField.trim()).ignoreCase().nullsLast());
+    return Sort.by(new Sort.Order(dir, sortField.trim()));
   }
 }

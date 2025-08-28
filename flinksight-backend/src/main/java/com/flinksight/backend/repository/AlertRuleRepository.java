@@ -4,6 +4,8 @@ import com.flinksight.backend.domain.AlertRule;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -28,5 +30,20 @@ public interface AlertRuleRepository extends JpaRepository<AlertRule, Long>, Sof
     Page<AlertRule> findAllByTenantIdAndEnableAndIsDeleted(Long tenantId, Integer enable, Integer isDeleted, Pageable pageable);
 
     Page<AlertRule> findAllByTenantIdAndClusterIdAndEnableAndIsDeleted(Long tenantId, Long clusterId, Integer enable, Integer isDeleted, Pageable pageable);
+
+
+    @Query("""
+  SELECT r FROM AlertRule r
+   WHERE r.isDeleted = 0
+     AND r.tenantId = :tenantId
+     AND (:clusterId IS NULL OR r.clusterId = :clusterId)
+     AND (:enable   IS NULL OR r.enable    = :enable)
+     AND (:kw IS NULL OR r.name LIKE CONCAT('%', :kw, '%') OR r.metricKey LIKE CONCAT('%', :kw, '%'))
+""")
+    Page<AlertRule> pageQuery(@Param("tenantId") Long tenantId,
+                              @Param("clusterId") Long clusterId,
+                              @Param("enable") Integer enable,
+                              @Param("kw") String keyword,
+                              Pageable pageable);
 
 }
