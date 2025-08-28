@@ -4,7 +4,7 @@ import { Button, Card, Col, Row, Tabs, message, Tooltip } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import type { TabsProps } from 'antd';
-import { getCluster, getNodes } from '@/api/modules';
+import { getCluster, getNodes, getNodeHealth_2 } from '@/api/modules';
 import { useUser } from '@/store/user';
 import NodeList from './NodeList';
 import NodeStatusPanel from './NodeStatusPanel';
@@ -12,21 +12,21 @@ import ExpandNodeModal from './ExpandNodeModal';
 
 type Health = { healthy: number; warning: number; error: number };
 
-/** —— 色板（与 antd 体系协调，同时考虑色弱可区分） —— */
+/** —— 色板 —— */
 const COLORS = {
   healthy: { solid: '#52c41a', g1: '#52c41a', g2: '#73d13d' },
   warning: { solid: '#faad14', g1: '#faad14', g2: '#ffc53d' },
   error:   { solid: '#ff4d4f', g1: '#ff4d4f', g2: '#ff7875' },
 };
 
-/** 权限工具：优先 perms，再回退到角色 */
+/** 权限：优先 perms，再回退角色 */
 function hasPerm(userInfo: any, permCode: string, roleFallback: string[] = ['admin', 'ops']) {
   const role = String(userInfo?.role || userInfo?.roleCode || '').toLowerCase();
   const perms: string[] = Array.isArray(userInfo?.perms) ? userInfo!.perms : [];
   return (perms?.includes(permCode)) || roleFallback.includes(role);
 }
 
-/** 将极坐标转笛卡尔 / 生成圆弧 path */
+/** 圆弧工具 */
 function polar(cx: number, cy: number, r: number, angle: number) {
   const rad = (angle - 90) * (Math.PI / 180);
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
@@ -38,7 +38,7 @@ function arcPath(cx: number, cy: number, r: number, startDeg: number, endDeg: nu
   return `M ${s.x} ${s.y} A ${r} ${r} 0 ${largeArc} 0 ${e.x} ${e.y}`;
 }
 
-/** —— 分段环形图（可与图例联动高亮） —— */
+/** —— 分段环形图 —— */
 const Donut: React.FC<{
   healthy: number; warning: number; error: number;
   size?: number; thickness?: number;
@@ -104,17 +104,44 @@ const Donut: React.FC<{
   );
 };
 
-/** 将节点行聚合为 {healthy, warning, error} */
+/** 统一统计：只按 health 聚合（避免混淆），无则记作 error */
 function toBuckets(rows: any[]): Health {
   let healthy = 0, warning = 0, error = 0;
-  const norm = (v: any) => String(v ?? '').trim().toLowerCase();
-  rows.forEach((r) => {
-    const hv = norm(r?.health), sv = norm(r?.status);
-    if (hv) { if (['healthy','ok','online','健康'].includes(hv)) healthy++; else if (['warning','warn','degraded','预警'].includes(hv)) warning++; else error++; return; }
-    if (sv) { if (['healthy','ok','online'].includes(sv)) healthy++; else if (['warning','warn','degraded'].includes(sv)) warning++; else error++; return; }
-    if (r?.enabled === true || Number(r?.status) === 1) healthy++; else error++;
+  rows.forEach(r => {
+    const hv = String(r?.health ?? '').trim().toUpperCase();
+    if      (hv === 'HEALTHY' || hv === 'ONLINE' || hv === 'OK') healthy++;
+    else if (hv === 'WARNING' || hv === 'DEGRADED')               warning++;
+    else                                                          error++;
   });
   return { healthy, warning, error };
+}
+
+/** 从分页/列表响应中解出 rows */
+function pickRows(payload: any) {
+  return (Array.isArray(payload?.data)    && payload.data) ||
+         (Array.isArray(payload?.records) && payload.records) ||
+         (Array.isArray(payload?.list)    && payload.list) ||
+         (Array.isArray(payload) ? payload : []);
+}
+
+/** —— 给节点“补齐最新健康 + 对齐字段名(role)” —— */
+async function attachLatestHealth(list: any[]) {
+  if (!Array.isArray(list) || list.length === 0) return [];
+  const enriched = await Promise.all(
+    list.map(async (n: any) => {
+      try {
+        const resp = await getNodeHealth_2({ nodeId: Number(n.id) }, { page: 1, size: 1 });
+        const p = resp as any;
+        const pr = p?.data?.data ?? p?.data ?? p;
+        const recs = pickRows(pr);
+        const latest = Array.isArray(recs) && recs[0]?.healthStatus ? String(recs[0].healthStatus).toUpperCase() : undefined;
+        return { ...n, role: n.role ?? n.type, health: latest ?? n.health };
+      } catch {
+        return { ...n, role: n.role ?? n.type };
+      }
+    })
+  );
+  return enriched;
 }
 
 const ClusterDetail: React.FC = () => {
@@ -136,17 +163,12 @@ const ClusterDetail: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [legendHover, setLegendHover] = useState<null | 'healthy' | 'warning' | 'error'>(null);
 
-  // 🔗 参数同步（仅在本页生效，不改你的 ClusterSwitcher）
-  // 目标：如果只有 clusterId 或只有 detail，就把另一项也自动补齐，保持双兼容，且不会死循环。
+  // 🔗 同步 detail/clusterId（不改你的 ClusterSwitcher）
   useEffect(() => {
     const next = new URLSearchParams(sp);
     let changed = false;
-    if (clusterIdParam && clusterIdParam !== detailParam) {
-      next.set('detail', clusterIdParam); changed = true;
-    }
-    if (!clusterIdParam && detailParam) {
-      next.set('clusterId', detailParam); changed = true;
-    }
+    if (clusterIdParam && clusterIdParam !== detailParam) { next.set('detail', clusterIdParam); changed = true; }
+    if (!clusterIdParam && detailParam) { next.set('clusterId', detailParam); changed = true; }
     if (changed) setSp(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clusterIdParam, detailParam]);
@@ -163,22 +185,21 @@ const ClusterDetail: React.FC = () => {
     } finally { setLoading(false); }
   };
 
-  // 健康分布（按节点列表聚合）
+  // 健康分布（**用最新健康补水后**再聚合）
   const fetchHealth = async () => {
     if (!Number.isFinite(id)) return;
     try {
       const resp = await getNodes({ clusterId: id as number }, { page: 1, size: 200 });
       const payload = (resp as any)?.data?.data ?? (resp as any)?.data ?? resp;
-      const rows =
-        (Array.isArray(payload?.data)    && payload.data) ||
-        (Array.isArray(payload?.records) && payload.records) ||
-        (Array.isArray(payload?.list)    && payload.list) ||
-        (Array.isArray(payload) ? payload : []);
-      setHealth(toBuckets(Array.isArray(rows) ? rows : []));
-    } catch { setHealth({ healthy: 0, warning: 0, error: 0 }); }
+      const rawRows = pickRows(payload);
+      const rows = await attachLatestHealth(rawRows);
+      setHealth(toBuckets(rows));
+    } catch {
+      setHealth({ healthy: 0, warning: 0, error: 0 });
+    }
   };
 
-  useEffect(() => { fetchDetail(); fetchHealth(); }, [id]);          // id 变更自动刷新
+  useEffect(() => { fetchDetail(); fetchHealth(); }, [id]);
   useEffect(() => { if (activeTab === 'status') fetchHealth(); }, [activeTab]);
 
   const basicInfo = useMemo(
@@ -224,7 +245,7 @@ const ClusterDetail: React.FC = () => {
     { key: 'status', label: '节点状态', children: <NodeStatusPanel clusterId={id as number} onHealthChange={(h) => setHealth(h)} /> },
   ];
 
-  // 扩容权限与弹窗（不动你的切换器 & 其它页面）
+  // 扩容权限与弹窗
   const canExpand = hasPerm(useUser().userInfo, 'CLUSTER_EDIT', ['admin','ops']);
   const [expandOpen, setExpandOpen] = useState(false);
 

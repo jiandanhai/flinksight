@@ -7,8 +7,8 @@ import { Button, Input, message, Modal, Space, Table, Tag, Tooltip } from "antd"
 import type { NodeDTO } from "@/api/dto";
 import NodeDetailModal from "./NodeDetailModal";
 import { useUser } from "@/store/user";
-// import { listNodes, deleteNode } from "@/api/modules";                      // [KEEP]
-import { getNodes, deleteNode } from "@/api/modules";                          // [FIX]
+// ⛳ 改：统一使用 getNodes（与 NodeStatusPanel 一致）
+import { getNodes, deleteNode } from "@/api/modules";
 
 const { Search } = Input;
 
@@ -29,41 +29,39 @@ const NodeList: React.FC<Props> = ({ clusterId }) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [detailId, setDetailId] = useState<number | null>(null);
 
+  function unpack(resp: any) {
+    const payload = resp?.data?.data ?? resp?.data ?? resp;
+    const rows =
+      (Array.isArray(payload?.data)    && payload.data) ||
+      (Array.isArray(payload?.records) && payload.records) ||
+      (Array.isArray(payload?.list)    && payload.list) ||
+      (Array.isArray(payload) ? payload : []);
+    const totalNum =
+      payload?.total ?? payload?.totalElements ?? payload?.totalCount ?? (Array.isArray(rows) ? rows.length : 0);
+    return { rows: Array.isArray(rows) ? rows : [], total: Number(totalNum) || 0 };
+  }
+
   const fetch = async () => {
-    if (!clusterId || !Number.isFinite(clusterId)) return;
+    if (!clusterId) return;
     setLoading(true);
     try {
-      // ✅ OpenAPI：对象入参 + query
+      // ⛳ 改：先尝试 1-based；若返回空且 total=0，再回退 0-based
       const q: any = { page, size };
       if (query.keyword) q.keyword = query.keyword;
 
-      let res = await getNodes({ clusterId }, q);                 // /api/cluster/nodes/:clusterId
-      let payload = (res as any)?.data?.data ?? (res as any)?.data ?? res;
-      let rows =
-        (Array.isArray(payload?.data)    && payload.data) ||
-        (Array.isArray(payload?.records) && payload.records) ||
-        (Array.isArray(payload?.list)    && payload.list) ||
-        (Array.isArray(payload) ? payload : []);
-      let totalNum =
-        payload?.total ?? payload?.totalElements ?? payload?.totalCount ?? (Array.isArray(rows) ? rows.length : 0);
+      let res = await getNodes({ clusterId }, q);
+      let { rows, total } = unpack(res);
 
-      // 若为空，尝试 0-based（少数后端）
-      if ((!rows || rows.length === 0) && Number(totalNum) === 0) {
+      if (!rows.length && total === 0) {
         const q0: any = { page: Math.max(0, page - 1), size };
         if (query.keyword) q0.keyword = query.keyword;
         res = await getNodes({ clusterId }, q0);
-        payload = (res as any)?.data?.data ?? (res as any)?.data ?? res;
-        rows =
-          (Array.isArray(payload?.data)    && payload.data) ||
-          (Array.isArray(payload?.records) && payload.records) ||
-          (Array.isArray(payload?.list)    && payload.list) ||
-          (Array.isArray(payload) ? payload : []);
-        totalNum =
-          payload?.total ?? payload?.totalElements ?? payload?.totalCount ?? (Array.isArray(rows) ? rows.length : 0);
+        const r2 = unpack(res);
+        rows = r2.rows; total = r2.total;
       }
 
-      setList(Array.isArray(rows) ? (rows as NodeDTO[]) : []);
-      setTotal(Number(totalNum) || 0);
+      setList(rows as any);
+      setTotal(total);
     } catch (e: any) {
       console.error("[NodeList] fetch error:", e);
       message.error(e?.message || "加载失败");
@@ -94,6 +92,15 @@ const NodeList: React.FC<Props> = ({ clusterId }) => {
     });
   }
 
+  // 只认 health 字段；没有就显示 -
+  const renderHealth = (v: unknown) => {
+    const s = String(v ?? "").toUpperCase();
+    if (!s) return <Tag>-</Tag>;
+    if (s === "HEALTHY")  return <Tag color="green">健康</Tag>;
+    if (s === "WARNING")  return <Tag color="orange">预警</Tag>;
+    return <Tag color="red">异常</Tag>; // 其它一律按“异常”
+  };
+
   return (
     <div>
       <div className="flex justify-between mb-4">
@@ -105,7 +112,7 @@ const NodeList: React.FC<Props> = ({ clusterId }) => {
           style={{ width: 320 }}
         />
         <Space>
-          {/* 批量操作逻辑保留 // [KEEP] */}
+          {/* 批量启停入口占位 */}
         </Space>
       </div>
 
@@ -135,19 +142,10 @@ const NodeList: React.FC<Props> = ({ clusterId }) => {
             ),
           },
           { title: "IP", dataIndex: "ip" },
-          { title: "角色", dataIndex: "type" }, // [KEEP] 你的表是 type(worker/nm)
-          {
-            title: "健康",
-            dataIndex: "health",
-            render: (v: string) => {
-              const hv = String(v || "").toLowerCase();
-              return (
-                <Tag color={hv === "healthy" ? "green" : hv === "warning" ? "orange" : "red"}>
-                  {hv === "healthy" ? "健康" : hv === "warning" ? "预警" : "异常"}
-                </Tag>
-              );
-            },
-          },
+          // 你的表是 type(worker/nm)，之前写的是 role；保持你当前字段
+          { title: "角色", dataIndex: "type" },
+          // ⛳ 改：严格只按 health 字段展示
+          { title: "健康", dataIndex: "health", render: renderHealth },
           {
             title: "状态",
             dataIndex: "status",
