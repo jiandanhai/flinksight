@@ -5,13 +5,11 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum PermissionTypeEnum {
-    MENU("MENU", "菜单"),
-    BUTTON("BUTTON", "按钮"),
-    API("API", "接口");
+public enum ClusterType {
+    YARN("YARN", "Yarn集群"),
+    K8S("K8S", "Kubernetes集群"),
+    STANDALONE("Standalone", "独立部署");
 
     private final String code;
     private final String desc;
-
-
 }

@@ -1,4 +1,4 @@
-package com.flinksight.backend.repository.projection;
+package com.flinksight.common.service.projection;
 
 // 可放在 common 模块：com.flinksight.common.projection
 public interface KeyCountView {

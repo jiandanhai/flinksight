@@ -5,10 +5,11 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum UserStatusEnum {
-    ENABLED(1, "启用"),
-    DISABLED(0, "禁用");
+public enum TicketStatus {
+    UNRESOLVED(0, "未处理"),
+    PROCESSING(1, "处理中"),
+    CLOSED(2, "已关闭");
 
-    private final Integer code;
+    private final int code;
     private final String desc;
 }

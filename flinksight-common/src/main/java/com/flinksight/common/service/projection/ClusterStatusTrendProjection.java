@@ -1,4 +1,4 @@
-package com.flinksight.backend.repository.projection;
+package com.flinksight.common.service.projection;
 
 public interface ClusterStatusTrendProjection {
 

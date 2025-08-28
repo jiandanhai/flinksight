@@ -3,7 +3,6 @@ package com.flinksight.backend.controller;
 import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.NodeDTO;
 import com.flinksight.common.dto.NodeHealthResponseDTO;
-import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NodeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * 节点管理
@@ -42,13 +42,22 @@ public class NodeController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "", description = "",operationId = "listNodes")
-    @GetMapping("/list")
-    public ApiResponse<PageResult<NodeDTO>> list(
-            @RequestParam Long clusterId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.list(clusterId,page,size));
+    /** 环图统计（与列表同口径） */
+    @Operation(summary = "环图统计（与列表同口径）”）", description = "",operationId = "healthBuckets")
+    @GetMapping("/nodes/{clusterId}/health-buckets")
+    public ApiResponse<Map<String, Long>> healthBuckets(@PathVariable Long clusterId) {
+        return ApiResponse.ok(service.healthBuckets(clusterId));
+    }
+
+    /** 节点健康历史（节点详情页/弹窗） */
+    @Operation(summary = "节点健康历史（节点详情页/弹窗））”）", description = "",operationId = "nodeHealthHistory")
+    @GetMapping("/nodes/health/{nodeId}")
+    public ApiResponse<Map<String, Object>> nodeHealthHistory(@PathVariable Long nodeId,
+                                                    @RequestParam String from,
+                                                    @RequestParam String to,
+                                                    @RequestParam(defaultValue = "1") int page,
+                                                    @RequestParam(defaultValue = "100") int size) {
+        return ApiResponse.ok(service.nodeHealthHistory(nodeId, LocalDateTime.parse(from), LocalDateTime.parse(to), page, size));
     }
 
     @Operation(summary = "", description = "",operationId = "updateNode")
@@ -58,13 +67,13 @@ public class NodeController {
     }
 
 
-    @Operation(summary = "查询节点健康（时间区间）",operationId = "getNodeHealth")
+    @Operation(summary = "查询节点健康（时间区间）",operationId = "getNodeHealthSeries")
     @GetMapping("/{nodeId}/health")
-    public ApiResponse<NodeHealthResponseDTO> getNodeHealth(
+    public ApiResponse<NodeHealthResponseDTO> getNodeHealthSeries(
             @PathVariable Long nodeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
-        return ApiResponse.ok(service.getNodeHealth(nodeId, from, to));
+        return ApiResponse.ok(service.getNodeHealthSeries(nodeId, from, to));
     }
 
     @Operation(summary = "", description = "",operationId = "deleteNode")

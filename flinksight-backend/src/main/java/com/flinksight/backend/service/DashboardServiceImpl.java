@@ -4,14 +4,14 @@ import com.flinksight.backend.domain.Alert;
 import com.flinksight.backend.domain.Cluster;
 import com.flinksight.backend.domain.ClusterStatusHistory;
 import com.flinksight.backend.repository.*;
-import com.flinksight.backend.repository.projection.ClusterStatusTrendProjection;
-import com.flinksight.backend.repository.projection.KeyCountMapper;
-import com.flinksight.backend.repository.projection.KeyCountView;
+import com.flinksight.common.service.projection.ClusterStatusTrendProjection;
+import com.flinksight.common.service.projection.KeyCountMapper;
+import com.flinksight.common.service.projection.KeyCountView;
 import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.common.dto.*;
-import com.flinksight.common.enums.AlertLevelEnum;
-import com.flinksight.common.enums.ClusterHealthStatusEnum;
-import com.flinksight.common.enums.JobStatusEnum;
+import com.flinksight.common.enums.AlertLevel;
+import com.flinksight.common.enums.ClusterHealthStatus;
+import com.flinksight.common.enums.JobStatus;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.DashboardService;
 import com.flinksight.common.utils.DateUtil;
@@ -59,12 +59,12 @@ public class DashboardServiceImpl implements DashboardService {
         int jobCount = jobRepository.countByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(), 0);
         int alertCount = alertRepository.countByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(), 0);
         int activeJobCount = jobRepository.countByTenantIdAndStatusAndIsDeleted(
-                SecurityUtil.getCurrentTenantId(), JobStatusEnum.RUNNING.getCode(), 0);
+                SecurityUtil.getCurrentTenantId(), JobStatus.RUNNING.getCode(), 0);
         long userCount = userRepository.countByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(),0);
 
         // 业务自定义：如健康度为健康集群占比
         int healthyCount = clusterRepository.countByTenantIdAndStatusAndIsDeleted(
-                SecurityUtil.getCurrentTenantId(), ClusterHealthStatusEnum.HEALTHY.getCode(), 0);
+                SecurityUtil.getCurrentTenantId(), ClusterHealthStatus.HEALTHY.getCode(), 0);
         int healthScore = clusterCount > 0 ? healthyCount * 100 / clusterCount : 100;
 
         String statTime = java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern(DateUtil.DEFAULT_FORMAT));
@@ -88,11 +88,11 @@ public class DashboardServiceImpl implements DashboardService {
     @Transactional(readOnly = true)
     public HealthDistributionDTO getHealthDistribution() {
         int healthyCount = clusterRepository.countByTenantIdAndStatusAndIsDeleted(
-                SecurityUtil.getCurrentTenantId(), ClusterHealthStatusEnum.HEALTHY.getCode(), 0);
+                SecurityUtil.getCurrentTenantId(), ClusterHealthStatus.HEALTHY.getCode(), 0);
         int warningCount = clusterRepository.countByTenantIdAndStatusAndIsDeleted(
-                SecurityUtil.getCurrentTenantId(), ClusterHealthStatusEnum.WARNING.getCode(), 0);
+                SecurityUtil.getCurrentTenantId(), ClusterHealthStatus.WARNING.getCode(), 0);
         int errorCount = clusterRepository.countByTenantIdAndStatusAndIsDeleted(
-                SecurityUtil.getCurrentTenantId(), ClusterHealthStatusEnum.ERROR.getCode(), 0);
+                SecurityUtil.getCurrentTenantId(), ClusterHealthStatus.ERROR.getCode(), 0);
 
         String statTime = java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
@@ -127,8 +127,8 @@ public class DashboardServiceImpl implements DashboardService {
         for (LocalDate d : days) {
             List<Alert> day = byDay.getOrDefault(d, Collections.emptyList());
             long t = day.size();
-            long f = day.stream().filter(a -> a.getLevel() == AlertLevelEnum.HIGH.getCode()).count();
-            long w = day.stream().filter(a -> a.getLevel() == AlertLevelEnum.LOW.getCode()).count();
+            long f = day.stream().filter(a -> a.getLevel() == AlertLevel.HIGH.getCode()).count();
+            long w = day.stream().filter(a -> a.getLevel() == AlertLevel.LOW.getCode()).count();
 
             times.add(d.toString());
             total.add(t);
@@ -154,14 +154,14 @@ public class DashboardServiceImpl implements DashboardService {
         // 2. 组装JobFunnelDTO
         List<JobFunnelDTO> allStages = statList.stream()
                 .map(row -> JobFunnelDTO.builder()
-                        .stage((String) JobStatusEnum.labelOfCode(KeyCountMapper.asInt(row.getKey())))
+                        .stage((String) JobStatus.labelOfCode(KeyCountMapper.asInt(row.getKey())))
                         .count(((Number) row.getCnt()).intValue())
-                        .stageDesc(getStageDesc((String) JobStatusEnum.labelOfCode(KeyCountMapper.asInt(row.getKey()))))
+                        .stageDesc(getStageDesc((String) JobStatus.labelOfCode(KeyCountMapper.asInt(row.getKey()))))
                         .build())
                 .collect(Collectors.toList());
         log.info("#[dashboard Job funnel] allStages => {}", allStages.toString());
         // 3. 自定义排序
-        allStages.sort(Comparator.comparingInt(o -> JobStatusEnum.codeOfLabel(o.getStage())));
+        allStages.sort(Comparator.comparingInt(o -> JobStatus.codeOfLabel(o.getStage())));
 
         // 4. 计算转化率
         int prev = allStages.size() > 0 ? allStages.get(0).getCount() : 1;
@@ -187,8 +187,8 @@ public class DashboardServiceImpl implements DashboardService {
     public MonitorMetricsDTO getMonitorMetrics() {
         LocalDateTime now = LocalDateTime.now();
         long alertCount = alertRepository.countByTenantIdAndCreatedAtBetween(SecurityUtil.getCurrentTenantId(), now.minusDays(1), now);
-        long jobRunning = jobRepository.countByTenantIdAndStatusAndIsDeleted(SecurityUtil.getCurrentTenantId(), JobStatusEnum.RUNNING.getCode(),0);
-        long clusterHealthy = clusterRepository.countByTenantIdAndStatusAndIsDeleted(SecurityUtil.getCurrentTenantId(), ClusterHealthStatusEnum.HEALTHY.getCode(),0);
+        long jobRunning = jobRepository.countByTenantIdAndStatusAndIsDeleted(SecurityUtil.getCurrentTenantId(), JobStatus.RUNNING.getCode(),0);
+        long clusterHealthy = clusterRepository.countByTenantIdAndStatusAndIsDeleted(SecurityUtil.getCurrentTenantId(), ClusterHealthStatus.HEALTHY.getCode(),0);
         long userCount = userRepository.countByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(),0);
         return new MonitorMetricsDTO(alertCount, jobRunning, clusterHealthy, userCount);
     }
@@ -294,10 +294,10 @@ public class DashboardServiceImpl implements DashboardService {
     private String getStageDesc(String stage) {
         try {
             // 支持传入字符串code或枚举名
-            JobStatusEnum status = Arrays.stream(JobStatusEnum.values())
+            JobStatus status = Arrays.stream(JobStatus.values())
                     .filter(e -> e.name().equalsIgnoreCase(stage) || String.valueOf(e.getCode()).equals(stage))
                     .findFirst()
-                    .orElse(JobStatusEnum.UNKNOWN);
+                    .orElse(JobStatus.UNKNOWN);
             return status.getLabel();
         } catch (Exception e) {
             return "未知阶段";

@@ -4,6 +4,8 @@ import com.flinksight.backend.domain.NodeHealth;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -46,4 +48,18 @@ public interface NodeHealthRepository extends JpaRepository<NodeHealth, Long> {
 
     List<NodeHealth> findAllByTenantIdAndNodeIdAndCheckTimeBetweenOrderByCheckTime(
             Long tenantId, Long nodeId, LocalDateTime from, LocalDateTime to);
+
+
+    @Query("""
+       SELECT nh FROM NodeHealth nh
+       WHERE nh.tenantId = :tenantId AND nh.nodeId = :nodeId
+         AND nh.checkTime BETWEEN :from AND :to
+       ORDER BY nh.checkTime DESC
+    """)
+    Page<NodeHealth> pageHistory(@Param("tenantId") Long tenantId,
+                                 @Param("nodeId") Long nodeId,
+                                 @Param("from") LocalDateTime from,
+                                 @Param("to") LocalDateTime to,
+                                 Pageable pageable);
+
 }

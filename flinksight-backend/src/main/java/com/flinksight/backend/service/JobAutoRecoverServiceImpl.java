@@ -4,7 +4,7 @@ import com.flinksight.backend.domain.JobInstance;
 import com.flinksight.backend.mapper.JobInstanceStructMapper;
 import com.flinksight.backend.repository.JobInstanceRepository;
 import com.flinksight.common.dto.JobInstanceDTO;
-import com.flinksight.common.enums.JobStatusEnum;
+import com.flinksight.common.enums.JobStatus;
 import com.flinksight.common.service.JobAutoRecoverService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,10 +19,10 @@ public class JobAutoRecoverServiceImpl implements JobAutoRecoverService {
 
     @Override
     public void checkAndRestart(JobInstanceDTO jobInstanceDTO) {
-        if (JobStatusEnum.FAILED.getCode() == (jobInstanceDTO.getStatus())) {
+        if (JobStatus.FAILED.getCode() == (jobInstanceDTO.getStatus())) {
 
             JobInstance entity = jobInstanceStructMapper.toEntity(jobInstanceDTO);
-            entity.setStatus(JobStatusEnum.RESTARTING.getCode());
+            entity.setStatus(JobStatus.RESTARTING.getCode());
             repo.save(entity);
             // 调用Flink/Spark API重启任务
             // FlinkApiHelper.restartJob(job.getClusterId(), job.getId());

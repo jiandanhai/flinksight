@@ -6,6 +6,8 @@ import com.flinksight.common.dto.*;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ClusterService;
 import com.flinksight.common.service.MetricDashboardService;
+import com.flinksight.common.service.NodeService;
+import com.flinksight.common.service.projection.NodeListRow;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -13,8 +15,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +35,7 @@ import java.util.List;
 public class ClusterController {
 
     private final ClusterService clusterService;
+    private final NodeService nodeService;
     private final MetricDashboardService metricDashboardService;
 
     @Operation(summary = "新建集群", description = "Create new cluster",operationId = "createCluster")
@@ -100,14 +102,14 @@ public class ClusterController {
         return ApiResponse.ok(clusterService.batchAddNodes(req.getItems()));
     }
 
-    @Operation(summary = "按集群分页查询节点",operationId = "getNodes")
+    /** 节点列表（统一口径：row.health 即“最新健康”） */
+    @Operation(summary = "节点列表（统一口径：row.health 即“最新健康”）", description = "",operationId = "getNodes")
     @GetMapping("/nodes/{clusterId}")
-    public ApiResponse<PageResult<NodeDTO>> getNodes(
-            @PathVariable Long clusterId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return ApiResponse.ok(clusterService.getNodesByCluster(clusterId, page,size));
+    public ApiResponse<Page<NodeListRow>> getNodes(@PathVariable Long clusterId,
+                                                    @RequestParam(defaultValue = "1") int page,
+                                                    @RequestParam(defaultValue = "20") int size,
+                                                    @RequestParam(required = false) String keyword) {
+        return ApiResponse.ok(nodeService.pageNodesWithHealth(clusterId, keyword, page, size));
     }
 
 
@@ -137,13 +139,13 @@ public class ClusterController {
 
     /* --------------- Health / Metrics --------------- */
 
-    @Operation(summary = "查询节点健康（分页，按时间倒序）",operationId = "getNodeHealth")
+    @Operation(summary = "查询节点健康（分页，按时间倒序）",operationId = "listNodeHealthRecords")
     @GetMapping("/nodes/health/{nodeId}")
-    public ApiResponse<PageResult<NodeHealthDTO>> getNodeHealth(
+    public ApiResponse<PageResult<NodeHealthDTO>> listNodeHealthRecords(
             @PathVariable Long nodeId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(clusterService.getNodeHealth(nodeId, page, size));
+        return ApiResponse.ok(clusterService.listNodeHealthRecords(nodeId, page, size));
     }
 
     @Operation(summary = "获取集群监控指标（最近一次或区间聚合）",operationId = "getNodeMetric")

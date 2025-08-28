@@ -1,7 +1,7 @@
 package com.flinksight.backend.security;
 
 import com.flinksight.backend.domain.User;
-import com.flinksight.common.enums.UserStatusEnum;
+import com.flinksight.common.enums.UserStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,7 +32,7 @@ public class SecurityUser implements UserDetails {
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
-    @Override public boolean isEnabled() { return (UserStatusEnum.ENABLED.getCode() == user.getStatus()); }
+    @Override public boolean isEnabled() { return (UserStatus.ENABLED.getCode() == user.getStatus()); }
 
     public Long getTenantId() { return user.getTenantId(); }
     public Long getId() { return user.getId(); }

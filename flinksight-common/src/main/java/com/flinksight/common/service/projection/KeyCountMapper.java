@@ -1,4 +1,4 @@
-package com.flinksight.backend.repository.projection;
+package com.flinksight.common.service.projection;
 
 import java.util.List;
 import java.util.Objects;

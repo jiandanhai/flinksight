@@ -4,7 +4,7 @@ import { Button, Card, Col, Row, Tabs, message, Tooltip } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import type { TabsProps } from 'antd';
-import { getCluster, getNodes, getNodeHealth_2 } from '@/api/modules';
+import { getCluster, getNodes } from '@/api/modules';
 import { useUser } from '@/store/user';
 import NodeList from './NodeList';
 import NodeStatusPanel from './NodeStatusPanel';
@@ -24,6 +24,68 @@ function hasPerm(userInfo: any, permCode: string, roleFallback: string[] = ['adm
   const role = String(userInfo?.role || userInfo?.roleCode || '').toLowerCase();
   const perms: string[] = Array.isArray(userInfo?.perms) ? userInfo!.perms : [];
   return (perms?.includes(permCode)) || roleFallback.includes(role);
+}
+
+/** —— 通用工具 —— */
+function unpackPageLike(resp: any) {
+  const root = resp?.data ?? resp;
+  const outer = root?.data !== undefined ? root.data : root;
+  const keys = ['data','records','list','rows','items','content','result'];
+
+  // 1) 直接就是数组
+  if (Array.isArray(outer)) {
+    return { list: outer, total: outer.length };
+  }
+
+  // 2) 命中一级键
+  for (const k of keys) {
+    const v = outer?.[k];
+    if (Array.isArray(v)) {
+      const total = Number(
+        outer?.total ?? outer?.totalElements ?? outer?.totalCount ?? outer?.count ?? v.length
+      ) || v.length;
+      return { list: v, total };
+    }
+  }
+
+  // 3) 命中 outer.data.<键>
+  const d = outer?.data;
+  if (d && typeof d === 'object') {
+    for (const k of keys) {
+      const v = d?.[k];
+      if (Array.isArray(v)) {
+        const total = Number(
+          d?.total ?? d?.totalElements ?? d?.totalCount ?? d?.count ?? v.length
+        ) || v.length;
+        return { list: v, total };
+      }
+    }
+  }
+
+  // 4) 兜底：挑第一个数组字段
+  if (outer && typeof outer === 'object') {
+    for (const [_, v] of Object.entries(outer)) {
+      if (Array.isArray(v)) {
+        const total = Number(
+          outer?.total ?? outer?.totalElements ?? outer?.totalCount ?? outer?.count ?? v.length
+        ) || v.length;
+        return { list: v as any[], total };
+      }
+    }
+  }
+  return { list: [] as any[], total: 0 };
+}
+
+/** 严格：只按 row.health 聚合（HEALTHY/ WARNING / 其它→异常） */
+function toBucketsStrict(rows: any[]): Health {
+  let healthy = 0, warning = 0, error = 0;
+  rows.forEach(r => {
+    const hv = String(r?.health ?? '').trim().toUpperCase();
+    if      (hv === 'HEALTHY') healthy++;
+    else if (hv === 'WARNING') warning++;
+    else                       error++;
+  });
+  return { healthy, warning, error };
 }
 
 /** 圆弧工具 */
@@ -104,46 +166,6 @@ const Donut: React.FC<{
   );
 };
 
-/** 统一统计：只按 health 聚合（避免混淆），无则记作 error */
-function toBuckets(rows: any[]): Health {
-  let healthy = 0, warning = 0, error = 0;
-  rows.forEach(r => {
-    const hv = String(r?.health ?? '').trim().toUpperCase();
-    if      (hv === 'HEALTHY' || hv === 'ONLINE' || hv === 'OK') healthy++;
-    else if (hv === 'WARNING' || hv === 'DEGRADED')               warning++;
-    else                                                          error++;
-  });
-  return { healthy, warning, error };
-}
-
-/** 从分页/列表响应中解出 rows */
-function pickRows(payload: any) {
-  return (Array.isArray(payload?.data)    && payload.data) ||
-         (Array.isArray(payload?.records) && payload.records) ||
-         (Array.isArray(payload?.list)    && payload.list) ||
-         (Array.isArray(payload) ? payload : []);
-}
-
-/** —— 给节点“补齐最新健康 + 对齐字段名(role)” —— */
-async function attachLatestHealth(list: any[]) {
-  if (!Array.isArray(list) || list.length === 0) return [];
-  const enriched = await Promise.all(
-    list.map(async (n: any) => {
-      try {
-        const resp = await getNodeHealth_2({ nodeId: Number(n.id) }, { page: 1, size: 1 });
-        const p = resp as any;
-        const pr = p?.data?.data ?? p?.data ?? p;
-        const recs = pickRows(pr);
-        const latest = Array.isArray(recs) && recs[0]?.healthStatus ? String(recs[0].healthStatus).toUpperCase() : undefined;
-        return { ...n, role: n.role ?? n.type, health: latest ?? n.health };
-      } catch {
-        return { ...n, role: n.role ?? n.type };
-      }
-    })
-  );
-  return enriched;
-}
-
 const ClusterDetail: React.FC = () => {
   const [sp, setSp] = useSearchParams();
   const navigate = useNavigate();
@@ -185,15 +207,13 @@ const ClusterDetail: React.FC = () => {
     } finally { setLoading(false); }
   };
 
-  // 健康分布（**用最新健康补水后**再聚合）
+  // 健康分布（直接用 row.health）
   const fetchHealth = async () => {
     if (!Number.isFinite(id)) return;
     try {
-      const resp = await getNodes({ clusterId: id as number }, { page: 1, size: 200 });
-      const payload = (resp as any)?.data?.data ?? (resp as any)?.data ?? resp;
-      const rawRows = pickRows(payload);
-      const rows = await attachLatestHealth(rawRows);
-      setHealth(toBuckets(rows));
+      const resp = await getNodes({ clusterId: id as number }, { page: 0, size: 200 }); // 后端0基
+      const { list } = unpackPageLike(resp);
+      setHealth(toBucketsStrict(list));
     } catch {
       setHealth({ healthy: 0, warning: 0, error: 0 });
     }

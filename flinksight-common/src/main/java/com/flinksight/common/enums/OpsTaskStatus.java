@@ -10,7 +10,7 @@ import java.util.Map;
 /** 运维任务状态机（与表 ops_task.status 对齐） */
 @Getter
 @AllArgsConstructor
-public enum OpsTaskStatusEnum {
+public enum OpsTaskStatus {
   PENDING("0","待执行"),    // 待执行（新建）
   RUNNING("1","执行中"),    // 执行中（已开始）
   SUCCESS("2","成功结束"),    // 成功结束
@@ -20,27 +20,27 @@ public enum OpsTaskStatusEnum {
   private final String code;
   private final String desc;
 
-  private static final Map<String, OpsTaskStatusEnum> BY_CODE;
+  private static final Map<String, OpsTaskStatus> BY_CODE;
   static {
-    Map<String, OpsTaskStatusEnum> m = new HashMap<>();
-    for (OpsTaskStatusEnum e : values()) m.put(e.code, e);
+    Map<String, OpsTaskStatus> m = new HashMap<>();
+    for (OpsTaskStatus e : values()) m.put(e.code, e);
     BY_CODE = Collections.unmodifiableMap(m);
   }
 
   /** 严格：码不存在抛异常 */
-  public static OpsTaskStatusEnum ofCode(String code) {
-    OpsTaskStatusEnum e = BY_CODE.get(code);
+  public static OpsTaskStatus ofCode(String code) {
+    OpsTaskStatus e = BY_CODE.get(code);
     if (e == null) throw new IllegalArgumentException("Unknown OpsTaskStatusEnum code: " + code);
     return e;
   }
 
   /** 可空：码不存在返回 null */
-  public static OpsTaskStatusEnum ofCodeOrNull(String code) {
+  public static OpsTaskStatus ofCodeOrNull(String code) {
     return BY_CODE.get(code);
   }
 
   /** 带默认：码不存在返回默认值 */
-  public static OpsTaskStatusEnum ofCodeOrDefault(String code, OpsTaskStatusEnum def) {
+  public static OpsTaskStatus ofCodeOrDefault(String code, OpsTaskStatus def) {
     return BY_CODE.getOrDefault(code, def);
   }
 }

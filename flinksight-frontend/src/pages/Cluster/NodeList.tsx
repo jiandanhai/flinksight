@@ -2,18 +2,56 @@
  * @file 节点列表（组件版）
  * @desc 传入 clusterId，自行拉取该集群的节点；包含明细弹窗与批量操作
  */
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button, Input, message, Modal, Space, Table, Tag, Tooltip } from "antd";
 import type { NodeDTO } from "@/api/dto";
 import NodeDetailModal from "./NodeDetailModal";
 import { useUser } from "@/store/user";
-// ⛳ 改：统一使用 getNodes（与 NodeStatusPanel 一致）
 import { getNodes, deleteNode } from "@/api/modules";
 
 const { Search } = Input;
 
 interface Props {
   clusterId: number;
+}
+
+const ui2apiPage = (uiPage: number) => Math.max(0, Number(uiPage) - 1);
+
+function unpackPageLike(resp: any) {
+  const root = resp?.data ?? resp;
+  const outer = root?.data !== undefined ? root.data : root;
+  const keys = ['data','records','list','rows','items','content','result'];
+
+  if (Array.isArray(outer)) return { rows: outer, total: outer.length };
+
+  for (const k of keys) {
+    const v = outer?.[k];
+    if (Array.isArray(v)) {
+      const total = Number(outer?.total ?? outer?.totalElements ?? outer?.totalCount ?? outer?.count ?? v.length) || v.length;
+      return { rows: v, total };
+    }
+  }
+
+  const d = outer?.data;
+  if (d && typeof d === 'object') {
+    for (const k of keys) {
+      const v = d?.[k];
+      if (Array.isArray(v)) {
+        const total = Number(d?.total ?? d?.totalElements ?? d?.totalCount ?? d?.count ?? v.length) || v.length;
+        return { rows: v, total };
+      }
+    }
+  }
+
+  if (outer && typeof outer === 'object') {
+    for (const [, v] of Object.entries(outer)) {
+      if (Array.isArray(v)) {
+        const total = Number(outer?.total ?? outer?.totalElements ?? outer?.totalCount ?? outer?.count ?? (v as any[]).length) || (v as any[]).length;
+        return { rows: v as any[], total };
+      }
+    }
+  }
+  return { rows: [] as any[], total: 0 };
 }
 
 const NodeList: React.FC<Props> = ({ clusterId }) => {
@@ -26,49 +64,33 @@ const NodeList: React.FC<Props> = ({ clusterId }) => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState<{ keyword?: string }>({});
-  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
-  const [detailId, setDetailId] = useState<number | null>(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<(number | string)[]>([]);
+  const [detailId, setDetailId] = useState<number | string | null>(null);
 
-  function unpack(resp: any) {
-    const payload = resp?.data?.data ?? resp?.data ?? resp;
-    const rows =
-      (Array.isArray(payload?.data)    && payload.data) ||
-      (Array.isArray(payload?.records) && payload.records) ||
-      (Array.isArray(payload?.list)    && payload.list) ||
-      (Array.isArray(payload) ? payload : []);
-    const totalNum =
-      payload?.total ?? payload?.totalElements ?? payload?.totalCount ?? (Array.isArray(rows) ? rows.length : 0);
-    return { rows: Array.isArray(rows) ? rows : [], total: Number(totalNum) || 0 };
-  }
+  const seqRef = useRef(0);
 
   const fetch = async () => {
     if (!clusterId) return;
     setLoading(true);
+    const seq = ++seqRef.current;
     try {
-      // ⛳ 改：先尝试 1-based；若返回空且 total=0，再回退 0-based
-      const q: any = { page, size };
+      const q: any = { page: ui2apiPage(page), size };
       if (query.keyword) q.keyword = query.keyword;
 
-      let res = await getNodes({ clusterId }, q);
-      let { rows, total } = unpack(res);
+      const res = await getNodes({ clusterId }, q);
+      const { rows, total } = unpackPageLike(res);
 
-      if (!rows.length && total === 0) {
-        const q0: any = { page: Math.max(0, page - 1), size };
-        if (query.keyword) q0.keyword = query.keyword;
-        res = await getNodes({ clusterId }, q0);
-        const r2 = unpack(res);
-        rows = r2.rows; total = r2.total;
-      }
-
+      if (seq !== seqRef.current) return;
       setList(rows as any);
       setTotal(total);
     } catch (e: any) {
+      if (seq !== seqRef.current) return;
       console.error("[NodeList] fetch error:", e);
       message.error(e?.message || "加载失败");
       setList([]);
       setTotal(0);
     } finally {
-      setLoading(false);
+      if (seq === seqRef.current) setLoading(false);
     }
   };
 
@@ -79,26 +101,25 @@ const NodeList: React.FC<Props> = ({ clusterId }) => {
     setPage(1);
   };
 
-  const openDetail = (id: number) => setDetailId(id);
+  const openDetail = (id: number | string) => setDetailId(id);
 
-  async function handleDelete(id: number) {
+  async function handleDelete(id: number | string) {
     Modal.confirm({
       title: "确认删除该节点？",
       onOk: async () => {
-        await deleteNode(id);
+        await deleteNode(id as any);
         message.success("已删除");
         fetch();
       },
     });
   }
 
-  // 只认 health 字段；没有就显示 -
   const renderHealth = (v: unknown) => {
     const s = String(v ?? "").toUpperCase();
     if (!s) return <Tag>-</Tag>;
     if (s === "HEALTHY")  return <Tag color="green">健康</Tag>;
     if (s === "WARNING")  return <Tag color="orange">预警</Tag>;
-    return <Tag color="red">异常</Tag>; // 其它一律按“异常”
+    return <Tag color="red">异常</Tag>;
   };
 
   return (
@@ -111,9 +132,7 @@ const NodeList: React.FC<Props> = ({ clusterId }) => {
           onSearch={handleSearch}
           style={{ width: 320 }}
         />
-        <Space>
-          {/* 批量启停入口占位 */}
-        </Space>
+        <Space>{/* 保留占位 */}</Space>
       </div>
 
       <Table
@@ -122,7 +141,7 @@ const NodeList: React.FC<Props> = ({ clusterId }) => {
         dataSource={list}
         rowSelection={{
           selectedRowKeys,
-          onChange: (keys) => setSelectedRowKeys(keys as number[]),
+          onChange: (keys) => setSelectedRowKeys(keys as (number | string)[]),
         }}
         pagination={{
           current: page,
@@ -142,9 +161,7 @@ const NodeList: React.FC<Props> = ({ clusterId }) => {
             ),
           },
           { title: "IP", dataIndex: "ip" },
-          // 你的表是 type(worker/nm)，之前写的是 role；保持你当前字段
           { title: "角色", dataIndex: "type" },
-          // ⛳ 改：严格只按 health 字段展示
           { title: "健康", dataIndex: "health", render: renderHealth },
           {
             title: "状态",
@@ -167,7 +184,7 @@ const NodeList: React.FC<Props> = ({ clusterId }) => {
       />
 
       {detailId && (
-        <NodeDetailModal id={detailId} open={!!detailId} onClose={() => setDetailId(null)} />
+        <NodeDetailModal id={detailId as any} open={!!detailId} onClose={() => setDetailId(null)} />
       )}
     </div>
   );

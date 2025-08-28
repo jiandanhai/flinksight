@@ -1,7 +1,7 @@
 package com.flinksight.backend.repository;
 
 import com.flinksight.backend.domain.ClusterStatusHistory;
-import com.flinksight.backend.repository.projection.ClusterStatusTrendProjection;
+import com.flinksight.common.service.projection.ClusterStatusTrendProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

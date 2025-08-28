@@ -11,7 +11,7 @@ import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.common.dto.FunnelResponseDTO;
 import com.flinksight.common.dto.KpiResponseDTO;
 import com.flinksight.common.dto.OpsTaskDTO;
-import com.flinksight.common.enums.OpsTaskStatusEnum;
+import com.flinksight.common.enums.OpsTaskStatus;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.OpsTaskService;
 import lombok.RequiredArgsConstructor;
@@ -56,7 +56,7 @@ public class OpsTaskServiceImpl implements OpsTaskService {
     public OpsTaskDTO create(OpsTaskDTO dto) {
         OpsTask e = opsTaskMapper.toEntity(dto);
         e.setIsDeleted(0);
-        e.setStatus(OpsTaskStatusEnum.PENDING.getCode());
+        e.setStatus(OpsTaskStatus.PENDING.getCode());
         // 可选：基于模板初始化（复制模板元信息到任务描述）
         if (dto.getTemplateId() != null) {
             OperationTemplate tpl = tplRepo.findByIdAndTenantId(dto.getTemplateId(), SecurityUtil.getCurrentTenantId())
@@ -201,10 +201,10 @@ public class OpsTaskServiceImpl implements OpsTaskService {
         Long tenantId = SecurityUtil.getCurrentTenantId();
         OpsTask e = opsTaskRepository.findByIdAndTenantIdAndIsDeleted(id, tenantId, 0)
                 .orElseThrow(() -> BusinessException.notFound("任务不存在或已删除"));
-        if (!OpsTaskStatusEnum.PENDING.getCode().equals(e.getStatus())) {
+        if (!OpsTaskStatus.PENDING.getCode().equals(e.getStatus())) {
             throw BusinessException.badRequest("仅 PENDING 任务可开始执行");
         }
-        e.setStatus(OpsTaskStatusEnum.RUNNING.name());
+        e.setStatus(OpsTaskStatus.RUNNING.name());
         e.setExecutedAt(LocalDateTime.now());
         OpsTask saved = opsTaskRepository.save(e);
         log.info("[task] started. id={}, tenant={}", id, tenantId);
@@ -217,10 +217,10 @@ public class OpsTaskServiceImpl implements OpsTaskService {
         Long tenantId = SecurityUtil.getCurrentTenantId();
         OpsTask e = opsTaskRepository.findByIdAndTenantIdAndIsDeleted(req.getId(), tenantId, 0)
                 .orElseThrow(() -> BusinessException.notFound("任务不存在或已删除"));
-        if (!OpsTaskStatusEnum.RUNNING.getCode().equals(e.getStatus())) {
+        if (!OpsTaskStatus.RUNNING.getCode().equals(e.getStatus())) {
             throw BusinessException.badRequest("仅 RUNNING 任务可标记完成");
         }
-        e.setStatus(OpsTaskStatusEnum.SUCCESS.getCode());
+        e.setStatus(OpsTaskStatus.SUCCESS.getCode());
         if (req.getDescription() != null && !req.getDescription().isBlank()) {
             e.setDescription(appendMsg(e.getDescription(), req.getDescription()));
         }
@@ -235,10 +235,10 @@ public class OpsTaskServiceImpl implements OpsTaskService {
         Long tenantId = SecurityUtil.getCurrentTenantId();
         OpsTask e = opsTaskRepository.findByIdAndTenantIdAndIsDeleted(req.getId(), tenantId, 0)
                 .orElseThrow(() -> BusinessException.notFound("任务不存在或已删除"));
-        if (!OpsTaskStatusEnum.RUNNING.getCode().equals(e.getStatus())) {
+        if (!OpsTaskStatus.RUNNING.getCode().equals(e.getStatus())) {
             throw BusinessException.badRequest("仅 RUNNING 任务可标记失败");
         }
-        e.setStatus(OpsTaskStatusEnum.FAILED.getCode());
+        e.setStatus(OpsTaskStatus.FAILED.getCode());
         if (req.getDescription() != null && !req.getDescription().isBlank()) {
             e.setDescription(appendMsg(e.getDescription(), req.getDescription()));
         }
@@ -253,10 +253,10 @@ public class OpsTaskServiceImpl implements OpsTaskService {
         Long tenantId = SecurityUtil.getCurrentTenantId();
         OpsTask e = opsTaskRepository.findByIdAndTenantIdAndIsDeleted(req.getId(), tenantId, 0)
                 .orElseThrow(() -> BusinessException.notFound("任务不存在或已删除"));
-        if (OpsTaskStatusEnum.SUCCESS.getCode().equals(e.getStatus())) {
+        if (OpsTaskStatus.SUCCESS.getCode().equals(e.getStatus())) {
             throw BusinessException.badRequest("成功任务不可取消");
         }
-        e.setStatus(OpsTaskStatusEnum.CANCELLED.getCode());
+        e.setStatus(OpsTaskStatus.CANCELLED.getCode());
         if (req.getDescription() != null && !req.getDescription().isBlank()) {
             e.setDescription(appendMsg(e.getDescription(), req.getDescription()));
         }

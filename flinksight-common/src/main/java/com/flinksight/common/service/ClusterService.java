@@ -39,7 +39,7 @@ public interface ClusterService extends SoftDeleteService<ClusterDTO, Long>  {
     PageResult<NodeDTO> getNodesByCluster(Long clusterId, int page, int size);
 
     // Health & Metrics
-    PageResult<NodeHealthDTO> getNodeHealth(Long nodeId, int page, int size);
+    PageResult<NodeHealthDTO> listNodeHealthRecords(Long nodeId, int page, int size);
 
     NodeMetricDTO getNodeMetric(Long clusterId, LocalDateTime from, LocalDateTime to);
 }

@@ -15,6 +15,7 @@ import com.flinksight.backend.repository.NodeRepository;
 import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.backend.security.tenant.TenantRequired;
 import com.flinksight.common.dto.*;
+import com.flinksight.common.enums.NodeState;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ClusterService;
 import jakarta.transaction.Transactional;
@@ -112,7 +113,7 @@ public class ClusterServiceImpl implements ClusterService{
                     .name(n.getName())
                     .type(n.getType())
                     .ip(n.getIp())
-                    .status(n.getStatus() != null ? n.getStatus() : 1)
+                    .status(toNodeState(n.getStatus()))
                     .clusterId(req.getClusterId())
                     .isDeleted(0)
                     .createTime(LocalDateTime.now())
@@ -147,6 +148,7 @@ public class ClusterServiceImpl implements ClusterService{
         }
         Node e = nodeStructMapper.toEntity(req);
         e.setIsDeleted(0);
+        e.setStatus(NodeState.ENABLED);   // 例如新增节点默认启用
         e.setCreateTime(LocalDateTime.now());
         return nodeStructMapper.toDTO(nodeRepository.save(e));
     }
@@ -171,6 +173,7 @@ public class ClusterServiceImpl implements ClusterService{
             }
             Node e = nodeStructMapper.toEntity(r);
             e.setIsDeleted(0);
+            e.setStatus(NodeState.ENABLED);   // 例如新增节点默认启用
             e.setCreateTime(LocalDateTime.now());
             toSave.add(e);
         }
@@ -202,7 +205,7 @@ public class ClusterServiceImpl implements ClusterService{
         Long tenantId = SecurityUtil.getCurrentTenantId();
         clusterRepository.findByIdAndTenantIdAndIsDeleted(node.getClusterId(), tenantId, 0)
                 .orElseThrow(() -> new IllegalArgumentException("节点不属于当前租户"));
-        node.setStatus(enable ? 1 : 0);
+        node.setStatus(enable ? NodeState.ENABLED : NodeState.DISABLED);
         return nodeStructMapper.toDTO(nodeRepository.save(node));
     }
 
@@ -219,8 +222,7 @@ public class ClusterServiceImpl implements ClusterService{
             clusterRepository.findByIdAndTenantIdAndIsDeleted(cid, tenantId, 0)
                     .orElseThrow(() -> new IllegalArgumentException("包含不属于当前租户的节点"));
         }
-        int s = enable ? 1 : 0;
-        nodes.forEach(n -> n.setStatus(s));
+        nodes.forEach(n -> n.setStatus(enable ? NodeState.ENABLED : NodeState.DISABLED));
         nodeRepository.saveAll(nodes);
     }
 
@@ -228,7 +230,7 @@ public class ClusterServiceImpl implements ClusterService{
     /* ------------------ Health / Metrics ------------------ */
 
     @Override
-    public PageResult<NodeHealthDTO> getNodeHealth(Long nodeId, int page,int size) {
+    public PageResult<NodeHealthDTO> listNodeHealthRecords(Long nodeId, int page,int size) {
         PageRequest pr = PageHelpers.pageRequest(page, size, null, NodeHealth.class); // 统一 1→0
         Page<NodeHealth> result = nodeHealthRepository
                 .findByTenantIdAndNodeIdAndIsDeleted(SecurityUtil.getCurrentTenantId(), nodeId, 0, pr);
@@ -263,4 +265,13 @@ public class ClusterServiceImpl implements ClusterService{
         return dto;
     }
 
+    // 放在本类里（private static 也可以）
+    private NodeState toNodeState(Integer v) {
+        // 你的 NodeState 是 code="0"/"1"，null 时给默认值
+        return v == null
+                ? NodeState.ENABLED
+                : NodeState.ofCodeOrDefault(String.valueOf(v), NodeState.ENABLED);
+        // 等价写法（不依赖 ofCode）：
+        // return v != null && v == 1 ? NodeState.DISABLED : NodeState.ENABLED;
+    }
 }

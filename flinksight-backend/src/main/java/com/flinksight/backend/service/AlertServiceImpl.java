@@ -17,7 +17,7 @@ import com.flinksight.common.dto.AlertDTO;
 import com.flinksight.common.dto.AlertHistoryDTO;
 import com.flinksight.common.dto.AlertOpsDTO;
 import com.flinksight.common.dto.AlertRuleDTO;
-import com.flinksight.common.enums.AlertLevelEnum;
+import com.flinksight.common.enums.AlertLevel;
 import com.flinksight.common.enums.ErrorCode;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.AlertService;
@@ -179,7 +179,7 @@ public class AlertServiceImpl implements AlertService{
                 .alertId(alertId)
                 .ruleId(null)
                 .content(content)
-                .level(AlertLevelEnum.ofCode(level).getCode())
+                .level(AlertLevel.ofCode(level).getCode())
                 .status(status == null ? 0 : status)
                 .operatorId(SecurityUtil.getCurrentUserId())
                 .tenantId(tenantId)

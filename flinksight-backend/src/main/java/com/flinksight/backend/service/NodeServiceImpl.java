@@ -1,6 +1,5 @@
 package com.flinksight.backend.service;
 
-import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.Node;
 import com.flinksight.backend.domain.NodeHealth;
 import com.flinksight.backend.mapper.NodeStructMapper;
@@ -10,16 +9,21 @@ import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.common.dto.NodeDTO;
 import com.flinksight.common.dto.NodeHealthPointDTO;
 import com.flinksight.common.dto.NodeHealthResponseDTO;
-import com.flinksight.common.model.PageResult;
+import com.flinksight.common.enums.NodeState;
 import com.flinksight.common.service.NodeService;
+import com.flinksight.common.service.projection.NodeListRow;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -34,6 +38,7 @@ public class NodeServiceImpl implements NodeService {
     public NodeDTO createOrUpdate(NodeDTO nodeDTO) {
         Node entity = nodeStructMapper.toEntity(nodeDTO);
         entity.setIsDeleted(0);
+        entity.setStatus(NodeState.ENABLED);   // 例如新增节点默认启用
         Node saved = repository.save(entity);
         return nodeStructMapper.toDTO(saved);
     }
@@ -44,14 +49,7 @@ public class NodeServiceImpl implements NodeService {
     }
 
     @Override
-    public PageResult<NodeDTO> list(Long clusterId,int page, int size) {
-        PageRequest pr = PageHelpers.pageRequest(page, size, null, Node.class); // 统一 1→0
-        Page<Node> result = repository.findByClusterIdAndIsDeleted(clusterId,0, pr);
-        return PageHelpers.toPageResult(result, nodeStructMapper::toDTO, true); // 返回
-    }
-
-    @Override
-    public NodeHealthResponseDTO getNodeHealth(Long nodeId, LocalDateTime from, LocalDateTime to) {
+    public NodeHealthResponseDTO getNodeHealthSeries(Long nodeId, LocalDateTime from, LocalDateTime to) {
         List<NodeHealth> list = nodeHealthRepository
                 .findAllByTenantIdAndNodeIdAndCheckTimeBetweenOrderByCheckTime(SecurityUtil.getCurrentTenantId(), nodeId, from, to);
 
@@ -65,6 +63,40 @@ public class NodeServiceImpl implements NodeService {
                         .map(n -> new NodeHealthPointDTO(n.getCheckTime(), n.getHealthStatus(), n.getMessage()))
                         .toList())
                 .build();
+    }
+
+    /** 节点列表（带最新健康）—— 前端两个 Tab 都调它 */
+    public Page<NodeListRow> pageNodesWithHealth(Long clusterId, String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(Math.max(0, page - 1), size, Sort.by(Sort.Direction.DESC, "id"));
+        return repository.pageWithLatestHealth(SecurityUtil.getCurrentTenantId(), clusterId, keyword, pageable);
+    }
+
+    /** 环图统计（与列表完全同口径） */
+    public Map<String, Long> healthBuckets(Long clusterId) {
+        Map<String, Long> map = new HashMap<>();
+        repository.healthBuckets(SecurityUtil.getCurrentTenantId(), clusterId).forEach(arr -> {
+            String health = (String) arr[0];
+            Number cnt = (Number) arr[1];
+            map.put(health, cnt.longValue());
+        });
+        // 填补缺失桶
+        map.putIfAbsent("HEALTHY", 0L);
+        map.putIfAbsent("WARNING", 0L);
+        map.putIfAbsent("UNHEALTHY", 0L);
+        map.putIfAbsent("UNKNOWN", 0L);
+        return map;
+    }
+
+    /** 单节点健康历史（节点详情/弹窗用；列表不要 N+1） */
+    public Map<String, Object> nodeHealthHistory(Long nodeId, LocalDateTime from, LocalDateTime to, int page, int size) {
+        var pageable = PageRequest.of(Math.max(0, page - 1), size, Sort.by(Sort.Direction.DESC, "checkTime"));
+        var pageData = nodeHealthRepository.pageHistory(SecurityUtil.getCurrentTenantId(), nodeId, from, to, pageable);
+        var latest = nodeHealthRepository.findTopByTenantIdAndNodeIdOrderByCheckTimeDesc(SecurityUtil.getCurrentTenantId(), nodeId).orElse(null);
+        Map<String, Object> res = new HashMap<>();
+        res.put("latestStatus", latest != null ? latest.getHealthStatus() : "UNKNOWN");
+        res.put("items", pageData.getContent());
+        res.put("total", pageData.getTotalElements());
+        return res;
     }
 
 

@@ -1,7 +1,7 @@
 package com.flinksight.backend.repository;
 
 import com.flinksight.backend.domain.Job;
-import com.flinksight.backend.repository.projection.KeyCountView;
+import com.flinksight.common.service.projection.KeyCountView;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

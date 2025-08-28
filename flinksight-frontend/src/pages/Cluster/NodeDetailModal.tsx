@@ -3,47 +3,74 @@ import { Drawer, Tabs, Descriptions, Space, Tag, Statistic, Row, Col, Table, But
 import type { TabsProps } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { useSearchParams, useParams } from 'react-router-dom';
-
-// 只依赖现有 /api/modules
-import { getNodes, getNodeMetric, getNodeMetricByAgg, getNodeHealth_2 } from '@/api/modules';
+import * as api from '@/api/modules';
 
 type Props = {
-  id: number | null;
+  id: number | string | null;
   open: boolean;
   onClose: () => void;
 };
 
 type KV = Record<string, any>;
 
-/** 简易迷你折线图（纯 SVG，无第三方依赖） */
+const ui2apiPage = (uiPage: number) => Math.max(0, Number(uiPage) - 1);
+
+function unpackPageLike(resp: any) {
+  const root = resp?.data ?? resp;
+  const outer = root?.data !== undefined ? root.data : root;
+  const keys = ['data','records','list','rows','items','content','result'];
+
+  if (Array.isArray(outer)) return { list: outer, total: outer.length };
+
+  for (const k of keys) {
+    const v = outer?.[k];
+    if (Array.isArray(v)) {
+      const total = Number(outer?.total ?? outer?.totalElements ?? outer?.totalCount ?? outer?.count ?? v.length) || v.length;
+      return { list: v, total };
+    }
+  }
+
+  const d = outer?.data;
+  if (d && typeof d === 'object') {
+    for (const k of keys) {
+      const v = d?.[k];
+      if (Array.isArray(v)) {
+        const total = Number(d?.total ?? d?.totalElements ?? d?.totalCount ?? d?.count ?? v.length) || v.length;
+        return { list: v, total };
+      }
+    }
+  }
+
+  if (outer && typeof outer === 'object') {
+    for (const [, v] of Object.entries(outer)) {
+      if (Array.isArray(v)) {
+        const total = Number(outer?.total ?? outer?.totalElements ?? outer?.totalCount ?? outer?.count ?? (v as any[]).length) || (v as any[]).length;
+        return { list: v as any[], total };
+      }
+    }
+  }
+  return { list: [] as any[], total: 0 };
+}
+
+/** 简易迷你折线图（纯 SVG） */
 const Sparkline: React.FC<{
   data: Array<{ t: number; v: number }>;
   height?: number;
   stroke?: string;
   fill?: string;
-  max?: number; // 可固定纵轴上限（例如 100%）
+  max?: number;
 }> = ({ data, height = 56, stroke = '#165DFF', fill = '#165dff14', max }) => {
-  const pad = 4;
-  const W = 240; // 固定宽度，足够在 Drawer 中阅读
-  const H = height;
+  const pad = 4, W = 240, H = height;
   const M = data.length ? (max ?? Math.max(...data.map(d => Number(d.v) || 0), 1)) : 1;
-
   const pts = data.map((d, i) => {
     const x = pad + (i * (W - pad * 2)) / Math.max(1, data.length - 1);
     const y = H - pad - ((Number(d.v) || 0) / M) * (H - pad * 2);
     return [x, y] as [number, number];
   });
-
-  const dPath = pts.length
-    ? `M ${pts[0][0]} ${pts[0][1]} ` + pts.slice(1).map(p => `L ${p[0]} ${p[1]}`).join(' ')
-    : '';
-
+  const dPath = pts.length ? `M ${pts[0][0]} ${pts[0][1]} ` + pts.slice(1).map(p => `L ${p[0]} ${p[1]}`).join(' ') : '';
   const areaPath = pts.length
-    ? `M ${pts[0][0]} ${H - pad} L ${pts[0][0]} ${pts[0][1]} ` +
-      pts.slice(1).map(p => `L ${p[0]} ${p[1]}`).join(' ') +
-      ` L ${pts[pts.length - 1][0]} ${H - pad} Z`
+    ? `M ${pts[0][0]} ${H - pad} L ${pts[0][0]} ${pts[0][1]} ` + pts.slice(1).map(p => `L ${p[0]} ${p[1]}`).join(' ') + ` L ${pts[pts.length - 1][0]} ${H - pad} Z`
     : '';
-
   return (
     <svg width={W} height={H} role="img" aria-label="sparkline">
       <defs>
@@ -64,29 +91,19 @@ const Sparkline: React.FC<{
   );
 };
 
-/** 将接口时间序列尽量归一到 {t,v}[]（未知结构时容错） */
 function coerceSeries(obj: any, nodeKey: string | number): Array<{ t: number; v: number }> {
   if (!obj) return [];
-  // 常见几种形态的兜底解析
-  // 1) { series: { cpu: [{timestamp,value}], mem: [...] } }
-  // 2) { nodes: { [nodeId]: { cpu:[...], mem:[...] } } }
-  // 3) { cpu: [...], mem: [...] }（整个集群，后续再筛）
-  // 4) 直接就是数组
-  const arrish = (x: any) => (Array.isArray(x) ? x : []);
   const normalize = (a: any[]) =>
-    a
-      .map((i: any) => {
-        const t = Number(i?.t ?? i?.ts ?? i?.time ?? i?.timestamp ?? i?.[0]);
-        const v = Number(i?.v ?? i?.value ?? i?.val ?? i?.[1]);
-        return Number.isFinite(t) && Number.isFinite(v) ? { t, v } : null;
-      })
-      .filter(Boolean) as Array<{ t: number; v: number }>;
+    a.map((i: any) => {
+      const t = Number(i?.t ?? i?.ts ?? i?.time ?? i?.timestamp ?? i?.[0]);
+      const v = Number(i?.v ?? i?.value ?? i?.val ?? i?.[1]);
+      return Number.isFinite(t) && Number.isFinite(v) ? { t, v } : null;
+    }).filter(Boolean) as Array<{ t: number; v: number }>;
 
   if (Array.isArray(obj)) return normalize(obj);
   if (obj?.series) return normalize(obj.series);
-  if (obj?.nodes && (obj.nodes as KV)[nodeKey]) {
-    // 可能是 { cpu:[], mem:[] } 结构
-    const node = (obj.nodes as KV)[nodeKey];
+  if (obj?.nodes && obj.nodes?.[nodeKey as any]) {
+    const node = obj.nodes?.[nodeKey as any];
     if (Array.isArray(node)) return normalize(node);
     if (node?.cpu) return normalize(node.cpu);
   }
@@ -94,16 +111,13 @@ function coerceSeries(obj: any, nodeKey: string | number): Array<{ t: number; v:
   return [];
 }
 
-/** 健康值标准化 */
 function mapHealthTag(v: any) {
   const s = String(v ?? '').toLowerCase();
-  if (['healthy', 'ok', 'online', '健康'].includes(s)) return <Tag color="green">健康</Tag>;
-  if (['warning', 'warn', 'degraded', '预警'].includes(s)) return <Tag color="orange">预警</Tag>;
+  if (['healthy','ok','online','健康'].includes(s)) return <Tag color="green">健康</Tag>;
+  if (['warning','warn','degraded','预警'].includes(s)) return <Tag color="orange">预警</Tag>;
   if (s) return <Tag color="red">异常</Tag>;
   return <Tag>未知</Tag>;
 }
-
-/** 启用/禁用标准化 */
 function mapEnabledTag(v: any) {
   const on = typeof v === 'boolean' ? v : Number(v) === 1;
   return on ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag>;
@@ -120,12 +134,10 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
   const [node, setNode] = useState<KV | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // 指标
   const [cpuSeries, setCpuSeries] = useState<Array<{ t: number; v: number }>>([]);
   const [memSeries, setMemSeries] = useState<Array<{ t: number; v: number }>>([]);
   const [range, setRange] = useState<'1h' | '6h' | '24h' | '7d'>('6h');
 
-  // 健康记录
   const [hRows, setHRows] = useState<any[]>([]);
   const [hTotal, setHTotal] = useState(0);
   const [hPage, setHPage] = useState(1);
@@ -141,21 +153,13 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
     return { from: from.toISOString(), to: to.toISOString() };
   }, [range]);
 
-  /** 拉节点基础信息（用 getNodes，全量取一页，再按 id 命中） */
   const fetchNode = useCallback(async () => {
     if (!id || !clusterId) return;
     setLoading(true);
     try {
-      const resp = await getNodes({ clusterId }, { page: 1, size: 200 });
-      const payload: any = resp as any;
-      const pageData =
-        (Array.isArray(payload?.data?.data?.data) && payload.data.data.data) ||
-        (Array.isArray(payload?.data?.data?.records) && payload.data.data.records) ||
-        (Array.isArray(payload?.data?.data?.list) && payload.data.data.list) ||
-        (Array.isArray(payload?.data?.data) && payload.data.data) ||
-        (Array.isArray(payload?.data) && payload.data) ||
-        (Array.isArray(payload) ? payload : []);
-      const target = (pageData as any[]).find((n: any) => Number(n?.id) === Number(id)) || null;
+      const resp = await (api as any).getNodes({ clusterId }, { page: 0, size: 200 });
+      const { list } = unpackPageLike(resp);
+      const target = (list as any[]).find((n: any) => String(n?.id) === String(id)) || null;
       setNode(target);
     } catch (e: any) {
       message.error(e?.message || '加载节点失败');
@@ -164,16 +168,16 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
     }
   }, [id, clusterId]);
 
-  /** 拉指标（尽力解析为 {t,v}[]；失败就降级只显示“当前值”） */
   const fetchMetric = useCallback(async () => {
     if (!id || !clusterId) return;
-
     try {
-      // 先用“最近一次/区间聚合”
-      const X = await getNodeMetric({ clusterId }, { from: timeRange.from, to: timeRange.to });
-      const Y = await getNodeMetricByAgg({ clusterId }, { from: timeRange.from, to: timeRange.to, agg: '1m' as any });
+      const fn1 = (api as any).getNodeMetric;
+      const fn2 = (api as any).getNodeMetricByAgg;
 
-      // 猜测 nodeKey：用 id 或 name 两种都试下
+      let X: any = null, Y: any = null;
+      if (typeof fn1 === 'function') X = await fn1({ clusterId }, { from: timeRange.from, to: timeRange.to });
+      if (typeof fn2 === 'function') Y = await fn2({ clusterId }, { from: timeRange.from, to: timeRange.to, agg: '1m' as any });
+
       const key = (node?.id ?? id) as any;
       const altKey = node?.name ?? node?.hostname ?? node?.ip;
 
@@ -184,9 +188,6 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
 
       const cpu = [c2, c1, c4, c3].find(a => a.length) || [];
       setCpuSeries(cpu);
-
-      // 内存同样复用 series；如果你的返回区分字段（如 memSeries），可在这里再做一次 coerce
-      // 为避免“空空”，用 cpu 替代（真实场景建议后端明确返回）
       setMemSeries(cpu);
     } catch {
       setCpuSeries([]);
@@ -194,32 +195,31 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
     }
   }, [id, clusterId, node, timeRange]);
 
-  /** 拉健康流水 */
   const fetchHealth = useCallback(async () => {
     if (!id) return;
     try {
-      const res: any = await getNodeHealth_2({ nodeId: id }, { page: hPage - 1, size: hSize });
-      const payload = res?.data?.data ?? res?.data ?? res ?? {};
-      const rows =
-        (Array.isArray(payload?.data) && payload.data) ||
-        (Array.isArray(payload?.records) && payload.records) ||
-        (Array.isArray(payload?.list) && payload.list) ||
-        (Array.isArray(payload) ? payload : []);
-      const total = payload?.total ?? payload?.totalElements ?? rows.length;
-      setHRows(rows as any[]);
-      setHTotal(Number(total) || 0);
+      const fn = (api as any).getNodeHealth; // 如果没导出，优雅降级
+      if (typeof fn !== 'function') { setHRows([]); setHTotal(0); return; }
+      const res: any = await fn({ nodeId: id }, { page: ui2apiPage(hPage), size: hSize });
+      const { list, total } = unpackPageLike(res);
+      const rows = (list as any[]).map((r: any) => ({
+        time: r.checkTime ?? r.time ?? r.timestamp ?? r.createdAt,
+        level: r.healthStatus ?? r.health ?? r.level,
+        message: r.message,
+        source: r.source,
+      }));
+      setHRows(rows);
+      setHTotal(Number(total) || rows.length);
     } catch {
-      setHRows([]);
-      setHTotal(0);
+      setHRows([]); setHTotal(0);
     }
   }, [id, hPage]);
 
   useEffect(() => { if (open) fetchNode(); }, [open, fetchNode]);
   useEffect(() => { if (open && node) fetchMetric(); }, [open, node, fetchMetric]);
   useEffect(() => { if (open) fetchHealth(); }, [open, fetchHealth]);
-  useEffect(() => { if (open) fetchMetric(); }, [open, range]); // 切换时间范围
+  useEffect(() => { if (open) fetchMetric(); }, [open, range]);
 
-  // —— 概览 KPI —— //
   const lastHeartbeatStr = useMemo(() => {
     const v = node?.lastHeartbeat ?? node?.heartbeatAt ?? node?.updatedAt;
     if (!v) return '-';
@@ -366,7 +366,6 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
 
 export default NodeDetailModal;
 
-/** 轻量卡片容器（避免引入 antd Card 造成边距不统一，这里自定义一点点样式） */
 const CardLike: React.FC<{ title: React.ReactNode; children: React.ReactNode }> = ({ title, children }) => {
   return (
     <div style={{ border: '1px solid #f0f0f0', borderRadius: 10, padding: 12 }}>
