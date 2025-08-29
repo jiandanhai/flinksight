@@ -40,6 +40,12 @@ public class OpsTaskController {
         return ApiResponse.ok(opsTaskService.create(dto));
     }
 
+    @Operation(summary = "", description = "", operationId = "runOpsTask")
+    @PostMapping("/run/{id}")
+    public ApiResponse<OpsTaskDTO> run(@PathVariable("id") Long id) {
+        return ApiResponse.ok(opsTaskService.start(id));
+    }
+
     /**
      * 更新运维任务
      * @param dto 运维任务参数
@@ -75,16 +81,18 @@ public class OpsTaskController {
     }
 
     /**
-     * 查询租户下指定状态的任务
-     * @param status 状态
-     * @return 任务列表
+     * 任务列表
+     * status 为必传，但支持传 ALL 表示不过滤（A 方案）
      */
-    @Operation(summary = "", description = "", operationId = "listOpsTasks")
+    @Operation(summary = "查询租户下指定状态的任务", description = "", operationId = "listOpsTasks")
     @GetMapping("/list")
-    public ApiResponse<PageResult<OpsTaskDTO>> list(@RequestParam String status,
-                                                                     @RequestParam(defaultValue = "0") int page,
-                                                                     @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(opsTaskService.list(status,page,size));
+    public ApiResponse<PageResult<OpsTaskDTO>> list(
+            @RequestParam("status") String status,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", defaultValue = "0") int page,   // 1 基
+            @RequestParam(value = "size", defaultValue = "20") int size
+    ) {
+        return ApiResponse.ok(opsTaskService.list(status, keyword, page, size));
     }
 
     @Operation(summary = "KPI 趋势（新建数/成功数）", description = "", operationId = "opsGetKpi")

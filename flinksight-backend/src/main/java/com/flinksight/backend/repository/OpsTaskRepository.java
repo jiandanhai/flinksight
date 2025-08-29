@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -28,6 +29,25 @@ public interface OpsTaskRepository extends JpaRepository<OpsTask, Long> {
      * @return 运维任务列表
      */
     Page<OpsTask> findByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted, Pageable pageable);
+
+
+    @Query("""
+        SELECT t
+        FROM OpsTask t
+        WHERE t.tenantId = :tenantId
+          AND t.isDeleted = 0
+          AND ( :status = 'ALL' OR t.status = :status )
+          AND ( :keyword IS NULL
+                OR t.name        LIKE CONCAT('%', :keyword, '%')
+                OR t.type        LIKE CONCAT('%', :keyword, '%')
+                OR t.description LIKE CONCAT('%', :keyword, '%') )
+    """)
+    Page<OpsTask> searchByTenantStatusKeyword(
+            @Param("tenantId") Long tenantId,
+            @Param("status") String status,
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
 
     /**
      * 按租户ID、任务状态查询

@@ -17,11 +17,11 @@ import com.flinksight.common.service.OpsTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -99,13 +99,13 @@ public class OpsTaskServiceImpl implements OpsTaskService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public PageResult<OpsTaskDTO> list(String status, int page, int size) {
-        PageRequest pr = PageHelpers.pageRequest(page, size, null, OpsTask.class); // 统一 1→0
-        Page<OpsTask> result = (status == null || status.isBlank())
-                ? opsTaskRepository.findByTenantIdAndIsDeleted(SecurityUtil.getCurrentUserId(), 0, pr)
-                : opsTaskRepository.findByTenantIdAndStatusAndIsDeleted(SecurityUtil.getCurrentUserId(), status,0, pr);
-        return PageHelpers.toPageResult(result, opsTaskMapper::toDTO, true); // 返回
+    public PageResult<OpsTaskDTO> list(String status, String keyword, int page, int size) {
+        // 统一 1→0，排序交给 PageHelpers / @DefaultSort
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, OpsTask.class);
+        String st = (StringUtils.hasText(status) ? status.trim() : "ALL");       // A 方案：允许 ALL
+        String kw = (StringUtils.hasText(keyword) ? keyword.trim() : null);
+        var pageData = opsTaskRepository.searchByTenantStatusKeyword(SecurityUtil.getCurrentTenantId(), st, kw, pr);
+        return PageHelpers.toPageResult(pageData, opsTaskMapper::toDTO, true);
     }
 
     @Override

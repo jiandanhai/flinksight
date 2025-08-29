@@ -83,17 +83,15 @@ public class OperationTemplateServiceImpl implements OperationTemplateService {
 
     @Override
     public PageResult<OperationTemplateDTO> list(String type, String keyword, int page, int size) {
-        PageRequest pr = PageHelpers.pageRequest(page, size, null, OperationTemplate.class); // 统一 1→0
-        Page<OperationTemplate> result;
-        if ((type == null || type.isBlank()) && (keyword == null || keyword.isBlank())) {
-            result = repository.findByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(), 0, pr);
-        } else {
-            result = repository.findByTenantIdAndIsDeletedAndTypeContainingAndNameContaining(
-                    SecurityUtil.getCurrentTenantId(), 0,
-                    type == null ? "" : type,
-                    keyword == null ? "" : keyword, pr);
-        }
-        return PageHelpers.toPageResult(result, operationTemplateStructMapper::toDTO, true); // 返回
+        // 统一分页（1→0，排序走 @DefaultSort 或全局规则）
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, OperationTemplate.class);
+        // 入参归一化：空白→null（避免匹配空字符串导致返回 0 条）
+        String tp = (type == null || type.isBlank()) ? null : type.trim();
+        String kw = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
+        Page<OperationTemplate> result = repository.searchByTenantTypeKeyword(
+                SecurityUtil.getCurrentTenantId(), tp, kw, pr
+        );
+        return PageHelpers.toPageResult(result, operationTemplateStructMapper::toDTO, true);
     }
 
 

@@ -35,12 +35,7 @@ public interface OpsTaskService extends SoftDeleteService<OpsTaskDTO, Long>{
      */
     OpsTaskDTO getById(Long id);
 
-    /**
-     * 查询租户下某状态的全部任务
-     * @param status 任务状态
-     * @return 运维任务列表
-     */
-    PageResult<OpsTaskDTO> list(String status, int page, int size);
+    PageResult<OpsTaskDTO> list(String status, String keyword, int page, int size);
 
     KpiResponseDTO getKpi(LocalDate from, LocalDate to);
 
