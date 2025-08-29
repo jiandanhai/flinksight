@@ -17,9 +17,8 @@ public interface RoleService extends SoftDeleteService<RoleDTO, Long> {
      * 编辑角色
      */
     RoleDTO update(RoleDTO dto);
-    /**
-     * 分页条件查询
-     */
-    PageResult<RoleDTO> list(String name, int page, int size);
+
+    PageResult<RoleDTO> list(String keyword, String name, String code,
+                             Integer page, Integer size);
 
 }

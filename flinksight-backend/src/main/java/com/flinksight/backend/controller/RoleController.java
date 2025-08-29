@@ -39,13 +39,17 @@ public class RoleController {
                 .orElse(ApiResponse.ok(null));
     }
 
+
     @Operation(summary = "分页查询角色",operationId = "listRoles")
     @GetMapping("/list")
-    public ApiResponse<PageResult<RoleDTO>> list(
-            @RequestParam(required = false) String name,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(roleService.list(name, page, size));
+    public ApiResponse<PageResult<RoleDTO>> listRolesLegacy(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "code", required = false) String code,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size
+    ) {
+        return ApiResponse.ok(roleService.list(keyword, name, code, page, size));
     }
 
     @Operation(summary = "编辑角色",operationId = "updateRole")

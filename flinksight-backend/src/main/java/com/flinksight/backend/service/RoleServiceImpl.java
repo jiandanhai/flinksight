@@ -60,12 +60,21 @@ public class RoleServiceImpl implements RoleService  {
     }
 
     @Override
-    public PageResult<RoleDTO> list(String name, int page, int size) {
-        PageRequest pr = PageHelpers.pageRequest(page, size, null, Role.class); // 统一 1→0
-        Page<Role> result = repository.findByTenantIdAndNameAndIsDeleted(SecurityUtil.getCurrentTenantId(),
-                name == null ? "" : name, 0, pr);
-        return PageHelpers.toPageResult(result, roleStructMapper::toDTO, true); //
+    public PageResult<RoleDTO> list(String keyword, String name, String code,
+                                    Integer page, Integer size) {
+        PageRequest pr = PageHelpers.pageRequest(page, size, null, Role.class); // 统一分页+排序
+
+        Page<Role> result = repository.searchByTenantAndFilters(
+                SecurityUtil.getCurrentTenantId(),
+                (keyword == null || keyword.isBlank()) ? null : keyword.trim(),
+                (name == null || name.isBlank()) ? null : name.trim(),
+                (code == null || code.isBlank()) ? null : code.trim(),
+                pr
+        );
+
+        return PageHelpers.toPageResult(result, roleStructMapper::toDTO, true);
     }
+
 
     @Override
     public boolean sDelete(Long id) {
