@@ -87,13 +87,15 @@ public class OpsTaskController {
     @Operation(summary = "查询租户下指定状态的任务", description = "", operationId = "listOpsTasks")
     @GetMapping("/list")
     public ApiResponse<PageResult<OpsTaskDTO>> list(
-            @RequestParam("status") String status,
+            @RequestParam("status") String status,                          // 必传；ALL 表示不过滤
             @RequestParam(value = "keyword", required = false) String keyword,
-            @RequestParam(value = "page", defaultValue = "0") int page,   // 1 基
-            @RequestParam(value = "size", defaultValue = "20") int size
+            @RequestParam(value = "templateType", required = false) String templateType,
+            @RequestParam(value = "page", defaultValue = "1") int page,     // 1 基
+            @RequestParam(value = "size", defaultValue = "30") int size
     ) {
-        return ApiResponse.ok(opsTaskService.list(status, keyword, page, size));
+        return ApiResponse.ok( opsTaskService.list(status, keyword, templateType, page, size));
     }
+
 
     @Operation(summary = "KPI 趋势（新建数/成功数）", description = "", operationId = "opsGetKpi")
     @GetMapping("/kpi")

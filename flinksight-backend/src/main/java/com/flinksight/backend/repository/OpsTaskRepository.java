@@ -1,6 +1,7 @@
 package com.flinksight.backend.repository;
 
 import com.flinksight.backend.domain.OpsTask;
+import com.flinksight.common.dto.OpsTaskDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,49 +23,51 @@ public interface OpsTaskRepository extends JpaRepository<OpsTask, Long> {
 
     Optional<OpsTask> findByIdAndTenantIdAndIsDeleted(Long id, Long tenantId, Integer isDeleted);
 
-    /**
-     * 按租户ID和软删标志查询全部任务
-     * @param tenantId 租户ID
-     * @param isDeleted 软删除标志 0=正常 1=删除
-     * @return 运维任务列表
-     */
-    Page<OpsTask> findByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted, Pageable pageable);
-
 
     @Query("""
-        SELECT t
+        SELECT new com.flinksight.common.dto.OpsTaskDTO(
+            t.id,
+            t.tenantId,
+            t.templateId,
+            t.name,
+            ot.name,
+            ot.type,
+            t.type,
+            t.status,
+            t.description,
+            t.createdAt,
+            t.executedAt,
+            t.isDeleted
+        )
         FROM OpsTask t
+        LEFT JOIN OperationTemplate ot
+               ON ot.id = t.templateId
+              AND ot.tenantId = t.tenantId
+              AND ot.isDeleted = 0
         WHERE t.tenantId = :tenantId
           AND t.isDeleted = 0
           AND ( :status = 'ALL' OR t.status = :status )
+          AND ( :templateType IS NULL OR LOWER(ot.type) = LOWER(:templateType) )
           AND ( :keyword IS NULL
-                OR t.name        LIKE CONCAT('%', :keyword, '%')
-                OR t.type        LIKE CONCAT('%', :keyword, '%')
-                OR t.description LIKE CONCAT('%', :keyword, '%') )
-    """)
-    Page<OpsTask> searchByTenantStatusKeyword(
+                OR LOWER(t.name) LIKE CONCAT('%', LOWER(:keyword), '%')
+                OR LOWER(ot.name) LIKE CONCAT('%', LOWER(:keyword), '%')
+                OR LOWER(ot.type) LIKE CONCAT('%', LOWER(:keyword), '%') )
+        """)
+    Page<OpsTaskDTO> pageQuery(
             @Param("tenantId") Long tenantId,
             @Param("status") String status,
+            @Param("templateType") String templateType,
             @Param("keyword") String keyword,
             Pageable pageable
     );
 
-    /**
-     * 按租户ID、任务状态查询
-     * @param tenantId 租户ID
-     * @param status 状态
-     * @param isDeleted 软删除标志
-     * @return 运维任务列表
-     */
-    Page<OpsTask> findByTenantIdAndStatusAndIsDeleted(Long tenantId, String status, Integer isDeleted, Pageable pageable);
-
 
     /** 统计：按 created_at 的日期分组，计算每日创建任务数（活跃） */
     @Query("""
-        select FUNCTION('date', t.createdAt) as d, count(t) 
-        from OpsTask t 
-        where t.isDeleted = 0 
-          and t.tenantId = :tenantId 
+        select FUNCTION('date', t.createdAt) as d, count(t)
+        from OpsTask t
+        where t.isDeleted = 0
+          and t.tenantId = :tenantId
           and t.createdAt between :from and :to
         group by FUNCTION('date', t.createdAt)
         order by d asc

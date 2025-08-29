@@ -30,7 +30,7 @@ public interface OperationTemplateRepository extends JpaRepository<OperationTemp
           AND ( :keyword IS NULL
                 OR LOWER(o.name) LIKE CONCAT('%', LOWER(:keyword), '%')
                 OR LOWER(o.type) LIKE CONCAT('%', LOWER(:keyword), '%')
-                OR LOWER(o.content) LIKE CONCAT('%', LOWER(:keyword), '%')
+                OR LOWER(o.content) LIKE CONCAT('%', LOWER(:keyword), '%') 
               )
     """)
     Page<OperationTemplate> searchByTenantTypeKeyword(

@@ -35,7 +35,7 @@ public interface OpsTaskService extends SoftDeleteService<OpsTaskDTO, Long>{
      */
     OpsTaskDTO getById(Long id);
 
-    PageResult<OpsTaskDTO> list(String status, String keyword, int page, int size);
+    PageResult<OpsTaskDTO> list(String status, String keyword, String templateType, int page, int size);
 
     KpiResponseDTO getKpi(LocalDate from, LocalDate to);
 

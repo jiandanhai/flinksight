@@ -31,6 +31,12 @@ public class OpsTaskDTO implements Serializable {
     @Schema(description = "任务名称")
     private String name;
 
+    @Schema(description = "自动化运维模板名")
+    public String templateName;
+
+    @Schema(description = "自动化运维模板类型")
+    public String templateType;
+
     @Schema(description = "任务类型（如备份、扩容、升级等）")
     private String type;
 

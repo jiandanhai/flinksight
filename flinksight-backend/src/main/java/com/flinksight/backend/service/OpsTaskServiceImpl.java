@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -27,6 +26,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * 运维自动化任务业务实现类
@@ -41,15 +41,6 @@ public class OpsTaskServiceImpl implements OpsTaskService {
     private final OperationTemplateRepository tplRepo;
     private final OpsTaskMapper opsTaskMapper;
 
-    /** 简单幂等：同租户 + 同名 + PENDING/RUNNING 视为重复创建（也可用外部幂等键做更严格控制） */
-    private Optional<OpsTask> findExistingPendingOrRunning(String name) {
-        // 这里可改为按 idempotencyKey 查询（若你在表中增加该字段）
-        return opsTaskRepository.findByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(), 0, Pageable.ofSize(1))
-                .stream()
-                .filter(t -> Objects.equals(t.getName(), name))
-                .filter(t -> "PENDING".equals(t.getStatus()) || "RUNNING".equals(t.getStatus()))
-                .findFirst();
-    }
 
     @Override
     @Transactional
@@ -99,13 +90,18 @@ public class OpsTaskServiceImpl implements OpsTaskService {
     }
 
     @Override
-    public PageResult<OpsTaskDTO> list(String status, String keyword, int page, int size) {
-        // 统一 1→0，排序交给 PageHelpers / @DefaultSort
+    public PageResult<OpsTaskDTO> list(String status, String keyword, String templateType, int page, int size) {
+        // 统一 1→0，排序走 @DefaultSort 或全局默认
         PageRequest pr = PageHelpers.pageRequest(page, size, null, OpsTask.class);
-        String st = (StringUtils.hasText(status) ? status.trim() : "ALL");       // A 方案：允许 ALL
-        String kw = (StringUtils.hasText(keyword) ? keyword.trim() : null);
-        var pageData = opsTaskRepository.searchByTenantStatusKeyword(SecurityUtil.getCurrentTenantId(), st, kw, pr);
-        return PageHelpers.toPageResult(pageData, opsTaskMapper::toDTO, true);
+        String st = StringUtils.hasText(status) ? status.trim() : "ALL";      // A 方案：仍要求 status，但允许 ALL
+        String kw = StringUtils.hasText(keyword) ? keyword.trim() : null;
+        String tp = StringUtils.hasText(templateType) ? templateType.trim() : null;
+        var pageData = opsTaskRepository.pageQuery(
+                SecurityUtil.getCurrentTenantId(), st, tp, kw, pr
+        );
+
+        // 直接返回 DTO，不需要 mapper
+        return PageHelpers.toPageResult(pageData, Function.identity(), true);
     }
 
     @Override
