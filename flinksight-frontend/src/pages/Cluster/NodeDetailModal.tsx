@@ -1,27 +1,24 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { Drawer, Tabs, Descriptions, Space, Tag, Statistic, Row, Col, Table, Button, Radio, message } from 'antd';
+import { Drawer, Tabs, Descriptions, Space, Tag, Statistic, Row, Col, Table, Button, Radio, message, DatePicker } from 'antd';
 import type { TabsProps } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { useSearchParams, useParams } from 'react-router-dom';
-import * as api from '@/api/modules';
 
-type Props = {
-  id: number | string | null;
-  open: boolean;
-  onClose: () => void;
-};
+import {
+  getNodes,
+  getNodeMetricByAgg,
+  nodeHealthHistory, // GET /api/node/nodes/health/{nodeId}
+} from '@/api/modules';
 
+type Props = { id: number | string | null; open: boolean; onClose: () => void; };
 type KV = Record<string, any>;
-
-const ui2apiPage = (uiPage: number) => Math.max(0, Number(uiPage) - 1);
+const { RangePicker } = DatePicker;
 
 function unpackPageLike(resp: any) {
   const root = resp?.data ?? resp;
   const outer = root?.data !== undefined ? root.data : root;
   const keys = ['data','records','list','rows','items','content','result'];
-
   if (Array.isArray(outer)) return { list: outer, total: outer.length };
-
   for (const k of keys) {
     const v = outer?.[k];
     if (Array.isArray(v)) {
@@ -29,7 +26,6 @@ function unpackPageLike(resp: any) {
       return { list: v, total };
     }
   }
-
   const d = outer?.data;
   if (d && typeof d === 'object') {
     for (const k of keys) {
@@ -40,7 +36,6 @@ function unpackPageLike(resp: any) {
       }
     }
   }
-
   if (outer && typeof outer === 'object') {
     for (const [, v] of Object.entries(outer)) {
       if (Array.isArray(v)) {
@@ -52,14 +47,30 @@ function unpackPageLike(resp: any) {
   return { list: [] as any[], total: 0 };
 }
 
-/** 简易迷你折线图（纯 SVG） */
-const Sparkline: React.FC<{
-  data: Array<{ t: number; v: number }>;
-  height?: number;
-  stroke?: string;
-  fill?: string;
-  max?: number;
-}> = ({ data, height = 56, stroke = '#165DFF', fill = '#165dff14', max }) => {
+/** 健康历史接口要求 LocalDateTime：yyyy-MM-dd'T'HH:mm:ss（无毫秒/无Z） */
+function fmtLDT(d: Date) {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const y = d.getFullYear();
+  const m = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const mm = pad(d.getMinutes());
+  const ss = pad(d.getSeconds());
+  return `${y}-${m}-${day}T${hh}:${mm}:${ss}`;
+}
+
+/** 尝试把 dayjs/moment/Date/字符串 转成 Date */
+function toDate(x: any): Date | null {
+  if (!x) return null;
+  if (x instanceof Date) return x;
+  if (typeof x?.toDate === 'function') return x.toDate();
+  const ts = Date.parse(String(x));
+  return Number.isFinite(ts) ? new Date(ts) : null;
+}
+
+/** 纯 SVG sparkline 小图 */
+const Sparkline: React.FC<{ data: Array<{ t: number; v: number }>; height?: number; stroke?: string; fill?: string; max?: number; }>
+= ({ data, height = 56, stroke = '#165DFF', fill = '#165dff14', max }) => {
   const pad = 4, W = 240, H = height;
   const M = data.length ? (max ?? Math.max(...data.map(d => Number(d.v) || 0), 1)) : 1;
   const pts = data.map((d, i) => {
@@ -79,14 +90,10 @@ const Sparkline: React.FC<{
           <stop offset="100%" stopColor="transparent" />
         </linearGradient>
       </defs>
-      {pts.length ? (
-        <>
-          <path d={areaPath} fill="url(#g-line)" />
-          <path d={dPath} fill="none" stroke={stroke} strokeWidth={2} />
-        </>
-      ) : (
-        <text x={W / 2} y={H / 2} textAnchor="middle" fill="#bfbfbf" fontSize="12">暂无数据</text>
-      )}
+      {pts.length ? (<>
+        <path d={areaPath} fill="url(#g-line)" />
+        <path d={dPath} fill="none" stroke={stroke} strokeWidth={2} />
+      </>) : (<text x={W/2} y={H/2} textAnchor="middle" fill="#bfbfbf" fontSize="12">暂无数据</text>)}
     </svg>
   );
 };
@@ -99,7 +106,6 @@ function coerceSeries(obj: any, nodeKey: string | number): Array<{ t: number; v:
       const v = Number(i?.v ?? i?.value ?? i?.val ?? i?.[1]);
       return Number.isFinite(t) && Number.isFinite(v) ? { t, v } : null;
     }).filter(Boolean) as Array<{ t: number; v: number }>;
-
   if (Array.isArray(obj)) return normalize(obj);
   if (obj?.series) return normalize(obj.series);
   if (obj?.nodes && obj.nodes?.[nodeKey as any]) {
@@ -119,7 +125,8 @@ function mapHealthTag(v: any) {
   return <Tag>未知</Tag>;
 }
 function mapEnabledTag(v: any) {
-  const on = typeof v === 'boolean' ? v : Number(v) === 1;
+  const s = String(v ?? '').toUpperCase();
+  const on = typeof v === 'boolean' ? v : s === 'ENABLED' || s === 'TRUE' || s === '1' || s === 'ON' || s === 'OK';
   return on ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag>;
 }
 
@@ -134,30 +141,47 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
   const [node, setNode] = useState<KV | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // 指标范围（仍用顶部单选）
+  const [metricRange, setMetricRange] = useState<'1h' | '6h' | '24h' | '7d'>('6h');
+  const metricTime = useMemo(() => {
+    const to = new Date();
+    const from = new Date();
+    if (metricRange === '1h') from.setHours(to.getHours() - 1);
+    if (metricRange === '6h') from.setHours(to.getHours() - 6);
+    if (metricRange === '24h') from.setDate(to.getDate() - 1);
+    if (metricRange === '7d') from.setDate(to.getDate() - 7);
+    return { fromISO: from.toISOString(), toISO: to.toISOString() };
+  }, [metricRange]);
+
+  // ✅ 健康记录范围：优先使用页面上的 RangePicker；未选择时默认近 30 天
+  const [healthPicker, setHealthPicker] = useState<[any, any] | null>(null);
+  const healthTime = useMemo(() => {
+    if (healthPicker?.[0] && healthPicker?.[1]) {
+      const f = toDate(healthPicker[0]); const t = toDate(healthPicker[1]);
+      return {
+        fromLDT: f ? fmtLDT(f) : undefined,
+        toLDT: t ? fmtLDT(t) : undefined,
+      };
+    }
+    const to = new Date();
+    const from = new Date();
+    from.setDate(to.getDate() - 30);
+    return { fromLDT: fmtLDT(from), toLDT: fmtLDT(to) };
+  }, [healthPicker]);
+
   const [cpuSeries, setCpuSeries] = useState<Array<{ t: number; v: number }>>([]);
   const [memSeries, setMemSeries] = useState<Array<{ t: number; v: number }>>([]);
-  const [range, setRange] = useState<'1h' | '6h' | '24h' | '7d'>('6h');
 
   const [hRows, setHRows] = useState<any[]>([]);
   const [hTotal, setHTotal] = useState(0);
   const [hPage, setHPage] = useState(1);
   const hSize = 10;
 
-  const timeRange = useMemo(() => {
-    const to = new Date();
-    const from = new Date();
-    if (range === '1h') from.setHours(to.getHours() - 1);
-    if (range === '6h') from.setHours(to.getHours() - 6);
-    if (range === '24h') from.setDate(to.getDate() - 1);
-    if (range === '7d') from.setDate(to.getDate() - 7);
-    return { from: from.toISOString(), to: to.toISOString() };
-  }, [range]);
-
   const fetchNode = useCallback(async () => {
     if (!id || !clusterId) return;
     setLoading(true);
     try {
-      const resp = await (api as any).getNodes({ clusterId }, { page: 0, size: 200 });
+      const resp = await getNodes({ clusterId }, { page: 0, size: 200 });
       const { list } = unpackPageLike(resp);
       const target = (list as any[]).find((n: any) => String(n?.id) === String(id)) || null;
       setNode(target);
@@ -171,39 +195,31 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
   const fetchMetric = useCallback(async () => {
     if (!id || !clusterId) return;
     try {
-      const fn1 = (api as any).getNodeMetric;
-      const fn2 = (api as any).getNodeMetricByAgg;
-
-      let X: any = null, Y: any = null;
-      if (typeof fn1 === 'function') X = await fn1({ clusterId }, { from: timeRange.from, to: timeRange.to });
-      if (typeof fn2 === 'function') Y = await fn2({ clusterId }, { from: timeRange.from, to: timeRange.to, agg: '1m' as any });
-
+      const agg = await getNodeMetricByAgg({ clusterId }, { from: metricTime.fromISO, to: metricTime.toISO, agg: '1m' as any });
       const key = (node?.id ?? id) as any;
       const altKey = node?.name ?? node?.hostname ?? node?.ip;
-
-      const c1 = coerceSeries((X as any)?.data ?? X, key);
-      const c2 = coerceSeries((Y as any)?.data ?? Y, key);
-      const c3 = altKey ? coerceSeries((X as any)?.data ?? X, altKey) : [];
-      const c4 = altKey ? coerceSeries((Y as any)?.data ?? Y, altKey) : [];
-
-      const cpu = [c2, c1, c4, c3].find(a => a.length) || [];
+      const c2 = coerceSeries((agg as any)?.data ?? agg, key);
+      const c4 = altKey ? coerceSeries((agg as any)?.data ?? agg, altKey) : [];
+      const cpu = [c2, c4].find(a => a.length) || [];
       setCpuSeries(cpu);
       setMemSeries(cpu);
     } catch {
-      setCpuSeries([]);
-      setMemSeries([]);
+      setCpuSeries([]); setMemSeries([]);
     }
-  }, [id, clusterId, node, timeRange]);
+  }, [id, clusterId, node, metricTime]);
 
   const fetchHealth = useCallback(async () => {
     if (!id) return;
     try {
-      const fn = (api as any).getNodeHealth; // 如果没导出，优雅降级
-      if (typeof fn !== 'function') { setHRows([]); setHTotal(0); return; }
-      const res: any = await fn({ nodeId: id }, { page: ui2apiPage(hPage), size: hSize });
+      const params: any = { page: hPage, size: hSize };
+      if (healthTime.fromLDT) params.from = healthTime.fromLDT;
+      if (healthTime.toLDT)   params.to   = healthTime.toLDT;
+
+      const res = await nodeHealthHistory({ nodeId: Number(id) }, params);
       const { list, total } = unpackPageLike(res);
       const rows = (list as any[]).map((r: any) => ({
-        time: r.checkTime ?? r.time ?? r.timestamp ?? r.createdAt,
+        id: r.id,
+        time: r.time ?? r.checkTime ?? r.timestamp ?? r.createdAt,
         level: r.healthStatus ?? r.health ?? r.level,
         message: r.message,
         source: r.source,
@@ -213,15 +229,16 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
     } catch {
       setHRows([]); setHTotal(0);
     }
-  }, [id, hPage]);
+  }, [id, hPage, hSize, healthTime]);
 
   useEffect(() => { if (open) fetchNode(); }, [open, fetchNode]);
   useEffect(() => { if (open && node) fetchMetric(); }, [open, node, fetchMetric]);
-  useEffect(() => { if (open) fetchHealth(); }, [open, fetchHealth]);
-  useEffect(() => { if (open) fetchMetric(); }, [open, range]);
+  useEffect(() => { if (open) fetchHealth(); }, [open, fetchHealth]);     // 打开时：用 RangePicker 的值(若未选用默认30天)
+  useEffect(() => { if (open) fetchMetric(); }, [open, metricRange]);     // 切换指标范围
+  useEffect(() => { if (open) { setHPage(1); fetchHealth(); } }, [open, healthPicker]); // RangePicker 变化重查
 
   const lastHeartbeatStr = useMemo(() => {
-    const v = node?.lastHeartbeat ?? node?.heartbeatAt ?? node?.updatedAt;
+    const v = node?.lastHeartbeat ?? node?.heartbeatAt ?? node?.updatedAt ?? node?.healthTime;
     if (!v) return '-';
     const ts = typeof v === 'number' ? v : Date.parse(String(v));
     return Number.isFinite(ts) ? new Date(ts).toLocaleString() : '-';
@@ -252,7 +269,7 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
 
       <div className="mt-4" />
 
-      <Descriptions column={1} size="small" labelStyle={{ width: 92, color: '#595959' }}>
+      <Descriptions column={1} size="small" styles={{ label: { width: 92, color: '#595959' } }}>
         <Descriptions.Item label="节点名">{node?.name || `#${id}`}</Descriptions.Item>
         <Descriptions.Item label="IP">{node?.ip || '-'}</Descriptions.Item>
         <Descriptions.Item label="角色">{node?.role || node?.type || '-'}</Descriptions.Item>
@@ -269,7 +286,7 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
   const Metrics = (
     <>
       <div className="flex justify-between items-center mb-2">
-        <Radio.Group value={range} onChange={e => setRange(e.target.value)} size="small">
+        <Radio.Group value={metricRange} onChange={e => setMetricRange(e.target.value)} size="small">
           <Radio.Button value="1h">近 1 小时</Radio.Button>
           <Radio.Button value="6h">近 6 小时</Radio.Button>
           <Radio.Button value="24h">近 24 小时</Radio.Button>
@@ -297,16 +314,27 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
 
   const Health = (
     <>
+      <div className="flex justify-between items-center mb-2">
+        {/* ✅ 用页面时间选择器控制健康记录范围；未选时默认近30天 */}
+        <RangePicker
+          showTime
+          allowClear
+          value={healthPicker as any}
+          onChange={(vals) => { setHPage(1); setHealthPicker(vals ? [vals[0], vals[1]] : null); }}
+          style={{ width: 360 }}
+          placeholder={['开始时间', '结束时间']}
+        />
+        <Button size="small" icon={<ReloadOutlined />} onClick={() => { setHPage(1); fetchHealth(); }} />
+      </div>
+
       <Table
         size="small"
-        rowKey={(_, i) => String(i)}
+        rowKey={(r: any) =>
+          String(r.id ?? r.time ?? r.checkTime ?? r.timestamp ?? r.createdAt ??
+            `${r.level ?? ''}-${r.message ?? ''}-${r.source ?? ''}`)
+        }
         dataSource={hRows}
-        pagination={{
-          current: hPage,
-          total: hTotal,
-          pageSize: hSize,
-          onChange: p => setHPage(p),
-        }}
+        pagination={{ current: hPage, total: hTotal, pageSize: hSize, onChange: p => setHPage(p) }}
         columns={[
           {
             title: '时间',
@@ -317,15 +345,13 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
               return Number.isFinite(ts) ? new Date(ts).toLocaleString() : '-';
             },
           },
-          {
-            title: '级别',
-            dataIndex: 'level',
-            width: 120,
-            render: (v: any) => mapHealthTag(v),
-          },
+          { title: '级别', dataIndex: 'level', width: 120, render: (v: any) => mapHealthTag(v) },
           { title: '描述', dataIndex: 'message', ellipsis: true },
           { title: '来源', dataIndex: 'source', width: 140, ellipsis: true },
         ]}
+        locale={{
+          emptyText: '所选时间范围内无健康记录',
+        }}
       />
     </>
   );
@@ -366,11 +392,9 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
 
 export default NodeDetailModal;
 
-const CardLike: React.FC<{ title: React.ReactNode; children: React.ReactNode }> = ({ title, children }) => {
-  return (
-    <div style={{ border: '1px solid #f0f0f0', borderRadius: 10, padding: 12 }}>
-      <div style={{ fontWeight: 600, marginBottom: 8 }}>{title}</div>
-      {children}
-    </div>
-  );
-};
+const CardLike: React.FC<{ title: React.ReactNode; children: React.ReactNode }> = ({ title, children }) => (
+  <div style={{ border: '1px solid #f0f0f0', borderRadius: 10, padding: 12 }}>
+    <div style={{ fontWeight: 600, marginBottom: 8 }}>{title}</div>
+    {children}
+  </div>
+);

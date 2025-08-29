@@ -33,7 +33,7 @@ public class NodeHealthController {
     @Operation(summary = "", description = "",operationId = "listNodeHealths")
     @GetMapping("/list")
     public ApiResponse<PageResult<NodeHealthDTO>> list(
-            @PathVariable Long nodeId,
+            @RequestParam Long nodeId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return ApiResponse.ok(service.list(nodeId,page,size));
