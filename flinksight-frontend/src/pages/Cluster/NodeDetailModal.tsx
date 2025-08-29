@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Drawer, Tabs, Descriptions, Space, Tag, Statistic, Row, Col, Table, Button, Radio, message, DatePicker } from 'antd';
 import type { TabsProps } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
@@ -95,26 +95,6 @@ const Sparkline: React.FC<{
   );
 };
 
-function coerceSeries(obj: any, nodeKey: string | number): Array<{ t: number; v: number }> {
-  if (!obj) return [];
-  const normalize = (a: any[]) =>
-    a.map((i: any) => {
-      const t = Number(i?.t ?? i?.ts ?? i?.time ?? i?.timestamp ?? i?.[0]);
-      const v = Number(i?.v ?? i?.value ?? i?.val ?? i?.[1]);
-      return Number.isFinite(t) && Number.isFinite(v) ? { t, v } : null;
-    }).filter(Boolean) as Array<{ t: number; v: number }>;
-
-  if (Array.isArray(obj)) return normalize(obj);
-  if (obj?.series) return normalize(obj.series);
-  if (obj?.nodes && obj.nodes?.[nodeKey as any]) {
-    const node = obj.nodes?.[nodeKey as any];
-    if (Array.isArray(node)) return normalize(node);
-    if (node?.cpu) return normalize(node.cpu);
-  }
-  if (obj?.cpu) return normalize(obj.cpu);
-  return [];
-}
-
 function mapHealthTag(v: any) {
   const s = String(v ?? '').toLowerCase();
   if (['healthy','ok','online','健康'].includes(s)) return <Tag color="green">健康</Tag>;
@@ -132,15 +112,29 @@ function mapEnabledTag(v: any) {
   return on ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag>;
 }
 
-/** LocalDateTime 期望的本地时间格式（不带 Z、不带时区） */
+/** LocalDateTime（无 Z） */
 const toLocal = (d: Dayjs) => d.format('YYYY-MM-DDTHH:mm:ss');
 
-const oneHour = 60 * 60 * 1000;
-const MAX_METRIC_RANGE_MS = 7 * 24 * oneHour;
-const pickAgg = (rangeMs: number) => {
-  if (rangeMs <= 6 * oneHour) return '1m';
-  if (rangeMs <= 24 * oneHour) return '5m';
-  return '30m';
+const ONE_HOUR = 60 * 60 * 1000;
+const MAX_7D_MS = 7 * 24 * ONE_HOUR;
+
+/** 区间长度 → 聚合档 */
+const pickAgg = (durMs: number) => {
+  if (durMs <= 6 * ONE_HOUR) return 'none';
+  if (durMs <= 24 * ONE_HOUR) return 'hour';
+  return 'day';
+};
+
+/** times[] + values[] → {t,v}[] */
+const toSeries = (times: any[], values: any[]) => {
+  if (!Array.isArray(times) || !Array.isArray(values) || times.length !== values.length) return [];
+  const out: Array<{ t: number; v: number }> = [];
+  for (let i = 0; i < times.length; i += 1) {
+    const t = dayjs(times[i]);
+    const v = Number(values[i]);
+    if (t.isValid() && Number.isFinite(v)) out.push({ t: t.valueOf(), v });
+  }
+  return out;
 };
 
 const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
@@ -155,26 +149,18 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
   const [loading, setLoading] = useState(false);
 
   // —— 指标 —— //
+  const now = dayjs();
+  const [mRange, setMRange] = useState<[Dayjs, Dayjs]>([
+    now.subtract(6, 'hour'),
+    now,
+  ]);
+  const [mQuick, setMQuick] = useState<'1h' | '6h' | '24h' | '7d' | 'custom'>('6h');
+
+  const mFromMs = useMemo(() => mRange[0].valueOf(), [mRange]);
+  const mToMs   = useMemo(() => mRange[1].valueOf(), [mRange]);
+
   const [cpuSeries, setCpuSeries] = useState<Array<{ t: number; v: number }>>([]);
   const [memSeries, setMemSeries] = useState<Array<{ t: number; v: number }>>([]);
-  const [range, setRange] = useState<'1h' | '6h' | '24h' | '7d'>('6h');
-
-  const metricRange = useMemo(() => {
-    const now = Date.now();
-    let fromMs = now;
-    if (range === '1h')  fromMs = now - 1  * oneHour;
-    if (range === '6h')  fromMs = now - 6  * oneHour;
-    if (range === '24h') fromMs = now - 24 * oneHour;
-    if (range === '7d')  fromMs = now - 7  * 24 * oneHour;
-    const minFrom = now - MAX_METRIC_RANGE_MS;
-    if (fromMs < minFrom) fromMs = minFrom;
-    const dur = now - fromMs;
-    return {
-      from: new Date(fromMs).toISOString(),
-      to:   new Date(now).toISOString(),
-      agg:  pickAgg(dur),
-    };
-  }, [range]);
 
   // —— 健康明细 —— //
   const [hRange, setHRange] = useState<[Dayjs, Dayjs]>(() => [dayjs().subtract(7, 'day'), dayjs()]);
@@ -183,7 +169,7 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
   const [hPage, setHPage] = useState(1);
   const hSize = 10;
 
-  /** 拉节点基础信息 */
+  // —— 基础信息 —— //
   const fetchNode = useCallback(async () => {
     if (!id || !clusterId) return;
     setLoading(true);
@@ -199,32 +185,53 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
     }
   }, [id, clusterId]);
 
-  /** 拉指标 */
+  // —— 指标：请求序列防乱序 —— //
+  const metricReqSeq = useRef(0);
+
   const fetchMetric = useCallback(async () => {
-    if (!id || !clusterId) return;
-    try {
-      const fnAgg = (api as any).getNodeMetricByAgg || (api as any).getClusterNodesMetricAgg;
-      if (!fnAgg) { setCpuSeries([]); setMemSeries([]); return; }
+    if (!clusterId) return;
+    const seq = ++metricReqSeq.current;
 
-      const res: any = await fnAgg(
-        { clusterId },
-        { from: metricRange.from, to: metricRange.to, agg: metricRange.agg }
-      );
+    const from = dayjs(mFromMs);
+    const to   = dayjs(mToMs);
 
-      const key   = (node?.id ?? id) as any;
-      const alias = node?.name ?? node?.hostname ?? node?.ip;
-
-      const a = coerceSeries((res?.data ?? res), key);
-      const b = alias ? coerceSeries((res?.data ?? res), alias) : [];
-      const cpu = [a, b].find(x => x.length) || [];
-      setCpuSeries(cpu);
-      setMemSeries(cpu);
-    } catch {
-      setCpuSeries([]); setMemSeries([]);
+    // 仅限近 7 天窗口（UI 已限制，双保险）
+    const minFrom = dayjs().subtract(7, 'day');
+    const maxTo = dayjs();
+    if (from.isBefore(minFrom) || to.isAfter(maxTo) || !from.isBefore(to)) {
+      if (seq === metricReqSeq.current) {
+        setCpuSeries([]); setMemSeries([]);
+      }
+      return;
     }
-  }, [id, clusterId, node, metricRange]);
 
-  /** 健康明细历史 */
+    const agg = pickAgg(to.diff(from));
+    try {
+      const res: any = await (api as any).getNodeMetricByAgg(
+        { clusterId },
+        { from: toLocal(from), to: toLocal(to), agg }
+      );
+      const data = res?.data ?? res;
+      const times = data?.times ?? [];
+      const cpuArr = data?.cpu ?? [];
+      const memArr = data?.memory ?? [];
+
+      const cpu = toSeries(times, cpuArr);
+      const mem = toSeries(times, memArr);
+
+      if (seq === metricReqSeq.current) {
+        setCpuSeries(cpu);
+        setMemSeries(mem);
+      }
+    } catch (e: any) {
+      if (seq === metricReqSeq.current) {
+        setCpuSeries([]); setMemSeries([]);
+      }
+      console.error('[NodeDetailModal] metric error:', e);
+    }
+  }, [clusterId, mFromMs, mToMs]);
+
+  // —— 健康明细 —— //
   const fetchHealth = useCallback(async () => {
     if (!id) return;
     try {
@@ -249,18 +256,17 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
       }));
       setHRows(rows);
       setHTotal(Number(total) || rows.length);
-    } catch {
+    } catch (e) {
       setHRows([]); setHTotal(0);
     }
   }, [id, hRange, hPage]);
 
   // —— 生命周期 —— //
   useEffect(() => { if (open) fetchNode(); }, [open, fetchNode]);
-  useEffect(() => { if (open && node) fetchMetric(); }, [open, node, fetchMetric]);
+  useEffect(() => { if (open) fetchMetric(); }, [open, fetchMetric]); // 只依赖毫秒值，避免循环
   useEffect(() => { if (open) fetchHealth(); }, [open, fetchHealth]);
-  useEffect(() => { if (open) fetchMetric(); }, [open, range]);
 
-  // —— 概览 KPI —— //
+  // —— KPI —— //
   const lastHeartbeatStr = useMemo(() => {
     const v = node?.lastHeartbeat ?? node?.heartbeatAt ?? node?.updatedAt;
     if (!v) return '-';
@@ -282,6 +288,7 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
     return 0;
   }, [node, memSeries]);
 
+  // —— 视图 —— //
   const Overview = (
     <>
       <Row gutter={16}>
@@ -313,28 +320,77 @@ const NodeDetailModal: React.FC<Props> = ({ id, open, onClose }) => {
 
   const Metrics = (
     <>
-      <div className="flex justify-between items-center mb-2 gap-2">
-        <Radio.Group value={range} onChange={e => setRange(e.target.value)} size="small">
-          <Radio.Button value="1h">近 1 小时</Radio.Button>
-          <Radio.Button value="6h">近 6 小时</Radio.Button>
-          <Radio.Button value="24h">近 24 小时</Radio.Button>
-          <Radio.Button value="7d">近 7 天</Radio.Button>
-        </Radio.Group>
-        <div style={{ fontSize: 12, color: '#8c8c8c' }}>指标仅保留近 7 天，超出会自动截断</div>
-        <Button size="small" icon={<ReloadOutlined />} onClick={() => { fetchMetric(); }} />
+      <div className="flex flex-wrap items-center justify-between mb-2 gap-2">
+        <Space size={8} wrap>
+          <Radio.Group
+            value={mQuick}
+            onChange={(e) => {
+              const v = e.target.value as typeof mQuick;
+              setMQuick(v);
+              const now = dayjs();
+              if (v === '1h')  setMRange([now.subtract(1, 'hour'), now]);
+              if (v === '6h')  setMRange([now.subtract(6, 'hour'), now]);
+              if (v === '24h') setMRange([now.subtract(24, 'hour'), now]);
+              if (v === '7d')  setMRange([now.subtract(7, 'day'), now]);
+              if (v === 'custom') {/* 不动，由 RangePicker 决定 */}
+            }}
+            size="small"
+          >
+            <Radio.Button value="1h">近 1 小时</Radio.Button>
+            <Radio.Button value="6h">近 6 小时</Radio.Button>
+            <Radio.Button value="24h">近 24 小时</Radio.Button>
+            <Radio.Button value="7d">近 7 天</Radio.Button>
+            <Radio.Button value="custom">自定义</Radio.Button>
+          </Radio.Group>
+
+          <RangePicker
+            showTime
+            allowClear={false}
+            value={mRange}
+            format="YYYY-MM-DD HH:mm:ss"
+            disabledDate={(current) => {
+              if (!current) return false;
+              const now = dayjs();
+              const min = now.subtract(7, 'day').startOf('day');
+              return current.isAfter(now) || current.isBefore(min);
+            }}
+            onChange={(vals) => {
+              if (!vals || vals.length !== 2 || !vals[0] || !vals[1]) return;
+              setMRange([vals[0], vals[1]]);
+              setMQuick('custom');
+            }}
+            onOk={(vals) => {
+              if (!vals || vals.length !== 2 || !vals[0] || !vals[1]) return;
+              setMRange([vals[0] as Dayjs, vals[1] as Dayjs]);
+              setMQuick('custom');
+            }}
+          />
+        </Space>
+
+        <div style={{ flex: 1 }} />
+
+        <Button
+          size="small"
+          icon={<ReloadOutlined />}
+          onClick={() => { fetchMetric(); }}
+        />
       </div>
 
       <Row gutter={16}>
         <Col span={12}>
-          <CardLike title="CPU 使用率">
+          <CardLike title="CPU 使用率（集群均值）">
             <Sparkline data={cpuSeries} max={100} />
-            <div style={{ marginTop: 6, color: '#8c8c8c' }}>当前 {cpuNow}%</div>
+            <div style={{ marginTop: 6, color: '#8c8c8c' }}>
+              当前 {cpuNow}%
+            </div>
           </CardLike>
         </Col>
         <Col span={12}>
-          <CardLike title="内存 使用率">
+          <CardLike title="内存 使用率（集群均值）">
             <Sparkline data={memSeries} max={100} stroke="#13c2c2" fill="#13c2c214" />
-            <div style={{ marginTop: 6, color: '#8c8c8c' }}>当前 {memNow}%</div>
+            <div style={{ marginTop: 6, color: '#8c8c8c' }}>
+              当前 {memNow}%
+            </div>
           </CardLike>
         </Col>
       </Row>
