@@ -18,7 +18,6 @@ type ProfileFromApi = {
   signature?: string;
   phone?: string;
   email?: string;
-  // 其它字段忽略
 };
 
 type ProfileForm = {
@@ -28,24 +27,15 @@ type ProfileForm = {
   avatar?: string;
 };
 
-const pick = <T extends object, K extends keyof T>(obj: T | undefined, keys: K[]): Partial<T> => {
-  if (!obj) return {};
-  const r: Partial<T> = {};
-  keys.forEach(k => (r[k] = obj[k]));
-  return r;
-};
-
 // 兼容：后端响应可能是 {success, data:{...}} 或直接 {...}
 function unwrap<T = any>(res: any): T | undefined {
   if (!res) return undefined;
-  // 你的 client.ts 有时返回 res.data（已是服务端body）
-  // 再保险：兼容 res.data.data 结构
   const body = 'data' in res ? res.data : res;
   return body?.data ?? body;
 }
 
-// API -> 表单 的映射
-function mapApiToForm(p: ProfileFromApi | undefined): ProfileForm {
+// API -> 表单
+function mapApiToForm(p?: ProfileFromApi): ProfileForm {
   if (!p) return {};
   return {
     nickname: p.realName ?? '',
@@ -55,7 +45,7 @@ function mapApiToForm(p: ProfileFromApi | undefined): ProfileForm {
   };
 }
 
-// 表单 -> API 的映射（只提交可编辑字段）
+// 表单 -> API
 function mapFormToApi(values: ProfileForm): Partial<ProfileFromApi> {
   return {
     realName: values.nickname?.trim(),
@@ -68,6 +58,9 @@ const ProfileCenter: React.FC = () => {
   const [info, setInfo] = useState<ProfileForm>({});
   const [edit, setEdit] = useState(false);
   const [form] = Form.useForm<ProfileForm>();
+
+  // ↓↓↓ 新增：受控密码弹窗与表单实例
+  const [pwdOpen, setPwdOpen] = useState(false);
   const [pwdForm] = Form.useForm();
 
   useEffect(() => {
@@ -78,14 +71,14 @@ const ProfileCenter: React.FC = () => {
         const mapped = mapApiToForm(data);
         setInfo(mapped);
         form.setFieldsValue(mapped);
-      } catch (e) {
+      } catch {
         message.error('加载个人资料失败');
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 修改基本资料
+  // 保存基本资料
   const handleSave = async (values: ProfileForm) => {
     const payload = mapFormToApi(values);
     await updateProfile(payload);
@@ -96,43 +89,9 @@ const ProfileCenter: React.FC = () => {
     form.setFieldsValue(merged);
   };
 
-  // 修改密码
-  const handlePassword = async () => {
-    Modal.confirm({
-      title: '修改密码',
-      content: (
-        <Form
-          id="passwordForm"
-          layout="vertical"
-          onFinish={async (vals) => {
-            await changePassword(vals);
-            message.success('密码已修改');
-            Modal.destroyAll();
-          }}
-        >
-          <Form.Item label="原密码" name="oldPassword" rules={[{ required: true }]}>
-            <Input.Password />
-          </Form.Item>
-          <Form.Item
-            label="新密码"
-            name="newPassword"
-            rules={[{ required: true, min: 6, message: '至少6位' }]}
-          >
-            <Input.Password />
-          </Form.Item>
-        </Form>
-      ),
-      okText: '提交',
-      cancelText: '取消',
-      onOk: () => {
-        const formEl: any = document.getElementById('passwordForm');
-        if (formEl) (formEl as HTMLFormElement).dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-        return false;
-      },
-      onCancel: () => Modal.destroyAll(),
-      maskClosable: true,
-      width: 400
-    });
+  // 打开修改密码弹窗
+  const handlePassword = () => {
+    setPwdOpen(true);
   };
 
   return (
@@ -141,18 +100,12 @@ const ProfileCenter: React.FC = () => {
         title="个人信息"
         extra={!edit ? <Button onClick={() => setEdit(true)}>编辑</Button> : null}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSave}
-          disabled={!edit}
-        >
+        <Form form={form} layout="vertical" onFinish={handleSave} disabled={!edit}>
           <Form.Item label="昵称" name="nickname" rules={[{ required: true, message: '请输入昵称' }]}>
             <Input placeholder="请输入昵称" />
           </Form.Item>
 
           <Form.Item label="邮箱" name="email">
-            {/* 邮箱一般不在此处修改，如需修改可改为可编辑并在 mapFormToApi 中添加 email */}
             <Input disabled />
           </Form.Item>
 
@@ -185,7 +138,6 @@ const ProfileCenter: React.FC = () => {
                 style={{ width: 80, height: 80, borderRadius: 40, cursor: edit ? 'pointer' : 'default', objectFit: 'cover' }}
               />
             </Upload>
-            {/* 隐藏表单字段，确保 avatar 提交时带上 */}
             <Form.Item name="avatar" style={{ display: 'none' }}>
               <Input />
             </Form.Item>
@@ -203,6 +155,57 @@ const ProfileCenter: React.FC = () => {
 
         <Button style={{ marginTop: 16 }} onClick={handlePassword}>修改密码</Button>
       </Card>
+
+      {/* 受控密码弹窗（稳定） */}
+      <Modal
+        title="修改密码"
+        open={pwdOpen}
+        onCancel={() => { setPwdOpen(false); pwdForm.resetFields(); }}
+        onOk={() => pwdForm.submit()}
+        okText="提交"
+        cancelText="取消"
+        destroyOnClose
+        maskClosable
+        width={400}
+      >
+        <Form
+          form={pwdForm}
+          layout="vertical"
+          onFinish={async (vals: any) => {
+            await changePassword({ oldPassword: vals.oldPassword, newPassword: vals.newPassword });
+            message.success('密码已修改');
+            setPwdOpen(false);
+            pwdForm.resetFields();
+          }}
+        >
+          <Form.Item label="原密码" name="oldPassword" rules={[{ required: true, message: '请输入原密码' }]}>
+            <Input.Password autoFocus />
+          </Form.Item>
+          <Form.Item
+            label="新密码"
+            name="newPassword"
+            rules={[{ required: true, min: 6, message: '至少 6 位' }]}
+          >
+            <Input.Password />
+          </Form.Item>
+          <Form.Item
+            label="确认新密码"
+            name="confirmPassword"
+            dependencies={['newPassword']}
+            rules={[
+              { required: true, message: '请再次输入新密码' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('newPassword') === value) return Promise.resolve();
+                  return Promise.reject(new Error('两次输入不一致'));
+                },
+              }),
+            ]}
+          >
+            <Input.Password />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };
