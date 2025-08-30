@@ -3,18 +3,24 @@ package com.flinksight.backend.controller;
 import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.common.dto.IdListDTO;
 import com.flinksight.common.dto.NotificationDTO;
+import com.flinksight.common.enums.ReadStatus;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 消息通知管理
  */
+@Slf4j
 @RestController
 @Tag(name = "api", description = "消息通知管理API")
 @RequestMapping("/api/notify")
@@ -38,16 +44,20 @@ public class NotificationController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    // ====== 前端：notificationList() ======
-    @Operation(summary = "消息列表（站内消息）",operationId = "listNotifications")
+
+    @Operation(summary = "消息列表（站内消息）", operationId = "listNotifications")
     @GetMapping("/list")
     public ApiResponse<PageResult<NotificationDTO>> list(
-            @RequestParam(required = false) String type,
-            @RequestParam(required = false) Integer isRead,
-            @RequestParam(defaultValue = "0") int page,   // 前端若是 0-based 就保持一致；你也可接收 1-based 再 -1
+            @Parameter(description = "通知类别集合，如 ALERT、SYSTEM、MARKETING、INFO 等")
+            @RequestParam(required = false, name = "categories") List<String> categories,
+            @Parameter(description = "读取状态：UNREAD/READ")
+            @RequestParam(required = false, name = "readStatus") ReadStatus readStatus,
+            @RequestParam(defaultValue = "0") int page, // 0-based
             @RequestParam(defaultValue = "20") int size
     ) {
-        var p = service.list(type, isRead, page,size);
+        log.info("[service Parameter] categories:{}, readStatus:{}, p={}, ps={}",
+                categories, readStatus, page, size);
+        PageResult<NotificationDTO> p = service.list(categories, readStatus, page, size);
         return ApiResponse.ok(p);
     }
 

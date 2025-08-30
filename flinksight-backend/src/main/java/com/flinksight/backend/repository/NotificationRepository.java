@@ -19,19 +19,43 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     Page<Notification> findByTenantIdAndIsDeleted(Long tenantId, Integer isDeleted, Pageable pageable);
     Page<Notification> findByIsDeleted(Integer isDeleted, Pageable pageable);
 
-    Page<Notification> findByUserIdAndTenantIdAndIsDeleted(Long userId, Long tenantId, Integer isDeleted, Pageable pageable);
-
-    Page<Notification> findByUserIdAndTenantIdAndIsDeletedAndType(Long userId, Long tenantId, Integer isDeleted, String type, Pageable pageable);
-
-    Page<Notification> findByUserIdAndTenantIdAndIsDeletedAndIsRead(Long userId, Long tenantId, Integer isDeleted, Integer isRead, Pageable pageable);
-
     List<Notification> findByIdInAndUserIdAndTenantIdAndIsDeleted(Collection<Long> ids, Long userId, Long tenantId, Integer isDeleted);
 
     Optional<Notification> findByIdAndUserIdAndTenantIdAndIsDeleted(Long id, Long userId, Long tenantId, Integer isDeleted);
 
 
+    @Query(
+            value = """
+    SELECT n
+    FROM Notification n
+    WHERE n.userId = :userId
+    AND n.tenantId = :tenantId
+    AND n.isDeleted = 0
+    AND (:readStatus IS NULL OR n.readStatus = :readStatus)
+    AND (:hasCategories = false OR n.category IN :categories)
+    """,
+                countQuery = """
+    SELECT COUNT(n)
+    FROM Notification n
+    WHERE n.userId = :userId
+    AND n.tenantId = :tenantId
+    AND n.isDeleted = 0
+    AND (:readStatus IS NULL OR n.readStatus = :readStatus)
+    AND (:hasCategories = false OR n.category IN :categories)
+    """
+        )
+    Page<Notification> pageByCond(
+            @Param("userId") Long userId,
+            @Param("tenantId") Long tenantId,
+            @Param("readStatus") Integer readStatus,
+            @Param("hasCategories") boolean hasCategories,
+            @Param("categories") List<String> categories,
+            Pageable pageable
+    );
+
+
     @Modifying
-    @Query("update Notification n set n.isRead=1 " +
+    @Query("update Notification n set n.readStatus=1 " +
             "where n.id=:id and n.userId=:uid and n.tenantId=:tid and n.isDeleted=0")
     int markReadByIdAndOwner(@Param("id") Long id,
                              @Param("uid") Long uid,

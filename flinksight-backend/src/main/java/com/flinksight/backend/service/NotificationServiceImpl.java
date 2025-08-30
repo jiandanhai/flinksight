@@ -6,17 +6,23 @@ import com.flinksight.backend.mapper.NotificationStructMapper;
 import com.flinksight.backend.repository.NotificationRepository;
 import com.flinksight.backend.security.SecurityUtil;
 import com.flinksight.common.dto.NotificationDTO;
+import com.flinksight.common.enums.ReadStatus;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.NotificationService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -50,18 +56,24 @@ public class NotificationServiceImpl implements NotificationService {
 
     /** 消息列表（当前用户 + 当前租户），支持按类型/已读筛选 */
     @Override
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
-    public PageResult<NotificationDTO> list(String type, Integer isRead, int page, int size) {
-        PageRequest pr = PageHelpers.pageRequest(page, size, null, Notification.class); // 统一 1→0
-        Page<Notification> result;
-        if (type != null && !type.isBlank()) {
-            result = repository.findByUserIdAndTenantIdAndIsDeletedAndType(SecurityUtil.getCurrentUserId(), SecurityUtil.getCurrentTenantId(), 0, type, pr);
-        } else if (isRead != null) {
-            result = repository.findByUserIdAndTenantIdAndIsDeletedAndIsRead(SecurityUtil.getCurrentUserId(), SecurityUtil.getCurrentTenantId(), 0, isRead, pr);
-        } else {
-            result = repository.findByUserIdAndTenantIdAndIsDeleted(SecurityUtil.getCurrentUserId(), SecurityUtil.getCurrentTenantId(), 0, pr);
-        }
-        return PageHelpers.toPageResult(result, notificationStructMapper::toDTO, true); // 返回
+    @Transactional(readOnly = true)
+    public PageResult<NotificationDTO> list(List<String> categories, ReadStatus readStatus, int page, int size) {
+        Sort sort = Sort.by(Sort.Direction.DESC, "createTime", "id");
+        PageRequest pr = PageHelpers.pageRequest(page, size, sort, Notification.class);
+        Long userId = SecurityUtil.getCurrentUserId();
+        Long tenantId = SecurityUtil.getCurrentTenantId();
+        List<String> cats = normalize(categories);
+        boolean hasCategories = !cats.isEmpty();
+        Integer rs = (readStatus == null ? null : (readStatus == ReadStatus.READ ? 1 : 0));
+        log.info("[service Parameter] rs:{},hasCategories:{},cats:{}",rs,hasCategories,cats);
+        Page<Notification> pg = repository.pageByCond(userId, tenantId, rs, hasCategories, cats, pr);
+        return PageHelpers.toPageResult(pg, notificationStructMapper::toDTO, true);
+    }
+
+
+    private List<String> normalize(List<String> in) {
+        if (in == null) return Collections.emptyList();
+        return in.stream().filter(Objects::nonNull).map(String::trim).filter(s -> !s.isEmpty()).distinct().toList();
     }
 
 
@@ -71,7 +83,7 @@ public class NotificationServiceImpl implements NotificationService {
         Long tenantId = SecurityUtil.getCurrentTenantId();
         Long userId = SecurityUtil.getCurrentUserId();
         List<Notification> list = repository.findByIdInAndUserIdAndTenantIdAndIsDeleted(ids, userId, tenantId, 0);
-        list.forEach(n -> n.setIsRead(1));
+        list.forEach(n -> n.setReadStatus(1));
         repository.saveAll(list);
         return list.size();
     }

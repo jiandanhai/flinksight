@@ -1,6 +1,7 @@
 package com.flinksight.common.service;
 
 import com.flinksight.common.dto.NotificationDTO;
+import com.flinksight.common.enums.ReadStatus;
 import com.flinksight.common.model.PageResult;
 
 import java.util.List;
@@ -13,7 +14,7 @@ public interface NotificationService extends SoftDeleteService<NotificationDTO, 
 
     PageResult<NotificationDTO> findByTenantId(int page, int size);
 
-    PageResult<NotificationDTO> list(String type, Integer isRead, int page,int size);
+    PageResult<NotificationDTO> list(List<String> categories, ReadStatus readStatus, int page, int size);
 
     int markRead(List<Long> ids);
 

@@ -21,9 +21,9 @@ public class NotificationDTO  implements Serializable {
     private Long id;
     private String title;
     private String content;
-    private Integer type;
+    private String category;
     private Long userId;
-    private Integer status;
+    private Integer readStatus;
     private Long tenantId;
     private LocalDateTime sendTime;
     private Integer isDeleted;

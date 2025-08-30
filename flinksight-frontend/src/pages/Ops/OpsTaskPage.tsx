@@ -1,12 +1,12 @@
+// /src/pages/ops/OpsTaskPage.tsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, Segmented, Input, Space, Button, Tag, Popconfirm, Popover, Drawer, message } from 'antd';
 import dayjs from 'dayjs';
 import client from '@/api/client';
-
 import { listOpsTasks, deleteOpsTask, runOpsTask } from '@/api/modules';
 import type { OpsTaskDTO } from '@/api/dto';
 import PageTable from '../../components/PageTable';
-// import Loading from '../../components/Loading'; // 表格自带 loading，避免全屏遮罩
+import Loading from '../../components/Loading';
 
 const STATUS_OPTIONS = [
   { label: '全部', value: 'ALL' },
@@ -18,7 +18,6 @@ const STATUS_OPTIONS = [
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_SIZE = 30;
-const TABLE_MIN_WIDTH = 900;
 
 type TemplateDetail = {
   id: number;
@@ -28,6 +27,19 @@ type TemplateDetail = {
   createTime?: string;
 };
 
+function extractPage<T = any>(resp: any) {
+  const payload = resp?.data?.data ?? resp?.data ?? resp;
+  const list: T[] = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.items) ? payload.items
+    : Array.isArray(payload?.data)  ? payload.data
+    : Array.isArray(payload?.list)  ? payload.list
+    : [];
+  const totalRaw =
+    payload?.total ?? payload?.totalElements ?? payload?.totalCount ?? (Array.isArray(list) ? list.length : 0);
+  return { list, total: Number(totalRaw) || 0, success: payload?.success, messageText: payload?.message };
+}
+
 const OpsTaskPage: React.FC = () => {
   const [tasks, setTasks] = useState<OpsTaskDTO[]>([]);
   const [total, setTotal] = useState(0);
@@ -35,130 +47,115 @@ const OpsTaskPage: React.FC = () => {
   const [keyword, setKeyword] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
-  // —— 重复请求防抖&并发保护（解决严格模式/多处触发导致的二次请求） —— //
-  const lastKeyRef = useRef<string>('');
-  const inflightRef = useRef<boolean>(false);
+  // —— 仅用于强制 rc-table 在可见后重算列宽 —— //
+  const [tableKey, setTableKey] = useState(0);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    // 首次挂载后异步 bump 一次，避免隐藏容器初始化拿到 0 宽
+    const t = setTimeout(() => setTableKey(k => k + 1), 0);
+    return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
+    if (!wrapRef.current || !('ResizeObserver' in window)) return;
+    const ro = new ResizeObserver(() => setTableKey(k => k + 1));
+    ro.observe(wrapRef.current);
+    return () => ro.disconnect();
+  }, []);
 
-  // 模板详情 Drawer
+  // 模板抽屉
   const [tplOpen, setTplOpen] = useState(false);
   const [tplLoading, setTplLoading] = useState(false);
   const [tpl, setTpl] = useState<TemplateDetail | null>(null);
 
-  async function fetchTasks(force = false) {
-    const k = `${status}|${keyword.trim()}|${DEFAULT_PAGE}|${DEFAULT_SIZE}`;
-    if (!force) {
-      if (lastKeyRef.current === k) return;     // 同参去重
-      if (inflightRef.current) return;          // 正在请求中，避免并发
-    }
-    lastKeyRef.current = k;
-    inflightRef.current = true;
-
+  const fetchTasks = async () => {
     setLoading(true);
     try {
-      const res = await listOpsTasks({
+      const resp = await listOpsTasks({
         page: DEFAULT_PAGE,
         size: DEFAULT_SIZE,
         status,
-        keyword: keyword.trim() || undefined,
+        keyword: keyword?.trim() || undefined,
       });
-      const body: any = (res && 'data' in res) ? res.data : res;
-      if (body && body.success === false) throw new Error(body.message || '请求失败');
-
-      const items: OpsTaskDTO[] = Array.isArray(body)
-        ? body
-        : (body?.items ?? body?.data ?? []);
-      const ttl = body?.total ?? items?.length ?? 0;
-
-      setTasks(items || []);
-      setTotal(ttl);
+      const { list, total, success, messageText } = extractPage<OpsTaskDTO>(resp);
+      if (success === false) {
+        message.error(messageText || '任务列表加载失败');
+        setTasks([]); setTotal(0);
+      } else {
+        setTasks(Array.isArray(list) ? list : []);
+        setTotal(total);
+      }
     } catch (e: any) {
       message.error(e?.message || '任务列表加载失败');
-      setTasks([]);
-      setTotal(0);
+      setTasks([]); setTotal(0);
     } finally {
-      inflightRef.current = false;
       setLoading(false);
     }
-  }
+  };
 
-  async function handleRun(id: number) {
+  useEffect(() => { fetchTasks(); /* eslint-disable-line */ }, [status]);
+
+  const handleRun = async (id?: number) => {
     if (!id) return;
     setLoading(true);
-    try {
-      await runOpsTask(id);
-      message.success('任务已触发');
-      await fetchTasks(true);
-    } catch (e: any) {
-      message.error(e?.message || '触发失败');
-    } finally {
-      setLoading(false);
-    }
-  }
+    try { await runOpsTask(id); message.success('任务已触发'); fetchTasks(); }
+    catch (e: any) { message.error(e?.message || '触发失败'); }
+    finally { setLoading(false); }
+  };
 
-  async function handleDelete(id: number) {
+  const handleDelete = async (id?: number) => {
     if (!id) return;
     setLoading(true);
-    try {
-      await deleteOpsTask(id);
-      message.success('删除成功');
-      await fetchTasks(true);
-    } catch (e: any) {
-      message.error(e?.message || '删除失败');
-    } finally {
-      setLoading(false);
-    }
-  }
+    try { await deleteOpsTask(id); message.success('删除成功'); fetchTasks(); }
+    catch (e: any) { message.error(e?.message || '删除失败'); }
+    finally { setLoading(false); }
+  };
 
-  async function openTemplateDetail(templateId?: number | null) {
+  const openTemplateDetail = async (templateId?: number | null) => {
     if (!templateId) return;
-    setTplOpen(true);
-    setTplLoading(true);
+    setTplOpen(true); setTplLoading(true);
     try {
       const resp = await client.get(`/api/ops/template/${templateId}`, { withCredentials: true });
-      const data = resp?.data?.data ?? resp?.data;
-      setTpl(data);
+      const data = resp?.data?.data ?? resp?.data ?? resp;
+      setTpl(data || null);
     } catch (e: any) {
       message.error(e?.message || '获取模板详情失败');
-    } finally {
-      setTplLoading(false);
-    }
-  }
+    } finally { setTplLoading(false); }
+  };
 
-  // 只有一个 effect：依赖 status（首次挂载也会跑一次），其余主动触发用 fetchTasks(true)
-  useEffect(() => {
-    fetchTasks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
-
+  // —— 列定义：百分比宽度 + 左对齐 + 省略，合计约 100%，消除右侧空白 —— //
   const columns = useMemo(() => ([
     {
       key: 'name',
       title: '任务名',
-      width: 220,
+      align: 'left' as const,
+      width: '22%',
       ellipsis: true,
       render: (t: any) => <span className="font-medium">{t.taskName || t.name || '-'}</span>,
     },
     {
       key: 'templateName',
       title: '模板名',
-      width: 220,
+      align: 'left' as const,
+      width: '22%',
       ellipsis: true,
       render: (t: any) =>
-        t.templateName
-          ? <Button type="link" onClick={() => openTemplateDetail(t.templateId)}>{t.templateName}</Button>
-          : '-',
+        t.templateName ? (
+          <Button type="link" onClick={() => openTemplateDetail(t.templateId)}>{t.templateName}</Button>
+        ) : '-',
     },
     {
       key: 'templateType',
       title: '模板类型',
-      width: 140,
+      align: 'left' as const,
+      width: '14%',
       ellipsis: true,
       render: (t: any) => t.templateType || '-',
     },
     {
       key: 'status',
       title: '状态',
-      width: 110,
+      align: 'left' as const,
+      width: '10%',
       render: (t: any) => {
         const s = t.status || 'UNKNOWN';
         const color =
@@ -172,7 +169,9 @@ const OpsTaskPage: React.FC = () => {
     {
       key: 'runAt',
       title: '执行时间',
-      width: 180,
+      align: 'left' as const,
+      width: '18%',
+      ellipsis: true,
       render: (t: any) => {
         const ts = t.executedAt || t.runAt;
         return ts ? dayjs(ts).format('YYYY-MM-DD HH:mm:ss') : '-';
@@ -181,22 +180,23 @@ const OpsTaskPage: React.FC = () => {
     {
       key: 'result',
       title: '执行结果',
-      width: 120,
+      align: 'left' as const,
+      width: '8%',
       render: (t: any) =>
-        t.result || t.descriptionSummary
-          ? (
-            <Popover
-              content={<pre className="max-w-[520px] whitespace-pre-wrap">{t.result ?? t.descriptionSummary}</pre>}
-              trigger="click"
-            >
-              <Button type="link" size="small">查看</Button>
-            </Popover>
-          ) : '-',
+        t.result || t.descriptionSummary ? (
+          <Popover
+            content={<pre className="max-w-[520px] whitespace-pre-wrap">{t.result ?? t.descriptionSummary}</pre>}
+            trigger="click"
+          >
+            <Button type="link" size="small">查看</Button>
+          </Popover>
+        ) : '-',
     },
     {
       key: 'op',
       title: '操作',
-      width: 160,
+      align: 'left' as const,
+      width: '6%',
       render: (t: any) => (
         <Space size="small" wrap>
           <Button type="link" onClick={() => handleRun(t.taskId || t.id)}>执行</Button>
@@ -210,45 +210,45 @@ const OpsTaskPage: React.FC = () => {
 
   return (
     <div className="p-4 md:p-6">
-      {/* 顶部工具条 */}
-      <div className="mb-3 flex items-center justify-between gap-3 flex-wrap">
-        <Space size="middle" wrap>
-          <Segmented
-            options={STATUS_OPTIONS as any}
-            value={status}
-            onChange={(v) => setStatus(v as string)}
-          />
-          <Input.Search
-            placeholder="按任务名/模板名/模板类型搜索"
-            allowClear
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            onSearch={() => fetchTasks(true)}
-            style={{ width: 300 }}
-          />
-        </Space>
-        <Space size="middle" wrap>
-          <Button onClick={() => fetchTasks(true)}>刷新</Button>
-          <Button type="primary">新建任务</Button>
-        </Space>
-      </div>
+      {/* 本页作用域内的“吃满宽度”，不改 table-layout，不加 !important */}
+      <style>{`
+        .ops-fit .ant-table-wrapper,
+        .ops-fit .ant-table-container,
+        .ops-fit .ant-table,
+        .ops-fit .ant-table-content { width: 100%; }
+      `}</style>
 
-      <Card className="shadow-sm" styles={{ body: { paddingTop: 12 } }}>
-        {/* 让表格自己滚动，避免表头/内容错位（需要 PageTable 透传 scroll 和 tableLayout） */}
-        <PageTable
-          columns={columns as any}
-          data={tasks}
-          loading={loading}
-          page={DEFAULT_PAGE}
-          size={DEFAULT_SIZE}
-          total={total}
-          emptyText="暂无运维任务"
-          tableLayout="fixed"      // PageTable 内部请转成 Table.tableLayout
-          scrollX={TABLE_MIN_WIDTH} // PageTable 内部请转成 Table.scroll={{ x: TABLE_MIN_WIDTH }}
-        />
+      <Card className="shadow-sm ops-fit" bodyStyle={{ paddingTop: 12 }}>
+        <div className="mb-3 flex items-center justify-between gap-3 flex-wrap">
+          <Segmented options={STATUS_OPTIONS as any} value={status} onChange={(v) => setStatus(v as string)} />
+          <Space size="middle" wrap>
+            <Input.Search
+              placeholder="按任务名/模板名/模板类型搜索"
+              allowClear
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onSearch={() => fetchTasks()}
+              style={{ width: 300 }}
+            />
+            <Button onClick={() => fetchTasks()}>刷新</Button>
+            <Button type="primary">新建任务</Button>
+          </Space>
+        </div>
+
+        <div ref={wrapRef} style={{ width: '100%' }}>
+          <PageTable<OpsTaskDTO>
+            key={tableKey}
+            columns={columns as any}
+            data={Array.isArray(tasks) ? tasks : []}
+            loading={!!loading}
+            page={DEFAULT_PAGE}
+            size={DEFAULT_SIZE}
+            total={typeof total === 'number' ? total : 0}
+            emptyText="暂无运维任务"
+          />
+        </div>
       </Card>
 
-      {/* 模板详情 Drawer */}
       <Drawer
         title={tpl?.name ? `模板：${tpl.name}` : '模板详情'}
         open={tplOpen}
@@ -260,21 +260,14 @@ const OpsTaskPage: React.FC = () => {
             <div>类型：{tpl.type || '-'}</div>
             <div>创建时间：{tpl.createTime ? dayjs(tpl.createTime).format('YYYY-MM-DD HH:mm:ss') : '-'}</div>
             <div style={{ marginTop: 8 }}>脚本预览：</div>
-            <pre
-              style={{
-                maxHeight: 420, overflow: 'auto',
-                background: '#0a0a0a', color: '#eaeaea',
-                padding: 12, borderRadius: 8, fontSize: 12, lineHeight: 1.5,
-              }}
-            >
+            <pre style={{ maxHeight: 420, overflow: 'auto', background: '#0a0a0a', color: '#eaeaea', padding: 12, borderRadius: 8, fontSize: 12, lineHeight: 1.5 }}>
               {(tpl.content || '').slice(0, 4000) || '(无内容)'}
             </pre>
           </div>
         ) : '未找到模板'}
       </Drawer>
 
-      {/* 表格已经有 loading，这里不要再叠全屏遮罩以免“卡住”的观感 */}
-      {/* {loading && <Loading />} */}
+      {loading && <Loading />}
     </div>
   );
 };

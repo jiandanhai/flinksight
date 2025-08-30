@@ -85,20 +85,20 @@ const routes: AppRoute[] = [
     ],
   },
 
-  // 报警中心：父级进 index.tsx；是否在菜单里显示“通知中心”，可用 showChildrenInMenu 控制
+  // 报警中心：父级只做占位 + 重定向到 /alerts/list；子路由各自渲染
   {
     path: '/alerts',
     title: '报警中心',
     icon: <BellOutlined />,
     perm: 'ALERT_VIEW',
-    component: AlertIndex,
-    // showChildrenInMenu: true, // ← 若想在菜单保留“通知中心”，取消本行注释
+    redirect: '/alerts/list',            // 访问 /alerts 时重定向到列表页
+    showChildrenInMenu: true,            // 菜单里展示“通知中心”等子项
     children: [
-      { path: '/alerts/list', title: '报警流水（旧链路）', redirect: '/alerts', hideInMenu: true },
-      { path: '/alerts/notification', title: '通知中心', component: NotificationCenter, perm: 'ALERT_VIEW' },
+      { path: '/alerts/list',          title: '报警流水',   component: AlertIndex,          perm: 'ALERT_VIEW' },
+      { path: '/alerts/notification',  title: '通知中心',   component: NotificationCenter,  perm: 'ALERT_VIEW' },
     ],
   },
-
+  
   // 指标可视化：父级进入 index.tsx（内部 Tabs：指标管理/指标大屏）
   {path: '/metrics',title: '指标可视化',icon: <HomeOutlined />,component: MetricIndex,perm: 'METRICS_VIEW'},
 
