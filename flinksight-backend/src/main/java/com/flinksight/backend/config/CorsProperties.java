@@ -16,4 +16,5 @@ public class CorsProperties {
     private String exposedHeaders;
     private boolean allowCredentials;
     private long maxAge;
+
 }
