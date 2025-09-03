@@ -9,34 +9,38 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { ClusterDTO } from '@/api/dto';
 import EditClusterModal from './EditClusterModal';
 import ClusterDetail from './ClusterDetail';
-import { useUser } from '../../store/user';
+import { useUser } from '@/store/user';
 import { listClusters, deleteCluster, enableBatch } from '@/api/modules';
 
 const { Search } = Input;
+
+type Props = {
+  /** 可选：让外层（index.tsx）控制跳转；不传则内部用 navigate */
+  onOpenDetail?: (clusterId: number, tab?: string) => void;
+};
 
 // 统一抽取分页：兼容“数组/包一层/包两层/records/list/totalElements/totalCount/total”等
 function extractPage<T = any>(resp: any) {
   const payload = resp?.data?.data ?? resp?.data ?? resp;
   const list: T[] = Array.isArray(payload)
-    ? payload
-    : Array.isArray(payload?.data)    ? payload.data
-    : Array.isArray(payload?.records) ? payload.records
-    : Array.isArray(payload?.list)    ? payload.list
-    : [];
+      ? payload
+      : Array.isArray(payload?.data)    ? payload.data
+          : Array.isArray(payload?.records) ? payload.records
+              : Array.isArray(payload?.list)    ? payload.list
+                  : [];
   const totalRaw =
-    payload?.total ??
-    payload?.totalElements ??
-    payload?.totalCount ??
-    (Array.isArray(list) ? list.length : 0);
+      payload?.total ??
+      payload?.totalElements ??
+      payload?.totalCount ??
+      (Array.isArray(list) ? list.length : 0);
   const total = Number(totalRaw) || 0;
   return { list, total, payload };
 }
 
-const ClusterList: React.FC = () => {
+const ClusterList: React.FC<Props> = ({ onOpenDetail }) => {
   const nav = useNavigate();
   const [sp] = useSearchParams();
   const detail = sp.get('detail');               // 有 detail 就渲染详情页
-  const tab = sp.get('tab') || 'nodes';
 
   if (detail) {
     // 进入详情页（与列表共用同一路由，不会覆盖侧边栏）
@@ -79,9 +83,18 @@ const ClusterList: React.FC = () => {
     setModalVisible(true);
   };
 
+  const gotoDetail = (id: number, tab: string) => {
+    if (onOpenDetail) {
+      onOpenDetail(id, tab);
+    } else {
+      nav(`/cluster/list?detail=${id}&tab=${tab}`);
+    }
+  };
+
   const handleDelete = (id: number) => {
     Modal.confirm({
       title: '确认删除该集群？',
+      content: '为避免误操作，这里执行的是“软删除”，数据可在回收站/审计中追溯。',
       onOk: async () => {
         await deleteCluster(id);
         message.success('已删除');
@@ -103,10 +116,10 @@ const ClusterList: React.FC = () => {
       title: '集群名',
       dataIndex: 'name',
       render: (_: any, t: any) => (
-        <span
-          className="text-blue-600 cursor-pointer"
-          onClick={() => nav(`/cluster/list?detail=${t.id}&tab=nodes`)}
-        >
+          <span
+              className="text-blue-600 cursor-pointer"
+              onClick={() => gotoDetail(Number(t.id), 'nodes')}
+          >
           {t.name}
         </span>
       )
@@ -126,9 +139,9 @@ const ClusterList: React.FC = () => {
       title: '健康',
       dataIndex: 'health',
       render: (v: string) =>
-        v === 'healthy' ? <Tag color="green">健康</Tag>
-        : v === 'warning' ? <Tag color="orange">预警</Tag>
-        : <Tag color="red">异常</Tag>
+          v === 'healthy' ? <Tag color="green">健康</Tag>
+              : v === 'warning' ? <Tag color="orange">预警</Tag>
+                  : <Tag color="red">异常</Tag>
     },
     {
       title: '创建时间',
@@ -142,65 +155,65 @@ const ClusterList: React.FC = () => {
     {
       title: '操作',
       render: (_: any, t: any) => (
-        <Space>
-          <Button
-            type="link"
-            size="small"
-            onClick={() => nav(`/cluster/list?detail=${t.id}&tab=status`)}
-          >
-            节点状态
-          </Button>
-          <Button type="link" size="small" onClick={() => openModal(t.id)} disabled={!canEdit}>编辑</Button>
-          <Button type="link" size="small" danger onClick={() => handleDelete(Number(t.id))} disabled={!canEdit}>删除</Button>
-        </Space>
+          <Space>
+            <Button
+                type="link"
+                size="small"
+                onClick={() => gotoDetail(Number(t.id), 'status')}
+            >
+              节点状态
+            </Button>
+            <Button type="link" size="small" onClick={() => openModal(Number(t.id))} disabled={!canEdit}>编辑</Button>
+            <Button type="link" size="small" danger onClick={() => handleDelete(Number(t.id))} disabled={!canEdit}>删除</Button>
+          </Space>
       )
     }
-  ]), [canEdit, nav]);
+  ]), [canEdit]);
 
   return (
-    <div className="p-6 bg-white rounded-xl shadow">
-      <div className="flex justify-between mb-4">
-        <Search
-          placeholder="集群名/负责人/关键字"
-          allowClear
-          enterButton
-          onSearch={(val) => { setKeyword(val?.trim() || undefined); setPage(1); }}
-          style={{ width: 320 }}
+      <div className="p-6 bg-white rounded-xl shadow">
+        <div className="flex justify-between mb-4">
+          <Search
+              placeholder="集群名/负责人/关键字"
+              allowClear
+              enterButton
+              onSearch={(val) => { setKeyword(val?.trim() || undefined); setPage(1); }}
+              style={{ width: 320 }}
+          />
+          <Space>
+            <Button type="primary" onClick={() => openModal()} disabled={!canEdit}>新建集群</Button>
+            <Button onClick={() => handleBatchEnable(true)} disabled={!selectedRowKeys.length || !canEdit}>批量启用</Button>
+            <Button danger onClick={() => handleBatchEnable(false)} disabled={!selectedRowKeys.length || !canEdit}>批量停用</Button>
+          </Space>
+        </div>
+
+        <Table<ClusterDTO>
+            rowKey={(r) => Number((r as any).id)}           // 强制数值，避免字符串 id 造成选择异常
+            dataSource={list}
+            loading={loading}
+            rowSelection={{
+              selectedRowKeys,
+              onChange: (keys) => setSelectedRowKeys(keys as number[]),
+            }}
+            pagination={{
+              current: page,
+              pageSize: size,
+              total,
+              showSizeChanger: true,
+              onChange: (p, s) => { setPage(p); setSize(s ?? size); },
+            }}
+            columns={columns}
         />
-        <Space>
-          <Button type="primary" onClick={() => openModal()} disabled={!canEdit}>新建集群</Button>
-          <Button onClick={() => handleBatchEnable(true)} disabled={!selectedRowKeys.length || !canEdit}>批量启用</Button>
-          <Button danger onClick={() => handleBatchEnable(false)} disabled={!selectedRowKeys.length || !canEdit}>批量停用</Button>
-        </Space>
+
+        {modalVisible && (
+            <EditClusterModal
+                id={editId}
+                open={modalVisible}
+                onOk={() => { setModalVisible(false); fetch(); }}
+                onClose={() => setModalVisible(false)}
+            />
+        )}
       </div>
-
-      <Table<ClusterDTO>
-        rowKey={(r) => Number((r as any).id)}           // 强制数值，避免字符串 id 造成选择异常
-        dataSource={list}
-        loading={loading}
-        rowSelection={{
-          selectedRowKeys,
-          onChange: (keys) => setSelectedRowKeys(keys as number[]),
-        }}
-        pagination={{
-          current: page,
-          pageSize: size,
-          total,
-          showSizeChanger: true,
-          onChange: (p, s) => { setPage(p); setSize(s ?? size); },
-        }}
-        columns={columns}
-      />
-
-      {modalVisible && (
-        <EditClusterModal
-          id={editId}
-          open={modalVisible}
-          onOk={() => { setModalVisible(false); fetch(); }}
-          onClose={() => setModalVisible(false)}
-        />
-      )}
-    </div>
   );
 };
 

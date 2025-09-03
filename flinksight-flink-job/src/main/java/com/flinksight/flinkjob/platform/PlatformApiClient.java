@@ -1,7 +1,7 @@
 package com.flinksight.flinkjob.platform;
 
 import com.flinksight.common.dto.JobMetricsEventDTO;
-import com.flinksight.common.utils.JsonUtil;
+import com.flinksight.common.utils.Jsons;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -19,7 +19,7 @@ public class PlatformApiClient {
             conn.setDoOutput(true);
             conn.setConnectTimeout(2000);
             conn.setRequestProperty("Content-Type", "application/json");
-            String json = JsonUtil.toJson(event);
+            String json = Jsons.to(event);
             OutputStream os = conn.getOutputStream();
             os.write(json.getBytes());
             os.flush();

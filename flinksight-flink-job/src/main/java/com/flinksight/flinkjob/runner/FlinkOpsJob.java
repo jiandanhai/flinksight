@@ -2,7 +2,7 @@ package com.flinksight.flinkjob.runner;
 
 import com.flinksight.common.dto.AlertRuleConfig;
 import com.flinksight.common.dto.JobMetricsEventDTO;
-import com.flinksight.common.utils.JsonUtil;
+import com.flinksight.common.utils.Jsons;
 import com.flinksight.flinkjob.alert.AlertDedupProcessFunction;
 import com.flinksight.flinkjob.alert.AlertRuleApiSource;
 import com.flinksight.flinkjob.alert.DynamicAlertRuleBroadcastProcessFunction;
@@ -30,6 +30,11 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
  * - 审计与Trace全链路
  * - 动态报警Sink支持Kafka/ES/Pulsar/Hudi/HDFS
  * - 生产可观测性/自动自愈/流控等
+ *
+ * - 从 Kafka 订阅 job-metrics（Spark Listener / 其他作业上报）
+ * - 进行规则匹配（此处保留钩子，可接入 AlertRuleApiSource + Broadcast）
+ * - 去重/节流（可接入 AlertDedupProcessFunction）
+ * - 下沉到 Kafka/ES/Prometheus（此处演示日志输出，可替换为 DynamicSinkFactory）
  */
 public class FlinkOpsJob {
 
@@ -76,7 +81,7 @@ public class FlinkOpsJob {
         DataStream<JobMetricsEventDTO> events = raw.map(new RichMapFunction<String, JobMetricsEventDTO>() {
             @Override
             public JobMetricsEventDTO map(String value) {
-                JobMetricsEventDTO event = JsonUtil.fromJson(value, JobMetricsEventDTO.class);
+                JobMetricsEventDTO event = Jsons.from(value, JobMetricsEventDTO.class);
                 TraceIdPropagator.propagate(event);
                 return event;
             }
@@ -94,7 +99,7 @@ public class FlinkOpsJob {
                 .broadcast(DynamicAlertRuleBroadcastProcessFunction.RULES_DESC);
 
         // 8. 指标流下沉（大屏/Prometheus/ES等，可独立配置）
-        DataStream<String> metricsJson = audited.map(JsonUtil::toJson);
+        DataStream<String> metricsJson = audited.map(Jsons::to);
         DynamicSinkFactory.applySink(metricsJson, metricsSinkType, metricsSinkParam, env);
 
         // 9. 动态报警规则联动、报警流防抖去重（全业务逻辑流）

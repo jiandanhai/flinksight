@@ -1,7 +1,7 @@
 package com.flinksight.flinkjob.alert;
 
 import com.flinksight.common.dto.AlertRuleConfig;
-import com.flinksight.common.utils.JsonUtil;
+import com.flinksight.common.utils.Jsons;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
 import java.io.BufferedReader;
@@ -34,7 +34,7 @@ public class AlertRuleApiSource implements SourceFunction<AlertRuleConfig> {
                 StringBuilder sb = new StringBuilder();
                 String line;
                 while ((line = reader.readLine()) != null) sb.append(line);
-                AlertRuleConfig config = JsonUtil.fromJson(sb.toString(), AlertRuleConfig.class);
+                AlertRuleConfig config = Jsons.from(sb.toString(), AlertRuleConfig.class);
                 if (config != null && config.getVersion() != lastVersion) {
                     ctx.collect(config);
                     lastVersion = config.getVersion();

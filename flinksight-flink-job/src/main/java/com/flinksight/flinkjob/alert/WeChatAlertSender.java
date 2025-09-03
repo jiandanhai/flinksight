@@ -1,7 +1,7 @@
 package com.flinksight.flinkjob.alert;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flinksight.common.utils.Jsons;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 
@@ -22,7 +22,6 @@ public class WeChatAlertSender {
     private static final String WX_API_TOKEN = "https://qyapi.weixin.qq.com/cgi-bin/gettoken";
     private static final String WX_API_SEND = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=%s";
     private static final OkHttpClient httpClient = new OkHttpClient();
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     // 缓存accessToken
     private static volatile String cachedToken;
@@ -47,7 +46,7 @@ public class WeChatAlertSender {
             Request request = new Request.Builder().url(sendUrl).post(body).build();
             try (Response resp = httpClient.newCall(request).execute()) {
                 String respBody = resp.body() != null ? resp.body().string() : "";
-                JsonNode root = objectMapper.readTree(respBody);
+                JsonNode root = Jsons.readTree(respBody);
                 if (root.has("errcode") && root.get("errcode").asInt() == 0) {
                     log.info("WeChat告警推送成功: user={} content={}", toUser, content);
                 } else {
@@ -94,7 +93,7 @@ public class WeChatAlertSender {
             Request req = new Request.Builder().url(url).build();
             try (Response resp = httpClient.newCall(req).execute()) {
                 String respBody = resp.body() != null ? resp.body().string() : "";
-                JsonNode node = objectMapper.readTree(respBody);
+                JsonNode node = Jsons.readTree(respBody);
                 if (node.has("access_token")) {
                     cachedToken = node.get("access_token").asText();
                     tokenExpireAt = now + node.get("expires_in").asLong();

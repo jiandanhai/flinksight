@@ -1,7 +1,7 @@
 package com.flinksight.sparkjob.metrics;
 
 import com.flinksight.common.dto.JobMetricsEventDTO;
-import com.flinksight.common.utils.JsonUtil;
+import com.flinksight.common.utils.Jsons;
 import com.flinksight.common.utils.TraceUtil;
 import com.flinksight.sparkjob.sink.DLSink;
 import com.flinksight.sparkjob.sink.DynamicSinkFactory;
@@ -26,7 +26,7 @@ public class MetricsReporter {
         String topic = System.getProperty("job.metrics.topic", "spark-job-metrics");
         String dlqTopic = System.getProperty("job.metrics.dlq.topic", "spark-job-metrics-dlq");
 
-        String json = JsonUtil.toJson(event);
+        String json = Jsons.to(event);
         try {
             // 主通道推送
             DynamicSinkFactory.applySink(json, sinkType, bootstrap, topic);

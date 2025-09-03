@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class FlinkYarnExecutor implements TemplateExecutor {
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
     private final ArtifactStoreRouter storeRouter;
 
     @Override

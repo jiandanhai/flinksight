@@ -18,15 +18,19 @@ import com.flinksight.common.dto.*;
 import com.flinksight.common.enums.NodeState;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ClusterService;
+import com.flinksight.common.service.cluster.probe.ClusterHealthProbe;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.*;
+
+import static org.springframework.http.HttpStatus.*;
 
 /**
  * 集群业务实现
@@ -45,23 +49,10 @@ public class ClusterServiceImpl implements ClusterService{
     private final NodeHealthRepository nodeHealthRepository;
     private final ClusterStatusHistoryRepository cshRepository;
     private final NodeHealthStructMapper nodeHealthStructMapper;
+    private final List<ClusterHealthProbe> probes; // Spring 会自动注入所有实现
 
     @Override
-    public ClusterDTO createCluster(ClusterDTO req) {
-        Long tenantId = SecurityUtil.getCurrentTenantId();
-        // 租户内重名校验（幂等/友好报错）
-        if (clusterRepository.existsByNameAndTenantIdAndIsDeleted(req.getName(), tenantId, 0)) {
-            throw new IllegalArgumentException("集群名称已存在: " + req.getName());
-        }
-        Cluster e = clusterStructMapper.toEntity(req);
-        e.setTenantId(tenantId);
-        e.setIsDeleted(0);
-        e.setCreatedAt(LocalDateTime.now());
-        return clusterStructMapper.toDTO(clusterRepository.save(e));
-    }
-
-    @Override
-    public ClusterDTO updateCluster(Long id, ClusterDTO req) {
+    public ClusterDTO update(Long id, ClusterDTO req) {
         Long tenantId = SecurityUtil.getCurrentTenantId();
         Cluster e = clusterRepository.findByIdAndTenantIdAndIsDeleted(id, tenantId, 0)
                 .orElseThrow(() -> new IllegalArgumentException("集群不存在或不属于当前租户"));
@@ -69,37 +60,44 @@ public class ClusterServiceImpl implements ClusterService{
         return clusterStructMapper.toDTO(clusterRepository.save(e));
     }
 
+
     @Override
-    public Optional<ClusterDTO> getClusterById(Long clusterId) {
+    public Optional<ClusterDTO> get(Long clusterId) {
         return clusterRepository.findById(clusterId).map(clusterStructMapper::toDTO).filter(e -> e.getIsDeleted() == 0);
     }
 
     @Override
-    public PageResult<ClusterDTO> list(int page, int size) {
+    public PageResult<ClusterDTO> list(String type, Integer status, String q, int page, int size) {
         PageRequest pr = PageHelpers.pageRequest(page, size, null, Cluster.class); // 统一 1→0
-        Page<Cluster> result = clusterRepository.findAllByTenantIdAndIsDeleted(SecurityUtil.getCurrentTenantId(), 0, pr);
+        Page<Cluster> result = clusterRepository.search(SecurityUtil.getCurrentTenantId(),
+                type!=null? type.toUpperCase(Locale.ROOT): null, status, q, pr);
         return PageHelpers.toPageResult(result, clusterStructMapper::toDTO, true); // 返回 1-ba
     }
 
-
+    @Transactional
     @Override
-    public ClusterDTO setClusterEnable(Long id, boolean enable) {
-        Long tenantId = SecurityUtil.getCurrentTenantId();
-        Cluster e = clusterRepository.findByIdAndTenantIdAndIsDeleted(id, tenantId, 0)
-                .orElseThrow(() -> new IllegalArgumentException("集群不存在或不属于当前租户"));
-        e.setStatus(enable ? 1 : 0);     // 幂等：重复设置不报错
-        return clusterStructMapper.toDTO(clusterRepository.save(e));
+    public void changeStatus(Long id, Integer status) {
+        if (status == null || (status!=0 && status!=1)) {
+            throw new ResponseStatusException(BAD_REQUEST, "status 只能为 0/1");
+        }
+        Cluster c = load(id);
+        c.setStatus(status);
+        clusterRepository.save(c);
     }
 
-    @Override
-    public void setClusterEnableBatch(List<Long> ids, boolean enable) {
-        if (ids == null || ids.isEmpty()) return;
-        Long tenantId = SecurityUtil.getCurrentTenantId();
-        List<Cluster> list = clusterRepository.findAllByIdInAndTenantIdAndIsDeleted(ids, tenantId, 0);
-        if (list.isEmpty()) return;
-        int s = enable ? 1 : 0;
-        list.forEach(c -> c.setStatus(s));
-        clusterRepository.saveAll(list);
+    @Override public ClusterHealthDTO healthById(Long id) {
+        Cluster c = load(id);
+        try {
+            return probe(c.getType()).check(clusterStructMapper.toDTO(c));
+        } catch (Exception e) {
+            return ClusterHealthDTO.builder()
+                    .name(c.getName()).type(c.getType()).endpoint(c.getEndpoint())
+                    .status(ClusterHealthDTO.Status.DOWN).latencyMs(0L)
+                    .message("健康检查异常: "+e.getMessage())
+                    .samples(java.util.Map.of())
+                    .checkedAt(java.time.Instant.now())
+                    .build();
+        }
     }
 
 
@@ -274,4 +272,110 @@ public class ClusterServiceImpl implements ClusterService{
         // 等价写法（不依赖 ofCode）：
         // return v != null && v == 1 ? NodeState.DISABLED : NodeState.ENABLED;
     }
+
+
+    @Transactional
+    @Override
+    public ClusterDTO register(ClusterSpecDTO spec) {
+        Long tenantId = SecurityUtil.getCurrentTenantId();
+        // 3) 名称在租户下唯一
+        if (clusterRepository.existsByTenantIdAndName(tenantId, spec.getName())) {
+            throw new ResponseStatusException(CONFLICT, "集群名已存在：" + spec.getName());
+        }
+
+        // 4) 可选：连通性预检查（根据类型尝试一次探针）
+        String normalizedType = spec.getType().toUpperCase(Locale.ROOT);
+        Cluster preview = Cluster.builder()
+                .tenantId(tenantId)
+                .name(spec.getName())
+                .type(normalizedType)
+                .endpoint(spec.getEndpoint())
+                .version(spec.getVersion())
+                .tags(spec.getTags())
+                .status(1)
+                .remark(spec.getRemark())
+                .isDeleted(0)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        // 若你希望注册时就校验联通性，可以打开下面代码；否则仅保存，由健康页再测
+        // try {
+        //   ClusterHealthDTO health = pickProbe(normalizedType).check(preview);
+        //   if (health.getStatus() == ClusterHealthDTO.Status.DOWN) {
+        //     throw new ResponseStatusException(BAD_REQUEST, "集群不可达：" + health.getMessage());
+        //   }
+        //   // 自动回填版本
+        //   if (preview.getVersion() == null && health.getSamples() != null) {
+        //     Object v = health.getSamples().get("flink.version");
+        //     if (v instanceof String vs && !vs.isBlank()) preview.setVersion(vs);
+        //   }
+        // } catch (Exception e) {
+        //   throw new ResponseStatusException(BAD_REQUEST, "连通性校验失败：" + e.getMessage());
+        // }
+
+        // 5) 落库
+        Cluster saved = clusterRepository.save(preview);
+        return ClusterDTO.builder()
+                .id(saved.getId())
+                .name(saved.getName())
+                .type(saved.getType())
+                .endpoint(saved.getEndpoint())
+                .version(saved.getVersion())
+                .tags(saved.getTags())
+                .status(saved.getStatus())
+                .remark(saved.getRemark())
+                .createdAt(saved.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    public ClusterHealthDTO healthByName(String name) {
+
+        Cluster c = clusterRepository.findByTenantIdAndName(SecurityUtil.getCurrentTenantId(), name)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "未找到该集群：" + name));
+        try {
+            return pickProbe(c.getType()).check(clusterStructMapper.toDTO(c));
+        } catch (ResponseStatusException rse) {
+            throw rse;
+        } catch (Exception e) {
+            // 任何异常都转为 DOWN，避免把栈抛给前端
+            return ClusterHealthDTO.builder()
+                    .name(c.getName())
+                    .type(c.getType())
+                    .endpoint(c.getEndpoint())
+                    .status(ClusterHealthDTO.Status.DOWN)
+                    .latencyMs(0)
+                    .message("健康检查异常：" + e.getMessage())
+                    .samples(java.util.Map.of())
+                    .checkedAt(java.time.Instant.now())
+                    .build();
+        }
+    }
+
+    // ---------- helpers ----------
+
+    private ClusterHealthProbe pickProbe(String type) {
+        return probes.stream()
+                .filter(p -> p.supports(type))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "不支持的集群类型：" + type));
+    }
+
+    private Cluster load(Long id) {
+        return clusterRepository.findByTenantIdAndId(SecurityUtil.getCurrentTenantId(), id)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "集群不存在或无权访问"));
+    }
+    private ClusterDTO toDTO(Cluster c) {
+        return ClusterDTO.builder()
+                .id(c.getId()).name(c.getName()).type(c.getType())
+                .endpoint(c.getEndpoint()).version(c.getVersion())
+                .tags(c.getTags()).status(c.getStatus())
+                .remark(c.getRemark()).createdAt(c.getCreatedAt())
+                .build();
+    }
+    private ClusterHealthProbe probe(String type){
+        return probes.stream().filter(p -> p.supports(type)).findFirst()
+                .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "不支持的集群类型: "+type));
+    }
+
 }

@@ -2,10 +2,13 @@ package com.flinksight.backend.controller;
 
 import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.backend.security.tenant.TenantRequired;
+import com.flinksight.backend.service.K8sClientFacade;
+import com.flinksight.backend.service.RenderService;
 import com.flinksight.common.dto.JobBatchUpdateStatusRequestDTO;
 import com.flinksight.common.dto.JobDTO;
 import com.flinksight.common.dto.JobInfoDTO;
 import com.flinksight.common.dto.JobRegisterRequestDTO;
+import com.flinksight.common.model.JobSpec;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.JobRegisterService;
 import com.flinksight.common.service.JobService;
@@ -16,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 /**
  * 任务管理接口
  */
@@ -25,18 +30,21 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @TenantRequired
 @Validated
-public class    JobController {
+public class JobController {
 
     private final JobService jobService;
-
     private final JobRegisterService jobRegisterService;
-    @Operation(summary = "新建任务", description = "Create new job",operationId = "createJob")
+
+    private final RenderService render;
+    private final K8sClientFacade k8s;
+
+    @Operation(summary = "新建任务", description = "Create new job", operationId = "createJob")
     @PostMapping("/create")
     public ApiResponse<JobDTO> createJob(@RequestBody JobDTO dto) {
         return ApiResponse.ok(jobService.createJob(dto));
     }
 
-    @Operation(summary = "根据ID查询任务", description = "Get job by ID",operationId = "getJob")
+    @Operation(summary = "根据ID查询任务", description = "Get job by ID", operationId = "getJob")
     @GetMapping("/{id}")
     public ApiResponse<JobDTO> getById(@PathVariable Long id) {
         return jobService.getJobById(id)
@@ -44,16 +52,16 @@ public class    JobController {
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "查询集群下所有任务", description = "Get jobs by tenant and cluster",operationId = "listJobs")
+    @Operation(summary = "查询集群下所有任务", description = "Get jobs by tenant and cluster", operationId = "listJobs")
     @GetMapping("/listByCluster")
     public ApiResponse<PageResult<JobDTO>> list(
             @RequestParam Long clusterId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(jobService.list(clusterId,page,size));
+        return ApiResponse.ok(jobService.list(clusterId, page, size));
     }
 
-    @Operation(summary = "更新任务信息", description = "Update job info",operationId = "updateJob")
+    @Operation(summary = "更新任务信息", description = "Update job info", operationId = "updateJob")
     @PutMapping("/update")
     public ApiResponse<JobDTO> updateJob(@RequestBody @Valid JobDTO dto) {
         return ApiResponse.ok(jobService.updateJob(dto));
@@ -66,7 +74,7 @@ public class    JobController {
         return ApiResponse.ok(updated);
     }
 
-    @Operation(summary = "删除任务（软删）", description = "Soft delete job",operationId = "deleteJob")
+    @Operation(summary = "删除任务（软删）", description = "Soft delete job", operationId = "deleteJob")
     @DeleteMapping("/delete/{id}")
     public ApiResponse<Void> deleteJob(@PathVariable Long id) {
         jobService.sDelete(id);
@@ -76,11 +84,24 @@ public class    JobController {
     /**
      * 自动注册作业，平台幂等/权限校验/多租户
      */
-    @Operation(summary = "", description = "",operationId = "registerJob")
+    @Operation(summary = "", description = "", operationId = "registerJob")
     @PostMapping("/register")
     public ApiResponse<JobInfoDTO> registerJob(@RequestBody @Valid JobRegisterRequestDTO req) {
         // （建议接口层可加租户/平台黑白名单防刷）
         JobInfoDTO job = jobRegisterService.register(req);
         return ApiResponse.ok(job);
     }
+
+    /**
+     * Job API：
+     * - POST /api/jobs?name=xxx    创建并下发 CRD（FlinkDeployment / SparkApplication）
+     * - 生产中可扩展：start/stop/rollback/rollout 等动作
+     */
+    @PostMapping
+    public Map<String, Object> create(@RequestParam String name, @Valid @RequestBody JobSpec spec) {
+        String yaml = render.renderJob(name, spec);
+        k8s.applyYaml(yaml);
+        return Map.of("name", name, "applied", true, "yaml", yaml);
+    }
+
 }

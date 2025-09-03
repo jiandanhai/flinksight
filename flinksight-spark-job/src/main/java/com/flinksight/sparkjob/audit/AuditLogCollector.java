@@ -1,7 +1,7 @@
 package com.flinksight.sparkjob.audit;
 
 import com.flinksight.common.dto.AuditLogDTO;
-import com.flinksight.common.utils.JsonUtil;
+import com.flinksight.common.utils.Jsons;
 import com.flinksight.sparkjob.sink.DLSink;
 import com.flinksight.sparkjob.sink.DynamicSinkFactory;
 
@@ -14,7 +14,7 @@ public class AuditLogCollector {
         String kafkaBootstrap = System.getProperty("kafka.bootstrap.servers", "localhost:9092");
         String topic = System.getProperty("audit.log.topic", "spark-audit-log");
         String dlqTopic = System.getProperty("audit.log.dlq.topic", "spark-audit-log-dlq");
-        String json = JsonUtil.toJson(audit);
+        String json = Jsons.to(audit);
         try {
             DynamicSinkFactory.applySink(json, "kafka", kafkaBootstrap, topic);
         } catch (Exception ex) {

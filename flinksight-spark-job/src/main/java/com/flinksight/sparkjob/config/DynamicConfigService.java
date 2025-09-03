@@ -6,7 +6,7 @@ import com.alibaba.nacos.api.config.listener.Listener;
 import com.flinksight.common.security.PermissionChecker;
 import com.flinksight.common.service.AuditLogWriter;
 import com.flinksight.common.tenant.TenantContextHolder;
-import com.flinksight.common.utils.JsonUtil;
+import com.flinksight.common.utils.Jsons;
 import com.flinksight.common.utils.TraceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,7 +80,7 @@ public class DynamicConfigService {
                         return;
                     }
                     // JSON反序列化
-                    T parsedConfig = JsonUtil.fromJson(config, configClass);
+                    T parsedConfig = Jsons.from(config, configClass);
 
                     // 回调通知业务服务层
                     try {

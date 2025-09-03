@@ -14,7 +14,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlinkTemplateExecutor implements TemplateExecutor {
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
     private final FlinkRestClient client;
 
     @Override

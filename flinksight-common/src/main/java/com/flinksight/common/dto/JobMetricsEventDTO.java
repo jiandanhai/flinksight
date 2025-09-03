@@ -1,6 +1,7 @@
 package com.flinksight.common.dto;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+import com.flinksight.common.utils.Jsons;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,10 +19,14 @@ import java.util.Set;
 public class JobMetricsEventDTO implements Serializable {
     private Long jobId;
     private String jobName;
+    public String vertexId; // Flink 算子可用
     private String jobPriority;         // 优先级（HIGH/MEDIUM/LOW 或数字 1-10）
     private Long tenantId;          // 多租户ID（平台隔离必备）
+    public String env; // dev/staging/prod
+    public String engine; // FLINK/SPARK
     private String clusterId;       // 所属集群
     private String clusterType;
+    public String cluster; // 集群名/标签
     private String alertType;       // 报警类型/巡检类型（如 HEALTH_CHECK、DEAD、OOM）
     private String alertLevel;      // 告警级别（INFO/WARN/ERROR/CRITICAL等）
     private String alertMsg;        // 告警内容或描述
@@ -52,7 +57,7 @@ public class JobMetricsEventDTO implements Serializable {
 
     public static JobMetricsEventDTO fromJson(String json) {
         try {
-            return new ObjectMapper().readValue(json, JobMetricsEventDTO.class);
+            return Jsons.from(json, JobMetricsEventDTO.class);
         } catch (Exception e) {
             return null;
         }

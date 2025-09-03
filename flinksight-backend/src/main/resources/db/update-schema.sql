@@ -33,57 +33,130 @@ SELECT '测试数据库 testdb 和用户 testuser 已初始化完成！' AS Info
 --  6. 使用测试数据库
 USE flinksight_test;
 
+-- ====== 新建表版（推荐直接建表用） ======
+CREATE TABLE IF NOT EXISTS `alert` (
+     `id`          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+     `tenant_id`   BIGINT UNSIGNED NOT NULL                COMMENT '租户ID',
+     `job_id`      BIGINT UNSIGNED          DEFAULT NULL   COMMENT '任务ID（可空：支持系统级/非作业报警）',
+     `cluster_id`   BIGINT UNSIGNED NULL COMMENT '集群ID（便于筛选/统计）',
+    -- 规则弱关联 + 关键字段快照（避免规则后续修改影响历史事件）
+     `rule_id`     BIGINT UNSIGNED          DEFAULT NULL   COMMENT '触发规则ID（软关联，可空）',
+     `rule_name`   VARCHAR(128)             DEFAULT NULL   COMMENT '规则名称快照',
+    `metric_key`  VARCHAR(64)              DEFAULT NULL   COMMENT '指标Key快照',
+    `threshold`   DOUBLE                   DEFAULT NULL   COMMENT '阈值快照',
+    `compare_op`  VARCHAR(8)               DEFAULT NULL   COMMENT '比较符快照(>,<,=,!=等)',
+    `channel`     VARCHAR(32)              DEFAULT NULL   COMMENT '通知渠道快照',
+    `level`       VARCHAR(16)              DEFAULT NULL   COMMENT '报警级别',
+    `type`        VARCHAR(32)              DEFAULT NULL   COMMENT '报警类型',
+    `message`     VARCHAR(255)             DEFAULT NULL   COMMENT '报警内容',
+    `status`      TINYINT       NOT NULL   DEFAULT 0      COMMENT '状态(0未处理 1处理中 2关闭)',
+    `handler_id`  BIGINT UNSIGNED          DEFAULT NULL   COMMENT '处理人',
+    `is_deleted`  TINYINT       NOT NULL   DEFAULT 0      COMMENT '软删除 0=正常 1=删除',
+    `created_at`  DATETIME      NOT NULL   DEFAULT CURRENT_TIMESTAMP  COMMENT '产生时间',
+    `updated_at`  DATETIME      NOT NULL   DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    CONSTRAINT `pk_alert` PRIMARY KEY (`id`),
 
-CREATE TABLE IF NOT EXISTS alert
-(
-    id BIGINT UNSIGNED  AUTO_INCREMENT COMMENT '主键ID',
-    tenant_id BIGINT UNSIGNED  NOT NULL COMMENT '租户ID',
-    job_id BIGINT UNSIGNED  NOT NULL COMMENT '任务ID',
-    level VARCHAR(16) COMMENT '报警级别',
-    type VARCHAR(32) COMMENT '报警类型',
-    message VARCHAR(255) COMMENT '报警内容',
-    status TINYINT NOT NULL DEFAULT 0 COMMENT '状态(0未处理1处理中2关闭)',
-    handler_id BIGINT UNSIGNED  COMMENT '处理人',
-    is_deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '产生时间',
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    CONSTRAINT pk_alert PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='报警事件表';
+    -- 常用查询索引：租户/状态/时间（列表&看板）
+    KEY `idx_alert_tenant_status_time` (`tenant_id`, `status`, `created_at`),
+    -- 按规则回溯
+    KEY `idx_alert_rule` (`rule_id`),
+    -- 按作业筛选
+    KEY `idx_alert_job` (`job_id`),
+    KEY `idx_cluster`    (`cluster_id`),
+    -- 可选：MySQL 8.0+ CHECK 约束（用于数据约束与可读性）
+    CONSTRAINT `chk_alert_status`     CHECK (`status` IN (0,1,2)),
+    CONSTRAINT `chk_alert_is_deleted` CHECK (`is_deleted` IN (0,1))
+    ) ENGINE=InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_0900_ai_ci
+    COMMENT='报警事件表（含规则快照，弱关联 AlertRule）';
+
+-- ====== 新建表：alert_history（推荐直接使用）======
+CREATE TABLE IF NOT EXISTS `alert_history` (
+    `id`           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '报警历史ID',
+    `tenant_id`    BIGINT UNSIGNED NOT NULL                COMMENT '租户ID',
+    `alert_id`     BIGINT UNSIGNED NOT NULL                COMMENT '关联的报警ID（弱关联，不加外键）',
+    `cluster_id`   BIGINT UNSIGNED NULL COMMENT '集群ID（快照/检索）',
+    `rule_id`      BIGINT UNSIGNED          DEFAULT NULL   COMMENT '触发规则ID（弱关联，可空）',
+    -- 规则关键信息快照（避免规则修改导致历史回看失真）
+    `rule_name`    VARCHAR(128)             DEFAULT NULL   COMMENT '规则名称快照',
+    `metric_key`   VARCHAR(64)              DEFAULT NULL   COMMENT '指标Key快照',
+    `threshold`    DOUBLE                   DEFAULT NULL   COMMENT '阈值快照',
+    `compare_op`   VARCHAR(8)               DEFAULT NULL   COMMENT '比较符快照(>,<,=,!=等)',
+    `channel`      VARCHAR(32)              DEFAULT NULL   COMMENT '通知渠道快照',
+    `content`      TEXT                                  COMMENT '报警内容/处理备注',
+    `level`        VARCHAR(16)              DEFAULT NULL   COMMENT '报警级别（与 alert 表保持一致，如 INFO/WARN/CRITICAL）',
+    `status`       TINYINT       NOT NULL   DEFAULT 0      COMMENT '处理状态(0未处理 1处理中 2关闭)',
+    `operator_id`  BIGINT UNSIGNED          DEFAULT NULL   COMMENT '操作人ID（谁处理/确认了这条记录）',
+    `is_deleted`   TINYINT       NOT NULL   DEFAULT 0      COMMENT '软删除 0=正常 1=删除',
+    `operate_time` DATETIME      NOT NULL   DEFAULT CURRENT_TIMESTAMP   COMMENT '操作时间',
+    `created_at`   DATETIME      NOT NULL   DEFAULT CURRENT_TIMESTAMP   COMMENT '记录创建时间',
+    CONSTRAINT `pk_alert_history` PRIMARY KEY (`id`),
+    -- 常用查询索引：按租户 + 报警 + 时间（列表/时间线）
+    KEY `idx_hist_tenant_alert_time` (`tenant_id`, `alert_id`, `operate_time`),
+    KEY `idx_tenant`     (`tenant_id`),
+    KEY `idx_cluster`    (`cluster_id`),
+    -- 从规则维度回溯
+    KEY `idx_hist_rule`               (`rule_id`),
+    -- 操作人维度
+    KEY `idx_hist_operator`           (`operator_id`),
+    -- MySQL 8.0+ CHECK（如需跨版本兼容，可去掉）
+    CONSTRAINT `chk_hist_status`     CHECK (`status` IN (0,1,2)),
+    CONSTRAINT `chk_hist_is_deleted` CHECK (`is_deleted` IN (0,1))
+    ) ENGINE=InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_0900_ai_ci
+    COMMENT='报警历史表（含规则快照，弱关联 AlertRule）';
 
 
+/* 1) 规则集：版本、作用域、激活状态 */
+CREATE TABLE IF NOT EXISTS alert_rule_set (
+    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tenant_id     BIGINT       NOT NULL,
+    scope_type    ENUM('TENANT','CLUSTER','JOB') NOT NULL,
+    scope_id      BIGINT       NULL,                       -- TENANT 级为 NULL；CLUSTER/JOB 为对应 id
+    version       BIGINT       NOT NULL,
+    status        ENUM('DRAFT','ACTIVE','ARCHIVED') NOT NULL DEFAULT 'DRAFT',
+    active_flag   TINYINT(1)   NOT NULL DEFAULT 0,         -- 每个 (tenant,scope) 仅允许 1 条 active=1
+    checksum      CHAR(64)     NULL,                       -- 规则项内容 sha256
+    created_by    VARCHAR(64)  NOT NULL,
+    created_at    DATETIME     NOT NULL,
+    UNIQUE KEY uk_scope_ver (tenant_id, scope_type, scope_id, version),
+    KEY idx_scope_active (tenant_id, scope_type, scope_id, active_flag)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS alert_history
-(
-    id BIGINT UNSIGNED  AUTO_INCREMENT COMMENT '报警历史ID',
-    alert_id BIGINT UNSIGNED  COMMENT '报警ID',
-    rule_id BIGINT UNSIGNED  COMMENT '报警规则ID',
-    content TEXT COMMENT '报警内容',
-    level INT COMMENT '报警级别',
-    status INT COMMENT '处理状态',
-    operator_id BIGINT UNSIGNED  COMMENT '操作人ID',
-    tenant_id BIGINT UNSIGNED  COMMENT '租户ID',
-    operate_time DATETIME COMMENT '操作时间',
-    is_deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    CONSTRAINT pk_alert_history PRIMARY KEY (id)
-)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='报警历史表';
+/* 2) 规则项：表达力完整 */
+CREATE TABLE IF NOT EXISTS alert_rule_item (
+                                               id               BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                               rule_set_id      BIGINT       NOT NULL,
+                                               metric_key       VARCHAR(64)  NOT NULL,
+    comparator       ENUM('GT','GTE','LT','LTE','EQ','NE') NOT NULL,
+    threshold        DECIMAL(20,6) NOT NULL,
+    window_seconds   INT          NOT NULL DEFAULT 60,
+    aggregator       ENUM('LAST','AVG','P95','MAX','MIN') NOT NULL DEFAULT 'LAST',
+    severity         ENUM('INFO','WARN','ERROR','CRITICAL') NOT NULL,
+    dedup_ms         INT          NOT NULL DEFAULT 30000,
+    auto_recover     TINYINT(1)   NOT NULL DEFAULT 0,
+    notify_policy_id BIGINT       NULL,
+    enabled          TINYINT(1)   NOT NULL DEFAULT 1,
+    created_at       DATETIME     NOT NULL,
+    UNIQUE KEY uk_rule (rule_set_id, metric_key, severity, aggregator, comparator, window_seconds),
+    KEY fk_rule_set (rule_set_id),
+    CONSTRAINT fk_rule_set FOREIGN KEY (rule_set_id) REFERENCES alert_rule_set(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+/* 3) 通知策略：可复用，避免每条规则重复写渠道 */
+CREATE TABLE IF NOT EXISTS alert_notify_policy (
+     id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+     tenant_id     BIGINT       NOT NULL,
+     name          VARCHAR(64)  NOT NULL,
+    channels      JSON         NOT NULL,   -- [{"type":"wechat","webhook":"..."}, {"type":"email","to":["a@x"]}]
+    rate_limit_per_min INT     NULL,
+    created_by    VARCHAR(64)  NOT NULL,
+    created_at    DATETIME     NOT NULL,
+    UNIQUE KEY uk_tenant_name (tenant_id, name)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
-CREATE TABLE IF NOT EXISTS alert_rule
-(
-    id BIGINT UNSIGNED  AUTO_INCREMENT COMMENT '主键ID',
-    tenant_id BIGINT UNSIGNED  NOT NULL COMMENT '租户ID',
-    cluster_id BIGINT UNSIGNED  NOT NULL COMMENT '集群ID',
-    metric_key VARCHAR(64) COMMENT '指标',
-    threshold DOUBLE COMMENT '阈值',
-    compare_op VARCHAR(8) COMMENT '比较符(>,<,=,!=等)',
-    channel VARCHAR(32) COMMENT '通知方式',
-    enable TINYINT NOT NULL DEFAULT 1 COMMENT '是否启用',
-    is_deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    CONSTRAINT pk_alert_rule PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='报警规则表';
 
 
 CREATE TABLE IF NOT EXISTS api_access_log
@@ -139,43 +212,53 @@ CREATE TABLE IF NOT EXISTS api_whitelist
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='API白名单';
 
 
-CREATE TABLE IF NOT EXISTS audit_log
-(
-    id BIGINT UNSIGNED  AUTO_INCREMENT COMMENT '主键ID',
-    tenant_id BIGINT UNSIGNED  NOT NULL COMMENT '租户ID',
-    user_id BIGINT UNSIGNED  COMMENT '操作人ID',
-    action VARCHAR(64) COMMENT '操作类型',
-    target_type VARCHAR(32) COMMENT '对象类型',
-    target_id BIGINT COMMENT '对象ID',
-    ip VARCHAR(45) COMMENT 'IP地址',
-    content VARCHAR(255) COMMENT '操作内容',
-    operator VARCHAR(64) NOT NULL COMMENT '操作人用户名/ID',
-    trace_id VARCHAR(64) COMMENT '全链路追踪ID',
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
-    is_deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除',
-    INDEX idx_operator (operator),
-    CONSTRAINT pk_audit_log PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作审计日志表';
+CREATE TABLE IF NOT EXISTS `audit_log` (
+   `id`           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+   `tenant_id`    BIGINT UNSIGNED NOT NULL COMMENT '租户ID',
+   `user_id`      BIGINT UNSIGNED DEFAULT NULL COMMENT '操作人ID',
+   `operator`     VARCHAR(64)     NOT NULL COMMENT '操作人用户名/显示名',
+    `action`       VARCHAR(64)     NOT NULL COMMENT '操作类型（如 ALERT_CREATE/EXPORT）',
+    `target_type`  VARCHAR(32)     NOT NULL COMMENT '对象类型（Alert/Rule/Tenant/User 等）',
+    `target_id`    VARCHAR(64)     DEFAULT NULL COMMENT '对象ID（字符串，兼容多种主键）',
+    `content`      VARCHAR(512)    DEFAULT NULL COMMENT '操作内容（简要描述）',
+    `source`       VARCHAR(128)    DEFAULT NULL COMMENT '来源（页面路由/接口路径等）',
+    `result`       VARCHAR(16)     NOT NULL DEFAULT 'SUCCESS' COMMENT '结果（SUCCESS/FAIL）',
+    `fail_reason`  VARCHAR(512)    DEFAULT NULL COMMENT '失败原因',
+    `ip`           VARCHAR(45)     DEFAULT NULL COMMENT 'IP 地址',
+    `trace_id`     VARCHAR(64)     DEFAULT NULL COMMENT '全链路追踪ID',
+    `created_at`   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+    `is_deleted`   TINYINT         NOT NULL DEFAULT 0 COMMENT '软删除',
+    PRIMARY KEY (`id`),
+    -- 常用查询维度的复合索引（带 created_at 便于时间倒排）
+    KEY `idx_tenant`   (`tenant_id`, `created_at`),
+    KEY `idx_target`   (`target_type`, `target_id`, `created_at`),
+    KEY `idx_operator` (`operator`, `created_at`),
+    KEY `idx_trace`    (`trace_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作审计日志表';
 
-CREATE TABLE IF NOT EXISTS cluster
-(
-    id BIGINT UNSIGNED  AUTO_INCREMENT COMMENT '集群ID',
-    tenant_id BIGINT UNSIGNED  NOT NULL COMMENT '所属租户ID',
-    name VARCHAR(64) NOT NULL COMMENT '集群名称',
-    type VARCHAR(32) NOT NULL COMMENT '类型(YARN/K8S/Standalone)',
-    endpoint VARCHAR(128) NOT NULL COMMENT '集群访问地址',
-    version VARCHAR(32) COMMENT '版本号',
-    tags VARCHAR(100) COMMENT '标签',
-    status INT NOT NULL DEFAULT 1 COMMENT '状态',
-    remark VARCHAR(255) COMMENT '备注',
-    is_deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除',
-    created_at DATETIME COMMENT '创建时间',
-    UNIQUE KEY uk_name_tenant (name, tenant_id),
-    INDEX idx_tenant (tenant_id),
-    INDEX idx_type (type),
-    INDEX idx_status (status),
-    CONSTRAINT pk_cluster PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='集群表';
+CREATE TABLE IF NOT EXISTS `cluster` (
+     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '集群ID',
+     `tenant_id` BIGINT NOT NULL COMMENT '所属租户ID',
+     `name` VARCHAR(64) NOT NULL COMMENT '集群名称',
+    `engine` VARCHAR(16) NULL COMMENT '引擎：FLINK/SPARK',
+    `type` VARCHAR(32) NOT NULL COMMENT '类型：YARN/K8S/Standalone',
+    `namespace` VARCHAR(128) NULL COMMENT 'K8s 命名空间；YARN/Standalone 为空',
+    `endpoint` VARCHAR(255) NULL COMMENT '访问地址（REST/Operator/HistoryServer）',
+    `version` VARCHAR(32) NULL COMMENT '版本号',
+    `tags` VARCHAR(100) NULL COMMENT '标签',
+    `spec` JSON NULL COMMENT 'ClusterSpec 快照（JSON）',
+    `status` SMALLINT NOT NULL DEFAULT 1 COMMENT '1=ENABLED,0=DISABLED',
+    `remark` VARCHAR(255) NULL COMMENT '备注',
+    `is_deleted` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '软删除 0/1',
+    `created_at` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `updated_at` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_cluster_name_tenant` (`name`,`tenant_id`),
+    KEY `idx_cluster_tenant` (`tenant_id`),
+    KEY `idx_cluster_type` (`type`),
+    KEY `idx_cluster_status` (`status`),
+    KEY `idx_cluster_engine` (`engine`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 CREATE TABLE IF NOT EXISTS cluster_status_history
@@ -290,28 +373,34 @@ CREATE TABLE IF NOT EXISTS integration_config
     CONSTRAINT pk_integration_config PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='第三方集成配置表';
 
+CREATE TABLE IF NOT EXISTS `job` (
+     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '任务ID',
+     `tenant_id` BIGINT NOT NULL COMMENT '所属租户ID',
+     `cluster_id` BIGINT NULL COMMENT '所属集群ID，可为空',
+     `job_name` VARCHAR(64) NOT NULL COMMENT '任务名',
+    `job_type` VARCHAR(32) NULL COMMENT '类型：streaming/batch',
+    `engine` VARCHAR(16) NULL COMMENT '计算引擎：FLINK/SPARK',
+    `env` VARCHAR(16) NULL COMMENT '环境：dev/staging/prod',
+    `status` SMALLINT NOT NULL DEFAULT 0 COMMENT '0=CREATED,1=RUNNING,2=FAILED,3=STOPPED,4=SUCCESS',
+    `owner_id` BIGINT NULL COMMENT '负责人ID',
+    `start_time` TIMESTAMP(3) NULL COMMENT '启动时间',
+    `end_time` TIMESTAMP(3) NULL COMMENT '结束时间',
+    `spec` JSON NULL COMMENT 'JobSpec 快照（JSON）',
+    `is_deleted` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '软删除 0/1',
+    `created_at` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `updated_at` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_job_name_tenant` (`job_name`,`tenant_id`),
+    KEY `idx_job_tenant` (`tenant_id`),
+    KEY `idx_job_cluster` (`cluster_id`),
+    KEY `idx_job_status` (`status`),
+    KEY `idx_job_engine` (`engine`),
+    KEY `idx_job_env` (`env`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE IF NOT EXISTS job
-(
-    id BIGINT UNSIGNED  AUTO_INCREMENT COMMENT '任务ID',
-    tenant_id BIGINT UNSIGNED  NOT NULL COMMENT '所属租户ID',
-    cluster_id BIGINT UNSIGNED  NOT NULL COMMENT '所属集群ID',
-    job_name VARCHAR(64) NOT NULL COMMENT '任务名',
-    job_type VARCHAR(32) COMMENT '类型 (streaming/batch)',
-    status VARCHAR(16) COMMENT '状态 (运行/异常/已停止等)',
-    owner_id BIGINT UNSIGNED  COMMENT '负责人ID',
-    start_time DATETIME COMMENT '启动时间',
-    end_time DATETIME COMMENT '结束时间',
-    is_deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除',
-    created_at DATETIME COMMENT '创建时间',
-    updated_at DATETIME COMMENT '更新时间',
-    UNIQUE KEY uk_job_name_tenant (job_name, tenant_id),
-    INDEX idx_tenant (tenant_id),
-    INDEX idx_cluster (cluster_id),
-    INDEX idx_status (status),
-    CONSTRAINT pk_job PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务表';
-
+-- ALTER TABLE `job` ADD CONSTRAINT `fk_job_cluster`
+-- FOREIGN KEY (`cluster_id`) REFERENCES `cluster`(`id`)
+-- ON DELETE SET NULL ON UPDATE CASCADE;
 
 CREATE TABLE IF NOT EXISTS  job_alert_log
 (
@@ -490,6 +579,43 @@ CREATE TABLE `job_permission` (
   COMMENT='作业-用户-权限三元组';
 
 
+CREATE TABLE IF NOT EXISTS `job_event` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+-- 维度冗余（避免高并发查询 JOIN）
+    `tenant_id` BIGINT NOT NULL COMMENT '租户ID',
+    `cluster_id` BIGINT NULL COMMENT '集群ID，可空',
+    `job_id` BIGINT NOT NULL COMMENT 'JobID',
+    `job_name` VARCHAR(128) NULL COMMENT 'Job 名称快照',
+    `engine` VARCHAR(16) NULL COMMENT 'FLINK/SPARK',
+    `env` VARCHAR(16) NULL COMMENT 'dev/staging/prod',
+-- 语义/告警
+    `type` VARCHAR(64) NOT NULL COMMENT '事件类型，如 stage_completed/heartbeat/alert',
+    `severity` SMALLINT NOT NULL DEFAULT 0 COMMENT '0=info,1=warn,2=error,3=critical',
+    `source` VARCHAR(32) NOT NULL DEFAULT 'pipeline' COMMENT '事件来源：flink_ops/spark_listener/backend',
+    `trace_id` VARCHAR(64) NULL COMMENT '链路追踪ID',
+-- 时间
+    `event_ts` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '事件发生时间',
+    `created_at` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '入库时间',
+-- Kafka 幂等/回溯
+    `kafka_topic` VARCHAR(128) NULL COMMENT 'Kafka topic',
+    `kafka_partition` INT NULL COMMENT 'Kafka partition',
+    `kafka_offset` BIGINT NULL COMMENT 'Kafka offset',
+-- 去重键（上游自带的业务幂等键）
+    `dedupe_key` VARCHAR(128) NULL COMMENT '业务去重键（可空）',
+    `dedupe_key_norm` VARCHAR(128) AS (IFNULL(`dedupe_key`, '')) STORED COMMENT '归一化去重键(为空->空串)',
+-- 原始负载
+    `payload` JSON NOT NULL COMMENT '原始事件JSON',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_event_kafka` (`kafka_topic`,`kafka_partition`,`kafka_offset`),
+    UNIQUE KEY `uk_event_dedup` (`tenant_id`,`job_id`,`type`,`event_ts`,`dedupe_key_norm`),
+    KEY `idx_ev_tenant_time` (`tenant_id`,`created_at`),
+    KEY `idx_ev_job_time` (`job_id`,`created_at`),
+    KEY `idx_ev_cluster_time` (`cluster_id`,`created_at`),
+    KEY `idx_ev_type` (`type`),
+    KEY `idx_ev_severity` (`severity`),
+    KEY `idx_ev_trace` (`trace_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 
 CREATE TABLE IF NOT EXISTS  label
 (
@@ -555,21 +681,35 @@ CREATE TABLE IF NOT EXISTS metric_dashboard (
   CONSTRAINT pk_metric_dashboard PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='指标大盘';
 
-CREATE TABLE IF NOT EXISTS node (
-   id BIGINT UNSIGNED  AUTO_INCREMENT COMMENT '节点ID',
-   name VARCHAR(64) NOT NULL COMMENT '节点名称',
-   type VARCHAR(32) COMMENT '节点类型',
-   ip VARCHAR(64) NOT NULL COMMENT '节点IP',
-   cluster_id BIGINT UNSIGNED  NOT NULL COMMENT '关联集群ID',
-   status INT NOT NULL COMMENT '节点状态',
-   is_deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除标志 0=正常 1=删除',
-   create_time DATETIME COMMENT '注册时间',
-   UNIQUE KEY uk_node_cluster_name (cluster_id, name),
-   UNIQUE KEY uk_node_ip (ip),
-   INDEX idx_node_cluster (cluster_id),
-   INDEX idx_node_status (status),
-   CONSTRAINT pk_node PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='节点表';
+-- 节点 / 主机 / Agent 表
+CREATE TABLE IF EXISTS `node` (
+  `id`          BIGINT NOT NULL AUTO_INCREMENT COMMENT '节点ID',
+  `tenant_id`   BIGINT NOT NULL COMMENT '租户ID',
+  `name`        VARCHAR(64)  NOT NULL COMMENT '节点名称（同一集群内唯一）',
+  `type`        VARCHAR(32)           COMMENT '节点类型（如 worker / nm / master 等）',
+  `ip`          VARCHAR(64)  NOT NULL COMMENT '节点IP（同一租户内唯一）',
+  `cluster_id`  BIGINT NOT NULL COMMENT '关联集群ID',
+  `status`      ENUM('ENABLED','DISABLED') NOT NULL DEFAULT 'ENABLED'
+                COMMENT '节点状态：ENABLED=启用，DISABLED=禁用（与健康无关）',
+                        `is_deleted`  TINYINT(1) NOT NULL DEFAULT 0 COMMENT '软删除标志：0=正常，1=删除',
+                        `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册/创建时间',
+                        PRIMARY KEY (`id`),
+    -- 唯一约束：同一集群内节点名唯一
+                        UNIQUE KEY `uk_node_cluster_name` (`cluster_id`, `name`),
+    -- 唯一约束：同一租户内 IP 唯一（不同租户可复用 IP）
+                        UNIQUE KEY `uk_node_tenant_ip` (`tenant_id`, `ip`),
+    -- 常用查询索引
+                        KEY `idx_node_tenant_cluster` (`tenant_id`, `cluster_id`),
+                        KEY `idx_node_tenant` (`tenant_id`),
+    -- 外键（若已存在 tenant/cluster 表）
+                        CONSTRAINT `fk_node_tenant`  FOREIGN KEY (`tenant_id`)  REFERENCES `tenant`(`id`)
+                            ON UPDATE CASCADE ON DELETE RESTRICT,
+                        CONSTRAINT `fk_node_cluster` FOREIGN KEY (`cluster_id`) REFERENCES `cluster`(`id`)
+                            ON UPDATE CASCADE ON DELETE RESTRICT,
+    -- 约束：仅允许 0/1；MySQL 8.0.16+ 才会严格生效
+                        CONSTRAINT `chk_node_is_deleted` CHECK (`is_deleted` IN (0,1))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+  COMMENT='节点/主机/Agent 表：支持节点注册与集群管理；status=启停，健康请看 node_health';
 
 
 
@@ -586,22 +726,20 @@ CREATE TABLE IF NOT EXISTS node_health (
    CONSTRAINT pk_node_health PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='节点健康状态表';
 
-
-CREATE TABLE IF NOT EXISTS notification (
-   id BIGINT UNSIGNED  AUTO_INCREMENT COMMENT '通知ID',
-   user_id BIGINT UNSIGNED  NOT NULL COMMENT '接收用户ID',
-   tenant_id BIGINT UNSIGNED  NOT NULL COMMENT '租户ID',
-   title VARCHAR(128) NOT NULL COMMENT '通知标题',
-   content TEXT COMMENT '通知内容',
-   type VARCHAR(32) COMMENT '通知类型',
-   is_read TINYINT NOT NULL DEFAULT 0 COMMENT '已读标志 0=未读 1=已读',
-   is_deleted TINYINT NOT NULL DEFAULT 0 COMMENT '软删除标志 0=正常 1=删除',
-   create_time DATETIME NOT NULL COMMENT '发送时间',
-   INDEX idx_notify_user_tenant_read (user_id, tenant_id, is_read),
-   INDEX idx_notify_time (create_time),
-   UNIQUE KEY uk_user_tenant (user_id, tenant_id),
-   CONSTRAINT pk_notification PRIMARY KEY (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='通知消息表';
+CREATE TABLE IF NOT EXISTS `notification` (
+   `id` BIGINT NOT NULL AUTO_INCREMENT,
+   `user_id` BIGINT NOT NULL,
+   `tenant_id` BIGINT NOT NULL,
+   `title` VARCHAR(128) NOT NULL,
+    `content` TEXT NULL,
+    `category` VARCHAR(32) NULL,
+    `read_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0=未读 1=已读',
+    `is_deleted` TINYINT NOT NULL DEFAULT 0,
+    `create_time` DATETIME(6) NOT NULL,
+    PRIMARY KEY (`id`),
+    KEY `idx_notify_user_tenant_read` (`user_id`, `tenant_id`, `read_status`),
+    KEY `idx_notify_time` (`create_time`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 CREATE TABLE IF NOT EXISTS operation_template (

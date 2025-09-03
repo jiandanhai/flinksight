@@ -31,7 +31,7 @@ import java.util.List;
 @Tag(name = "api", description = "报警规则配置管理")
 @RequiredArgsConstructor
 @Validated
-public class AlertRuleController {
+public class AlertRuleControllerv1 {
 
     private final AlertRuleService alertRuleService;
 

@@ -51,8 +51,7 @@ public class UserController {
     // @PreAuthorize("isAuthenticated()") // 如果项目开启了方法级鉴权
     public ApiResponse<UserDTO> getCurrentUser() {
         // 查询并封装返回DTO
-        UserDTO user = userService.getCurrentUserProfile();
-        return ApiResponse.ok(user);
+        return ApiResponse.ok(userService.getCurrentUserProfile());
 
     }
 

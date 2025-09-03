@@ -1,7 +1,7 @@
 package com.flinksight.sparkjob.register;
 
 import com.flinksight.common.dto.JobRegisterRequestDTO;
-import com.flinksight.common.utils.JsonUtil;
+import com.flinksight.common.utils.Jsons;
 import okhttp3.*;
 
 /**
@@ -21,7 +21,7 @@ public class JobAutoRegisterService {
      * @param req 作业注册请求
      */
     public static void registerJob(String registerUrl, JobRegisterRequestDTO req) throws Exception {
-        RequestBody body = RequestBody.create(JsonUtil.toJson(req), MediaType.parse("application/json"));
+        RequestBody body = RequestBody.create(Jsons.to(req), MediaType.parse("application/json"));
         Request httpRequest = new Request.Builder().url(registerUrl).post(body).build();
         try (Response response = httpClient.newCall(httpRequest).execute()) {
             if (!response.isSuccessful()) {

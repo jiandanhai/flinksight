@@ -12,20 +12,17 @@ import java.util.Optional;
  * Cluster Service
  */
 public interface ClusterService extends SoftDeleteService<ClusterDTO, Long>  {
-    Optional<ClusterDTO> getClusterById(Long clusterId);
+    Optional<ClusterDTO> get(Long clusterId);
 
-    PageResult<ClusterDTO> list(int page, int size);
+    PageResult<ClusterDTO> list(String type, Integer status, String q, int page, int size);
 
     void batchAddNodes(BatchAddNodesRequestDTO req);
 
-    // Cluster
-    ClusterDTO createCluster(ClusterDTO req);
+    ClusterDTO update(Long id, ClusterDTO req);
 
-    ClusterDTO updateCluster(Long id, ClusterDTO req);
+    void changeStatus(Long id, Integer status);
 
-    ClusterDTO setClusterEnable(Long id, boolean enable);
-
-    void setClusterEnableBatch(List<Long> ids, boolean enable);
+    ClusterHealthDTO healthById(Long id);
 
     // Node
     NodeDTO createNode(NodeDTO req);
@@ -42,4 +39,10 @@ public interface ClusterService extends SoftDeleteService<ClusterDTO, Long>  {
     PageResult<NodeHealthDTO> listNodeHealthRecords(Long nodeId, int page, int size);
 
     NodeMetricDTO getNodeMetric(Long clusterId, LocalDateTime from, LocalDateTime to);
+
+    /** 注册集群：校验唯一、可选连通性检查、落库。 */
+    ClusterDTO register(ClusterSpecDTO spec);
+
+    /** 根据名称（租户内唯一）执行健康检查。 */
+    ClusterHealthDTO healthByName(String name);
 }

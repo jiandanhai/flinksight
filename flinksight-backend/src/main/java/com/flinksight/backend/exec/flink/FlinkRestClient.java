@@ -20,7 +20,7 @@ import java.util.Map;
 public class FlinkRestClient {
 
     private final RestTemplate restTemplate = new RestTemplate();
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
 
     public String submitJar(String baseUrl, String jarId, String entryClass,
                             Integer parallelism, String programArgs, Boolean allowNonRestoredState) throws Exception {

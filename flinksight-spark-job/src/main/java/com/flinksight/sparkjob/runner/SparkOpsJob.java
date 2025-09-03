@@ -7,6 +7,10 @@ import com.flinksight.sparkjob.config.DynamicConfigService;
 import com.flinksight.sparkjob.register.JobAutoRegisterService;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+
+import java.util.Arrays;
 
 /**
  * 主入口Runner
@@ -57,5 +61,22 @@ public class SparkOpsJob {
                 }
         );
         // ...后续业务处理
+
+        String brokers = conf.get("spark.flinksight.kafka.brokers", "localhost:9092");
+        String outTopic = conf.get("spark.flinksight.topic.metrics", "flinksight.spark.metrics");
+        String env = conf.get("spark.flinksight.env", "dev");
+        String cluster = conf.get("spark.flinksight.cluster", "spark-demo");
+        String clusterId = conf.get("spark.flinksight.cluster.id", "spark-1");
+        String clusterTyp = conf.get("spark.flinksight.cluster.type", "standalone");
+
+        sc.addSparkListener(new FlinksightSparkListener(
+                brokers, outTopic, tenantId, env, cluster, clusterId, clusterTyp,
+                conf.get("spark.app.name"), sc.applicationId()
+        ));
+        // 最小任务（可删除）
+        JavaRDD<Integer> rdd = JavaSparkContext.fromSparkContext(sc)
+                .parallelize(Arrays.asList(1, 2, 3));
+        rdd.map(x -> x * x).collect();
+        sc.stop();
     }
 }

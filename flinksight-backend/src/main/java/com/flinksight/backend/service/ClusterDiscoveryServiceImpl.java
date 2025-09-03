@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flinksight.common.dto.ClusterDTO;
 import com.flinksight.common.service.ClusterDiscoveryService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.fluent.Request;
 import org.springframework.stereotype.Service;
@@ -17,10 +18,11 @@ import java.util.List;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ClusterDiscoveryServiceImpl implements ClusterDiscoveryService {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-
+    //使用 Spring 管理的 ObjectMapper（会带上你全局的 JavaTimeModule 等配置）
+    private final ObjectMapper mapper;
     /**
      * 批量自动发现集群状态
      */
@@ -45,7 +47,7 @@ public class ClusterDiscoveryServiceImpl implements ClusterDiscoveryService {
                 // 采集YARN ResourceManager API
                 String yarnApi = config.getApiEndpoint() + "/ws/v1/cluster/info";
                 String resp = Request.Get(yarnApi).connectTimeout(2000).execute().returnContent().asString();
-                JsonNode info = MAPPER.readTree(resp);
+                JsonNode info = mapper.readTree(resp);
                 config.setStatus(
                     "STARTED".equalsIgnoreCase(info.path("clusterInfo").path("state").asText("UNKNOWN")) ? 1 : 0
                 );
@@ -57,7 +59,7 @@ public class ClusterDiscoveryServiceImpl implements ClusterDiscoveryService {
                 // Flink Standalone REST接口
                 String resp = Request.Get(config.getApiEndpoint() + "/overview").connectTimeout(2000)
                         .execute().returnContent().asString();
-                JsonNode info = MAPPER.readTree(resp);
+                JsonNode info = mapper.readTree(resp);
                 config.setStatus(info.path("taskmanagers").isArray() ? 1 : 0);
             } else {
                 config.setStatus(0); // 未知类型视为离线

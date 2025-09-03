@@ -1,7 +1,7 @@
 package com.flinksight.flinkjob.sink;
 
 import com.flinksight.common.dto.JobMetricsEventDTO;
-import com.flinksight.common.utils.JsonUtil;
+import com.flinksight.common.utils.Jsons;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
@@ -9,7 +9,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 public class FlinkAlertSink {
     public static void sink(DataStream<JobMetricsEventDTO> eventStream, String sinkType, String sinkParam, StreamExecutionEnvironment env) {
-        DataStream<String> jsonStream = eventStream.map(JsonUtil::toJson);
+        DataStream<String> jsonStream = eventStream.map(Jsons::to);
         switch (sinkType.toLowerCase()) {
             case "kafka": case "es": case "hudi": case "pulsar": // ...已实现
                 DynamicSinkFactory.applySink(jsonStream, sinkType, sinkParam, env); break;

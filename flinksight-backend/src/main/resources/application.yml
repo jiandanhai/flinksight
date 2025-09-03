@@ -36,6 +36,8 @@ jwt:
 logging:
   level:
     root: INFO
+    org.springframework.web.method.annotation: TRACE
+    org.springframework.core.convert: TRACE
     org.springframework.security: info
     org.springframework.web: info
 business:
@@ -79,6 +81,7 @@ security:
     clock-skew-seconds: 60
     issuer: "flinksight"
     audience: "api"
+  idempotencyHeader: X-Idempotency-Key
 
   permission-filter:
     enabled: true
@@ -103,5 +106,34 @@ security:
       - "GET /api/user/me"
       - "GET /api/user/menus"
 
+kubernetes:
+  # 集群内运行可不配 kubeconfig，Fabric8 自动使用 ServiceAccount
+  kubeconfig: /root/.kube/config
+prometheus:
+  baseUrl: http://prometheus:9091 # PromQL 查询地址
+  kafka:
+    bootstrap: localhost:9092
+    admin:
+      fail-fast: false          # 关键：AdminClient 连接不上也不让应用失败
+    listener:
+      missing-topics-fatal: false
+      auto-startup: false       # 不自动启动消费者（可按需开启）
+    topics:
+      metrics: job-metrics
+      alert: job-alert
+      heartbeat: job-heartbeat
+    bootstrap-servers: ${flinksight.kafka.bootstrap-servers}
 
+flinksight:
+  kafka:
+    bootstrap-servers: PLAINTEXT://localhost:9092
+    admin:
+      fail-fast: false          # 关键：AdminClient 连接不上也不让应用失败
+    listener:
+      missing-topics-fatal: false
+      auto-startup: false       # 不自动启动消费者（可按需开启）
+    topics:
+      ruleSetChange: flinksight.alert-rules
+    partitions: 3
+    replication: 1
 # 多租户/审计可加自定义配置

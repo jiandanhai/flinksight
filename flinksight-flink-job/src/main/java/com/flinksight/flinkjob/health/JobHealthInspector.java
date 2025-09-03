@@ -2,11 +2,10 @@ package com.flinksight.flinkjob.health;
 
 import com.flinksight.common.dto.JobMetricsEventDTO;
 import com.flinksight.common.utils.DateUtil;
-import com.flinksight.common.utils.JsonUtil;
+import com.flinksight.common.utils.Jsons;
 import com.flinksight.flinkjob.sink.DynamicSinkFactory;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-
 import java.time.Instant;
 
 /**
@@ -42,7 +41,7 @@ public class JobHealthInspector {
                 });
 
         // 巡检流自动下沉报警通道
-        DynamicSinkFactory.applySink(probeAlerts.map(JsonUtil::toJson), alertSinkType, alertSinkParam, env);
+        DynamicSinkFactory.applySink(probeAlerts.map(Jsons::to), alertSinkType, alertSinkParam, env);
 
         // 若需要自愈闭环，可在这里自动调用自愈
         probeAlerts.map(JobHealthInspector::autoRecover);

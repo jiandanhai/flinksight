@@ -2,6 +2,7 @@ package com.flinksight.backend.controller;
 
 import com.flinksight.backend.common.ApiResponse;
 import com.flinksight.backend.security.tenant.TenantRequired;
+import com.flinksight.backend.service.PromqlGateway;
 import com.flinksight.common.dto.*;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ClusterService;
@@ -11,12 +12,14 @@ import com.flinksight.common.service.projection.NodeListRow;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,96 +40,99 @@ public class ClusterController {
     private final ClusterService clusterService;
     private final NodeService nodeService;
     private final MetricDashboardService metricDashboardService;
+    private final PromqlGateway prom;
 
-    @Operation(summary = "新建集群", description = "Create new cluster",operationId = "createCluster")
-    @PostMapping("/create")
-    public ApiResponse<ClusterDTO> createCluster(@RequestBody  @Valid ClusterDTO dto) {
-        return ApiResponse.ok(clusterService.createCluster(dto));
+    @Operation(summary="注册集群",operationId = "registerCluster")
+    @PostMapping
+    public ApiResponse<ClusterDTO> register(@Valid @RequestBody ClusterSpecDTO spec) {
+        return ApiResponse.ok(clusterService.register(spec));
     }
 
-    @Operation(summary = "根据ID查询集群", description = "Get cluster by ID",operationId = "getCluster")
+    @Operation(summary = "根据ID查询集群", description = "Get cluster by ID", operationId = "getCluster")
     @GetMapping("/id/{id}")
-    public ApiResponse<ClusterDTO> getById(@PathVariable Long id) {
-        return clusterService.getClusterById(id)
+    public ApiResponse<ClusterDTO> get(@PathVariable Long id) {
+        return clusterService.get(id)
                 .map(ApiResponse::ok)
                 .orElse(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "查询租户下所有集群", description = "Get clusters by tenant",operationId = "listClusters")
-    @GetMapping("/list")
-    public ApiResponse<PageResult<ClusterDTO>> getClustersByTenant(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(clusterService.list(page,size));
-    }
-
-    @Operation(summary = "更新集群信息", description = "Update cluster info",operationId = "updateCluster")
-    @PutMapping("/update/{id}")
-    public ApiResponse<ClusterDTO> updateCluster(@PathVariable Long id, @RequestBody  @Valid ClusterDTO dto) {
-        return ApiResponse.ok(clusterService.updateCluster(id,dto));
-    }
-
-    @Operation(summary = "启停集群（单条，幂等）",operationId = "enableOne")
-    @PatchMapping("/enablement/{id}")
-    public ApiResponse<ClusterDTO> enableOne(@PathVariable Long id, @RequestBody EnableReq body) {
-        return ApiResponse.ok(clusterService.setClusterEnable(id, body.getEnable()));
-    }
-
-    @Operation(summary = "启停集群（批量，幂等）",operationId = "enableBatch")
-    @PostMapping("/enablements")
-    public ApiResponse<Void> enableBatch(@RequestBody EnableBatchReq body) {
-        clusterService.setClusterEnableBatch(body.getIds(), body.getEnable());
+    @Operation(summary="启用/禁用",operationId = "changeStatus")
+    @PostMapping("/{id}/status")
+    public ApiResponse<Void> status(@PathVariable Long id, @RequestParam Integer value){
+        clusterService.changeStatus(id, value);
         return ApiResponse.ok(null);
     }
 
+    @Operation(summary = "更新集群  ", description = "Update cluster info", operationId = "updateCluster")
+    @PutMapping("/update/{id}")
+    public ApiResponse<ClusterDTO> update(@PathVariable Long id, @RequestBody @Valid ClusterDTO dto) {
+        return ApiResponse.ok(clusterService.update(id, dto));
+    }
 
-    @Operation(summary = "删除集群（软删）", description = "Soft delete cluster",operationId = "deleteCluster")
+
+    @Operation(summary = "删除集群（软删）", description = "Soft delete cluster", operationId = "deleteCluster")
     @DeleteMapping("/delete/{id}")
     public ApiResponse<Void> deleteCluster(@PathVariable Long id) {
         clusterService.sDelete(id);
         return ApiResponse.ok(null);
     }
 
+    @Operation(summary="集群列表",operationId = "list")
+    @GetMapping("/list")
+    public ApiResponse<PageResult<ClusterDTO>> list(@RequestParam(required=false) String type,
+                                                             @RequestParam(required=false) Integer status,
+                                                             @RequestParam(required=false) String q,
+                                                             @RequestParam(defaultValue="0") @Min(0) int page,
+                                                             @RequestParam(defaultValue="20") @Min(1) int size) {
+        return ApiResponse.ok(clusterService.list(type, status, q, page,size));
+    }
+
+    @Operation(summary="健康体检")
+    @GetMapping("/{id}/health") public ResponseEntity<ClusterHealthDTO> health(@PathVariable Long id){
+        return ResponseEntity.ok(clusterService.healthById(id));
+    }
 
     /* --------------- Node --------------- */
 
-    @Operation(summary = "创建节点",operationId = "createNode")
+    @Operation(summary = "创建节点", operationId = "createNode")
     @PostMapping("/nodes/create")
     public ApiResponse<NodeDTO> createNode(@Valid @RequestBody NodeDTO req) {
         return ApiResponse.ok(clusterService.createNode(req));
     }
 
-    @Operation(summary = "批量创建节点",operationId = "batchCreateNode")
+    @Operation(summary = "批量创建节点", operationId = "batchCreateNode")
     @PostMapping("/nodes/batch-create")
     public ApiResponse<List<NodeDTO>> batchCreateNode(@Valid @RequestBody NodeBatchCreateReqDTO req) {
         return ApiResponse.ok(clusterService.batchAddNodes(req.getItems()));
     }
 
-    /** 节点列表（统一口径：row.health 即“最新健康”） */
-    @Operation(summary = "节点列表（统一口径：row.health 即“最新健康”）", description = "",operationId = "getNodes")
+    /**
+     * 节点列表（统一口径：row.health 即“最新健康”）
+     */
+    @Operation(summary = "节点列表（统一口径：row.health 即“最新健康”）", description = "", operationId = "getNodes")
     @GetMapping("/nodes/{clusterId}")
     public ApiResponse<Page<NodeListRow>> getNodes(@PathVariable Long clusterId,
-                                                    @RequestParam(defaultValue = "1") int page,
-                                                    @RequestParam(defaultValue = "20") int size,
-                                                    @RequestParam(required = false) String keyword) {
+                                                   @RequestParam(defaultValue = "1") int page,
+                                                   @RequestParam(defaultValue = "20") int size,
+                                                   @RequestParam(required = false) String keyword) {
         return ApiResponse.ok(nodeService.pageNodesWithHealth(clusterId, keyword, page, size));
     }
 
 
-    @Operation(summary = "启停节点（单条，幂等）",operationId = "enableNode")
+    @Operation(summary = "启停节点（单条，幂等）", operationId = "enableNode")
     @PatchMapping("/nodes/enablement/{nodeId}")
     public ApiResponse<NodeDTO> enableNode(@PathVariable Long nodeId, @RequestBody EnableReq body) {
         return ApiResponse.ok(clusterService.setNodeEnable(nodeId, body.getEnable()));
     }
 
-    @Operation(summary = "启停节点（批量，幂等）",operationId = "enableNodeBatch")
+    @Operation(summary = "启停节点（批量，幂等）", operationId = "enableNodeBatch")
     @PostMapping("/nodes/enablements")
     public ApiResponse<Void> enableNodeBatch(@RequestBody EnableBatchReq body) {
         clusterService.setNodeEnableBatch(body.getIds(), body.getEnable());
         return ApiResponse.ok(null);
     }
 
-    @Operation(summary = "（集群维度）节点指标：CPU/内存/活跃节点", description = "agg=none/hour/day",operationId = "getNodeMetricByAgg")
+    @Operation(summary = "（集群维度）节点指标：CPU/内存/活跃节点", description = "agg=none/hour/day", operationId = "getNodeMetricByAgg")
     @GetMapping("/nodes/metric-agg/{clusterId}")
     public ApiResponse<NodeMetricResponseDTO> getNodeMetricByAgg(
             @PathVariable Long clusterId,
@@ -139,7 +145,7 @@ public class ClusterController {
 
     /* --------------- Health / Metrics --------------- */
 
-    @Operation(summary = "查询节点健康（分页，按时间倒序）",operationId = "listNodeHealthRecords")
+    @Operation(summary = "查询节点健康（分页，按时间倒序）", operationId = "listNodeHealthRecords")
     @GetMapping("/nodes/health/{nodeId}")
     public ApiResponse<PageResult<NodeHealthDTO>> listNodeHealthRecords(
             @PathVariable Long nodeId,
@@ -148,7 +154,7 @@ public class ClusterController {
         return ApiResponse.ok(clusterService.listNodeHealthRecords(nodeId, page, size));
     }
 
-    @Operation(summary = "获取集群监控指标（最近一次或区间聚合）",operationId = "getNodeMetric")
+    @Operation(summary = "获取集群监控指标（最近一次或区间聚合）", operationId = "getNodeMetric")
     @GetMapping("/nodes/metric/{clusterId}")
     public ApiResponse<NodeMetricDTO> getNodeMetric(
             @PathVariable Long clusterId,
@@ -159,6 +165,17 @@ public class ClusterController {
 
     /* ---- request models ---- */
     @Data
-    public static class EnableReq { @NotNull private Boolean enable; }
-    @Data public static class EnableBatchReq { @NotEmpty private List<Long> ids; @NotNull private Boolean enable; }
+    public static class EnableReq {
+        @NotNull
+        private Boolean enable;
+    }
+
+    @Data
+    public static class EnableBatchReq {
+        @NotEmpty
+        private List<Long> ids;
+        @NotNull
+        private Boolean enable;
+    }
+
 }

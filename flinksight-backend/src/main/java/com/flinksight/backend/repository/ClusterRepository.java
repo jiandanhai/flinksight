@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -43,4 +44,22 @@ public interface ClusterRepository extends JpaRepository<Cluster, Long>, SoftDel
     @Modifying
     @Query("update Cluster c set c.status = ?2 where c.id in ?1")
     int updateStatusByIds(List<Long> ids, Integer status);
+
+    Optional<Cluster> findByTenantIdAndName(Long tenantId, String name);
+    boolean existsByTenantIdAndName(Long tenantId, String name);
+
+    Optional<Cluster> findByTenantIdAndId(Long tenantId, Long id);
+
+    @Query("""
+     select c from Cluster c
+     where c.tenantId=:tenantId and c.isDeleted=0
+       and (:type is null or c.type=:type)
+       and (:status is null or c.status=:status)
+       and (:q is null or c.name like concat('%',:q,'%') or c.tags like concat('%',:q,'%'))
+     """)
+    Page<Cluster> search(@Param("tenantId") Long tenantId,
+                         @Param("type") String type,
+                         @Param("status") Integer status,
+                         @Param("q") String q,
+                         Pageable pageable);
 }
