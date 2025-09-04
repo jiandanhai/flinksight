@@ -7,14 +7,14 @@ import { useUser } from "@/context/UserContext";
 /**
  * 说明：
  * - 仍然保留你的后端 SSO 登录入口（通过环境变量可配置）
- * - 白名单包含登录页与回调页
+ * - 白名单包含回调页
  * - 未登录时做「硬跳转」到后端 SSO，并带回当前完整地址
  */
 const SSO_LOGIN_URL =
   import.meta.env.VITE_SSO_LOGIN_URL || "/api/sso/sso-login";
 
 // ✅ 回调白名单：这些路径不做鉴权拦截
-const ALLOWLIST = new Set<string>(["/login", "/login/sso-callback"]);
+const ALLOWLIST = new Set<string>(["/login/sso-callback"]);
 
 const AuthRoute: React.FC = () => {
   const { user, token, loading } = useUser(); // 从同一上下文拿 user/token/loading
@@ -23,7 +23,7 @@ const AuthRoute: React.FC = () => {
   // React 18 StrictMode 下函数组件可能在 DEV 渲染两次，这里防止重复发起硬跳转
   const didRedirect = React.useRef(false);
 
-  // 1) 白名单路径：直接放行（保证回调流程/登录页正常）
+  // 1) 白名单路径：直接放行（保证回调流程正常）
   if (ALLOWLIST.has(location.pathname)) {
     return <Outlet />;
   }

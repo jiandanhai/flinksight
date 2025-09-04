@@ -1,57 +1,36 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useUser } from '../../store/user';
+import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
+/**
+ * 方案B：保留后端中转登录
+ * - 使用环境变量 VITE_SSO_LOGIN_URL（例如 http://localhost:8080/sso/sso-login）
+ * - 本页挂载即硬跳转：/sso/sso-login?redirect=<目标页>
+ * - 不渲染任何本地用户名/密码或 SSO 按钮
+ */
 const LoginPage: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { login } = useUser();
+  const { search } = useLocation();
 
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  useEffect(() => {
+    const ssoLogin = import.meta.env.VITE_SSO_LOGIN_URL || '/sso/sso-login';
+    const redirectAfter = new URLSearchParams(search).get('redirect') || '/dashboard';
+    const sep = ssoLogin.includes('?') ? '&' : '?';
+    // 硬跳转到后端中转，后端再 302 到 Keycloak，并带 state/redirect 回调本前端
+    window.location.replace(`${ssoLogin}${sep}redirect=${encodeURIComponent(redirectAfter)}`);
+  }, [search]);
 
-  const redirectAfter = new URLSearchParams(location.search).get('redirect') || '/dashboard';
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    try {
-      const resp = await fetch('/sso/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // 你的后端 DTO 用的是 account/password，这里对齐
-        body: JSON.stringify({ account: username, password }),
-      });
-      const data = await resp.json();
-      if (!resp.ok || !data?.data?.token) throw new Error(data?.message || '用户名或密码错误');
-
-      const token = data.data.token;
-      login(token);
-      navigate('/dashboard', { replace: true });
-    } catch (e: any) {
-      setError(e?.message || '登录失败');
-    }
-  };
-
-  const goSSO = () => {
-    const loginUrl = import.meta.env.VITE_SSO_LOGIN_URL || '/sso/sso-login';
-    // 注意：redirect 传完整 URL 或相对路径均可；后端会做 state 存证
-    window.location.href = `${loginUrl}?redirect=${encodeURIComponent(redirectAfter)}`;
-  };
-
+  // 兜底提示（通常一闪而过）
   return (
-    <div style={{ maxWidth: 420, margin: '12vh auto' }}>
-      <h2>登录</h2>
-      <form onSubmit={handleLogin}>
-        <input value={username} onChange={e=>setUsername(e.target.value)} placeholder="用户名" />
-        <input value={password} onChange={e=>setPassword(e.target.value)} placeholder="密码" type="password" />
-        <button type="submit">本地登录</button>
-      </form>
-      {error && <div style={{ color: 'crimson', marginTop: 8 }}>{error}</div>}
-      <hr/>
-      <button onClick={goSSO} style={{ marginTop: 12 }}>SSO 登录</button>
+    <div style={{
+      minHeight: '100vh',
+      display: 'grid',
+      placeItems: 'center',
+      background: '#0b1220',
+      color: '#e6e8ec',
+      padding: 24
+    }}>
+      <div style={{ opacity: .9 }}>Redirecting to SSO…</div>
     </div>
   );
 };
+
 export default LoginPage;

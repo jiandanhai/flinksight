@@ -92,6 +92,44 @@
 - 支持全自动测试与批量Mock，回归、上云、商用均零阻力
 - 代码与文档均生产可交付，运维与业务团队均可独立交接
 
+  flinksight-root/
+  ├── flinksight-common/ # 公共DTO、工具等（纯Java模块，无Spring依赖）
+  ├── flinksight-backend/ # Spring Boot后端API服务（管理/指标/报警/用户/任务等）
+  ├── flinksight-flink-job/ # Flink采集/指标/报警流任务
+  ├── flinksight-spark-job/ # Spark流批任务
+  ├── flinksight-frontend-mock/ # 前端Mock API（Express/JSON-server）
+  ├── deploy/ # 一键部署（docker-compose、k8s模板等）
+  ├── Jenkinsfile # CI/CD流水线脚本
+  ├── test/ # 自动化测试与示例数据
+  ├── README.md # 本文档
+  └── pom.xml # 多模块父pom
+
+flinksight/
+├── backend/                    # Spring Boot 3 控制面（K8s/CRD 渲染/PromQL/事件汇聚/审计）
+├── frontend/                   # Next.js 控制台（作业/集群/告警/观测）
+├── flink-ops/                  # Flink 生产采集/告警联动作业
+├── spark-ops/                  # Spark 3.4 监听器 + Runner（Kafka 上报）
+├── k8s/                        # CRD 模板、RBAC、监控与告警规则、Operator 安装
+├── dashboards/                 # Grafana 面板（JSON）
+├── ci/                         # CI（GitHub Actions）
+└── README.md                   # 一键部署说明
+### 1) 安装 Operator 与监控栈
+./k8s/install-operators.sh
+kubectl apply -f k8s/rbac/backend-rbac.yaml
+kubectl apply -f k8s/monitoring/
+
+### 2) 配置并启动 Backend/Frontend
+cd backend && mvn -B -DskipTests package && docker build -t reg/ops-backend:1.0 .
+# 部署后端到 K8s（自行创建 Deployment/Service/Ingress, SA=ops/backend）
+
+### 3) 通过前端创建 Job/Cluster
+- 前端：jobs/create 填写 JobSpec，提交后由后端渲染 CRD 并下发
+- 观察 Prometheus/Grafana 面板与 Alertmanager 告警
+
+### 4) Spark/Flink 作业上报
+- Spark：为 Driver 挂上 FlinksightSparkListener（随 spark-ops 提供），Kafka 上报 job-metrics
+- Flink：FlinkOpsJob 订阅 job-metrics, 执行动态规则与下沉
+
 
 
 

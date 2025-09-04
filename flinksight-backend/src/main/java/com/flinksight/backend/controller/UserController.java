@@ -62,12 +62,6 @@ public class UserController {
     }
 
 
-    @Operation(summary = "创建用户", description = "Create new user",operationId = "createUser")
-    @PostMapping("/create")
-    public ApiResponse<UserDTO> createUser(@RequestBody  @Valid UserDTO dto) {
-        return ApiResponse.ok(userService.createUser(dto));
-    }
-
     @Operation(summary = "根据ID查询用户", description = "Get user by ID",operationId = "getUser")
     @GetMapping("/id/{id}")
     public ApiResponse<UserDTO> getById(
