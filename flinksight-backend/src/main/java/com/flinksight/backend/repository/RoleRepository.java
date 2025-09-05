@@ -24,6 +24,9 @@ public interface RoleRepository extends JpaRepository<Role, Long>, SoftDeleteRep
      */
     Optional<Role> findByTenantIdAndCode(Long tenantId,String code);
 
+    // 可选：先找租户内，没有再用“平台公共角色”（tenantId 为 null）
+    Optional<Role> findByTenantIdIsNullAndCode(String code);
+
     Page<Role> findByTenantIdAndIsDeleted(Long tenantId,Integer isDeleted, Pageable pageable);
 
     /**

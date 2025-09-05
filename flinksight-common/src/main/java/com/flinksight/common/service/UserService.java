@@ -21,17 +21,6 @@ public interface UserService extends SoftDeleteService<UserDTO, Long>  {
 
     UserDTO findByAccount(String account);
 
-    UserDTO register(UserDTO user);
-
-    void updateProfile(UserDTO user);
-
-    /**
-     * 新建用户
-     * @param user 用户实体
-     * @return 保存后的用户
-     */
-    UserDTO createUser(UserDTO user);
-
     /**
      * 根据ID获取用户
      * @param userId 用户ID
@@ -54,14 +43,6 @@ public interface UserService extends SoftDeleteService<UserDTO, Long>  {
      * @return 更新后用户
      */
     UserDTO updateUser(UserDTO user);
-
-    /**
-     * 校验用户密码
-     * @param userId 用户ID
-     * @param rawPwd 明文密码
-     * @return 是否匹配
-     */
-    boolean checkPassword(Long userId, String rawPwd);
 
     /**
      * 获取用户所有权限（权限码/角色码）

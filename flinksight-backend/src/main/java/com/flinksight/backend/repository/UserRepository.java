@@ -32,6 +32,7 @@ public interface UserRepository extends JpaRepository<User, Long>, SoftDeleteRep
      */
     User findByTenantIdAndUsernameAndIsDeleted(Long tenantId, String username, Integer isDeleted);
 
+
     /**
      * 查询指定租户下所有未删除用户
      * @param tenantId 租户ID

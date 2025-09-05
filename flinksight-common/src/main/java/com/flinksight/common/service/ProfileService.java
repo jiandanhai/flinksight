@@ -1,6 +1,5 @@
 package com.flinksight.common.service;
 
-import com.flinksight.common.dto.ChangePasswordRequestDTO;
 import com.flinksight.common.dto.ProfileDTO;
 import com.flinksight.common.model.PageResult;
 
@@ -24,6 +23,4 @@ public interface ProfileService extends SoftDeleteService<ProfileDTO, Long> {
 
     /** 管理员：软删除（同租户） */
     void softDeleteByUserId(Long userId);
-
-    void changePassword(ChangePasswordRequestDTO req);
 }

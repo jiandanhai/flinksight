@@ -7,9 +7,9 @@ import com.flinksight.backend.service.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -25,7 +25,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
-import org.springframework.beans.factory.annotation.Qualifier;
+
 import javax.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.List;
@@ -43,17 +43,6 @@ public class SecurityConfig {
     @Autowired
     private PasswordEncoder passwordEncoder;
     private final PermissionCheckFilter permissionCheckFilter;
-
-    /**
-     * Dao认证Provider，关联自定义UserDetailsService和密码加密
-     */
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userServiceImpl); // 必须用实现了UserDetailsService的UserServiceImpl
-        provider.setPasswordEncoder(passwordEncoder);
-        return provider;
-    }
 
     @Bean
     public SecurityFilterChain apiFilterChain(HttpSecurity http,
@@ -88,8 +77,7 @@ public class SecurityConfig {
                             resp.getWriter().write("{\"error\": \"无权限访问该资源\"}");
                         })
                 )
-                .httpBasic(Customizer.withDefaults())
-                .authenticationProvider(authenticationProvider());
+                .httpBasic(Customizer.withDefaults());
         // 将权限检查挂在认证之后
         http.addFilterAfter(permissionCheckFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

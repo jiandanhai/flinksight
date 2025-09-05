@@ -1031,30 +1031,38 @@ CREATE TABLE IF NOT EXISTS ticket (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工单表';
 
 
-CREATE TABLE IF NOT EXISTS `user` (
-                        `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-                        `tenant_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '租户ID，多租户隔离',
-                        `username` VARCHAR(50) NOT NULL COMMENT '登录名/用户名（唯一）',
-                        `password` VARCHAR(128) NOT NULL COMMENT '密码Hash',
-                        `nickname` VARCHAR(128) DEFAULT NULL COMMENT '昵称',
-                        `avatar` VARCHAR(255) DEFAULT NULL COMMENT '头像URL',
-                        `email` VARCHAR(100) DEFAULT NULL COMMENT '邮箱',
-                        `phone` VARCHAR(20) DEFAULT NULL COMMENT '手机号',
-                        `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态 1启用 0禁用',
-                        `is_deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '软删除 0=正常 1=已删除',
-                        `sso_id` VARCHAR(128) DEFAULT NULL COMMENT '三方SSO唯一标识/开放平台id（可选）',
-                        `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间',
-                        `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                        CONSTRAINT pk_user PRIMARY KEY (id),
-                        UNIQUE KEY `uk_username` (`username`),
-                        UNIQUE KEY `uk_sso_id` (`sso_id`),
-                        KEY `idx_tenant_id` (`tenant_id`),
-                        KEY `idx_email` (`email`),
-                        KEY `idx_phone` (`phone`),
-                        KEY `idx_status` (`status`),
-                        CONSTRAINT `fk_user_tenant` FOREIGN KEY (`tenant_id`) REFERENCES `tenant` (`id`)
-                            ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
+-- 创建表：用户影子表（与 IdP 绑定，不存密码）
+CREATE TABLE `user` (
+                        `id`              BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键',
+                        `tenant_id`       BIGINT               DEFAULT NULL   COMMENT '默认/当前租户ID（真正授权以 user_role(tenant_id) 为准）',
+
+                        `sso_id`          VARCHAR(256) NOT NULL              COMMENT 'SSO唯一标识，建议写入 iss#sub',
+                        `idp_issuer`      VARCHAR(200)          DEFAULT NULL COMMENT 'IdP Issuer（可选，便于多Realm）',
+                        `idp_subject`     VARCHAR(200)          DEFAULT NULL COMMENT 'IdP Subject（可选）',
+
+                        `username`        VARCHAR(80)  NOT NULL              COMMENT '可读用户名（来自 preferred_username/sub）',
+                        `display_name`    VARCHAR(120)          DEFAULT NULL COMMENT '展示名/昵称',
+                        `email`           VARCHAR(160)          DEFAULT NULL,
+                        `email_verified`  TINYINT(1)            DEFAULT NULL,
+                        `phone`           VARCHAR(30)           DEFAULT NULL,
+                        `avatar`          VARCHAR(255)          DEFAULT NULL,
+
+                        `status`          TINYINT      NOT NULL DEFAULT 1     COMMENT '1启用 0禁用',
+                        `is_deleted`      TINYINT      NOT NULL DEFAULT 0     COMMENT '软删除标记',
+
+                        `created_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP                         COMMENT '创建时间',
+                        `updated_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                        `last_login_at`   DATETIME               DEFAULT NULL COMMENT '最近登录时间',
+
+                        PRIMARY KEY (`id`),
+                        UNIQUE KEY `uk_user_sso_id` (`sso_id`),
+                        UNIQUE KEY `uk_user_username` (`username`),
+                        KEY `idx_user_tenant` (`tenant_id`),
+                        KEY `idx_user_status` (`status`),
+                        KEY `idx_user_updated_at` (`updated_at`),
+                        KEY `idx_user_idp_pair` (`idp_issuer`,`idp_subject`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户影子表（Keycloak对接）';
+
 
 
 

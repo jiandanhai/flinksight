@@ -2,7 +2,7 @@ package com.flinksight.backend.security.jwt;
 
 import com.flinksight.backend.domain.User;
 import com.flinksight.backend.mapper.UserStructMapper;
-import com.flinksight.backend.security.SecurityUser;
+import com.flinksight.backend.security.UserPrincipal;
 import com.flinksight.backend.security.tenant.TenantContext;
 import com.flinksight.common.dto.UserDTO;
 import com.flinksight.common.service.UserService;
@@ -22,7 +22,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -100,10 +99,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             .distinct()
                             .map(SimpleGrantedAuthority::new)
                             .collect(Collectors.toList());
-                    // 构造SecurityUser
-                    SecurityUser securityUser = new SecurityUser(user, new ArrayList<>(perms));
+                    // 构造UserPrincipal
+                    UserPrincipal principal = new UserPrincipal(user.getId(), user.getSsoId(),
+                            (tenantId != null ? tenantId : user.getTenantId()), username, new java.util.HashSet<>(perms)
+                    );
                     UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(securityUser, null, authorities);
+                            new UsernamePasswordAuthenticationToken(principal, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             }

@@ -17,7 +17,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -54,13 +53,6 @@ public class UserController {
         return ApiResponse.ok(userService.getCurrentUserProfile());
 
     }
-
-    @Operation(summary = "",operationId = "ssoUserRegister")
-    @PostMapping("/register")
-    public UserDTO register(@RequestBody  @Valid UserDTO dto) {
-        return userService.register(dto);
-    }
-
 
     @Operation(summary = "根据ID查询用户", description = "Get user by ID",operationId = "getUser")
     @GetMapping("/id/{id}")
@@ -104,19 +96,6 @@ public class UserController {
     public ApiResponse<UserDTO> updateUser(@RequestBody UserDTO dto) {
         return ApiResponse.ok(userService.updateUser(dto));
     }
-
-    @Operation(summary = "",operationId = "updateSsoUserProfile")
-    @PutMapping("/profile")
-    public void updateProfile(@RequestBody UserDTO dto) {
-        userService.updateProfile(dto);
-    }
-
-    @Operation(summary = "校验密码", description = "Check user password",operationId = "checkPassword")
-    @PostMapping("/checkPassword")
-    public ApiResponse<Boolean> checkPassword(@RequestParam Long userId, @RequestParam String rawPwd) {
-        return ApiResponse.ok(userService.checkPassword(userId, rawPwd));
-    }
-
 
     @Operation(summary = "本地 JWT 登出（吊销当前访问令牌）",operationId = "logout")
     @PostMapping("/logout")

@@ -1,8 +1,7 @@
 package com.flinksight.backend.security.rbac;
 
-import com.flinksight.backend.domain.User;
 import com.flinksight.backend.exception.ForbiddenException;
-import com.flinksight.backend.security.SecurityUser;
+import com.flinksight.backend.security.UserPrincipal;
 import com.flinksight.common.service.PermissionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,12 +9,10 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
-import java.util.Objects;
 
 /**
  * RBAC权限注解AOP切面
@@ -43,29 +40,15 @@ public class PermissionAspect {
         }
 
         String permissionCode = permission.value();
-        Long userId = Objects.requireNonNull(getCurrentUser()).getId();
-        Long tenantId = getCurrentUser().getTenantId();
+        UserPrincipal principal = (UserPrincipal)SecurityContextHolder.getContext().getAuthentication().getPrincipal();;
+        Long userId = principal.userId();
+        Long tenantId = principal.tenantId();
 
         // ===== 你的权限校验实现，建议调用RBACService/PermissionService校验 =====
         boolean hasPermission = permissionService.userHasPermission(userId, tenantId,permissionCode);
         if (!hasPermission) {
             log.warn("用户{}无权限操作：{}", userId, permissionCode);
             throw new ForbiddenException("没有操作权限：" + permissionCode);
-        }
-    }
-
-    /**
-     * 获取当前登录用户ID（需结合你自己的UserDetails实现补充）
-     */
-    private User getCurrentUser() {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            SecurityUser currentUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            User user = currentUser.getUser();
-            // TODO: 如principal为username，可通过UserService查ID
-            return user;
-        } catch (Exception ex) {
-            return null;
         }
     }
 

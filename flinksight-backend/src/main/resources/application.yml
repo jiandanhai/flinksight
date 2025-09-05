@@ -32,6 +32,7 @@ spring:
 jwt:
   secret: ChangeMeToYourSecretKey-ChangeMeToYourSecretKey
   expire: 86400000 # 1 day
+  jit-create: true
 
 logging:
   level:

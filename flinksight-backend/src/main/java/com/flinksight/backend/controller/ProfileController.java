@@ -1,7 +1,6 @@
 package com.flinksight.backend.controller;
 
 import com.flinksight.backend.common.ApiResponse;
-import com.flinksight.common.dto.ChangePasswordRequestDTO;
 import com.flinksight.common.dto.ProfileDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ProfileService;
@@ -56,12 +55,6 @@ public class ProfileController {
     @PutMapping("/update")
     public ApiResponse<ProfileDTO> update(@RequestBody @Valid ProfileDTO dto) {
         return ApiResponse.ok(service.createOrUpdate(dto));
-    }
-
-    @Operation(summary = "修改当前用户密码",operationId = "changePassword")
-    @PostMapping("/change-password")
-    public void changePassword(@Valid @RequestBody ChangePasswordRequestDTO req) {
-        service.changePassword(req);
     }
 
     @Operation(summary = "删除用户档案", operationId = "deleteProfile")

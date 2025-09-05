@@ -6,30 +6,25 @@ import com.flinksight.backend.domain.UserTokenState;
 import com.flinksight.backend.exception.BusinessException;
 import com.flinksight.backend.mapper.UserStructMapper;
 import com.flinksight.backend.repository.*;
-import com.flinksight.backend.security.SecurityUser;
 import com.flinksight.backend.security.SecurityUtil;
+import com.flinksight.backend.security.UserPrincipal;
 import com.flinksight.backend.security.tenant.TenantRequired;
 import com.flinksight.common.dto.UserDTO;
 import com.flinksight.common.dto.UserTokenStateDTO;
 import com.flinksight.common.enums.ErrorCode;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.UserService;
-import com.flinksight.common.utils.PasswordUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -41,9 +36,10 @@ import java.util.*;
 @RequiredArgsConstructor
 @Transactional
 @TenantRequired
-public class UserServiceImpl implements UserService, UserDetailsService {
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
     private final RolePermissionRepository rolePermissionRepository;
     private final UserRoleRepository userRoleRepository;
     private final UserTokenStateRepository tokenStateRepo;
@@ -52,43 +48,17 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public UserDTO getCurrentUserProfile() {
-        SecurityUser currentUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return userStructMapper.toDTO(currentUser.getUser());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) return null;
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof UserPrincipal p)) return null;
+        return userStructMapper.toDTO(userRepository.findByIdAndTenantIdAndIsDeleted(p.userId(),p.tenantId(),0));
     }
 
     @Override
     public UserDTO findByAccount(String account) {
         User user = userRepository.findByTenantIdAndUsernameAndIsDeleted(SecurityUtil.getCurrentTenantId(), account, 0);
         return userStructMapper.toDTO(user);
-    }
-
-    @Override
-    public UserDTO register(UserDTO userDTO) {
-        // 密码加密/唯一性校验省略
-        User user = userStructMapper.toEntity(userDTO);
-        user.setStatus(1);
-        user.setIsDeleted(0);
-        user.setCreatedAt(LocalDateTime.now());
-        return userStructMapper.toDTO(userRepository.save(user));
-    }
-
-    @Override
-    public void updateProfile(UserDTO userDTO) {
-        userRepository.findById(userDTO.getId()).ifPresent(user -> {
-            user.setNickname(userDTO.getNickname());
-            user.setEmail(userDTO.getEmail());
-            user.setPhone(userDTO.getPhone());
-            user.setAvatar(userDTO.getAvatar());
-            userRepository.save(user);
-        });
-    }
-
-    @Override
-    public UserDTO createUser(UserDTO userDTO) {
-        User entity = userStructMapper.toEntity(userDTO);
-        entity.setIsDeleted(0);
-        User saved = userRepository.save(entity);
-        return userStructMapper.toDTO(saved);
     }
 
     @Override
@@ -116,12 +86,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         throw new BusinessException(ErrorCode.NOT_FOUND, "用户不存在");
     }
 
-    @Override
-    public boolean checkPassword(Long userId, String rawPwd) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        return userOpt.isPresent() && PasswordUtil.matches(rawPwd, userOpt.get().getPassword());
-    }
-
     /**
      * 查询用户所有权限（如所有角色下的权限code合集）
      */
@@ -147,19 +111,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             return true;
         }
         return false;
-    }
-
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // 这里可以加多租户ID逻辑
-        User user = userRepository.findByTenantIdAndUsernameAndIsDeleted(SecurityUtil.getCurrentTenantId(),username, 0);
-        // 构造UserDetails，填充权限等
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(),
-                AuthorityUtils.createAuthorityList("ROLE_USER") // 这里可以查出角色/权限
-        );
     }
 
 

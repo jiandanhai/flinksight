@@ -1,8 +1,5 @@
 package com.flinksight.backend.controller;
 
-import com.flinksight.backend.common.ApiResponse;
-import com.flinksight.common.dto.SsoAuthLoginRequestDTO;
-import com.flinksight.common.dto.SsoAuthRegisterRequestDTO;
 import com.flinksight.common.dto.SsoAuthResponseDTO;
 import com.flinksight.common.service.SsoAuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,13 +7,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -129,21 +128,6 @@ public class SsoAuthController {
             log.error("[SSO Callback] Error during SSO callback handling", e);
             throw e;
         }
-    }
-
-    // ========== 账号密码登录（原样保留） ==========
-    @Operation(summary = "账号密码登录", operationId = "login")
-    @PostMapping("/login")
-    public ApiResponse<SsoAuthResponseDTO> login(@RequestBody @Valid SsoAuthLoginRequestDTO req) {
-        log.info("[account login  account=  {}", req.getAccount());
-        return ApiResponse.ok(ssoAuthService.login(req));
-    }
-
-    // ========== 用户注册（原样保留） ==========
-    @Operation(summary = "注册", operationId = "register")
-    @PostMapping("/register")
-    public ApiResponse<SsoAuthResponseDTO> register(@RequestBody @Valid SsoAuthRegisterRequestDTO req) {
-        return ApiResponse.ok(ssoAuthService.register(req));
     }
 
     // ========== SSO 登出（兼容 yml 与 env 的 end-session-url；保留你原方法不删） ==========

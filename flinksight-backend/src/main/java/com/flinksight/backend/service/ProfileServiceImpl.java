@@ -2,12 +2,10 @@ package com.flinksight.backend.service;
 
 import com.flinksight.backend.common.PageHelpers;
 import com.flinksight.backend.domain.Profile;
-import com.flinksight.backend.domain.User;
 import com.flinksight.backend.mapper.ProfileStructMapper;
 import com.flinksight.backend.repository.ProfileRepository;
 import com.flinksight.backend.repository.UserRepository;
 import com.flinksight.backend.security.SecurityUtil;
-import com.flinksight.common.dto.ChangePasswordRequestDTO;
 import com.flinksight.common.dto.ProfileDTO;
 import com.flinksight.common.model.PageResult;
 import com.flinksight.common.service.ProfileService;
@@ -18,7 +16,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -85,28 +82,6 @@ public class ProfileServiceImpl implements ProfileService {
         PageRequest pr = PageHelpers.pageRequest(page, size, null, Profile.class); // 统一 1→0
         Page<Profile> result = repository.findByTenantId(SecurityUtil.getCurrentTenantId(), pr);
         return PageHelpers.toPageResult(result, profileStructMapper::toDTO, true); // 返回
-    }
-
-    /** 修改当前用户密码 */
-    @Transactional
-    public void changePassword(ChangePasswordRequestDTO req) {
-        if (!req.getNewPassword().equals(req.getConfirmPassword())) {
-            throw new IllegalArgumentException("两次输入的新密码不一致");
-        }
-        // 不允许与原密码相同
-        if (req.getOldPassword().equals(req.getNewPassword())) {
-            throw new IllegalArgumentException("新密码不能与原密码相同");
-        }
-        // 强度校验（可按需放宽/加强）
-        validatePasswordPolicy(req.getNewPassword());
-        User user = userRepository.findByIdAndTenantIdAndIsDeleted(SecurityUtil.getCurrentUserId(), SecurityUtil.getCurrentTenantId(),0);
-        if (!passwordEncoder.matches(req.getOldPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("原密码不正确");
-        }
-
-        user.setPassword(passwordEncoder.encode(req.getNewPassword()));
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
     }
 
     /** 最低强度策略：长度≥8，且包含字母、数字、特殊字符三类中的至少两类（可按需调整） */
